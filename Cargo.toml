@@ -1,0 +1,6 @@
+[package]
+name = "android-xml-decoder"
+version = "0.1.0"
+authors = ["Guillem Nieto <guillem.nieto@socialpoint.es>"]
+
+[dependencies]
