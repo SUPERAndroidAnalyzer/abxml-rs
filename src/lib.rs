@@ -56,21 +56,30 @@ impl<'a> BinaryXmlDecoder<'a> {
         // Read document header
         self.parse_document_header()?;
         // Read strings table
-        self.parse_string_table()?;
+        //self.parse_string_table()?;
         // Read resource table
-        self.parse_resource_table();
+        // self.parse_resource_table();
 
         loop {
+            let initial_position = self.cursor.position();
             let code = self.cursor.read_u32::<LittleEndian>();
+            let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
+
+            println!("Code: {:?}; Chunk size: {:?}", code, chunk_size);
+
             match code {
+                Ok(TOKEN_STRING_TABLE) => self.parse_string_table(initial_position as u32)?,
+                Ok(TOKEN_RESOURCE_TABLE) => self.parse_resource_table(chunk_size)?,
                 Ok(TOKEN_NAMESPACE_START) => {println!("NS Start"); self.parse_namespace_start()?},
                 Ok(TOKEN_NAMESPACE_END) => {println!("NS End"); self.parse_namespace_end()?},
                 Ok(TOKEN_START_TAG) => {println!("Tag Start"); self.parse_start_tag()?},
                 Ok(TOKEN_END_TAG) => {println!("Tag end"); self.parse_end_tag()?},
-                Ok(t) => {println!("Unkown {}", t); panic!("")},
+                Ok(t) => {println!("Unkown {:X}", t); panic!("")},
                 Err(_) => break,
                 // _ => unreachable!(""),
             }
+            println!("Pointing to: {} -> {}", initial_position,  initial_position + chunk_size as u64);
+            self.cursor.set_position(initial_position + chunk_size as u64);
         }
 
         /*let next_section = self.cursor.read_u32::<LittleEndian>()?;
@@ -95,19 +104,9 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_string_table(&mut self) -> Result<(), Error> {
+    fn parse_string_table(&mut self, initial_position: u32) -> Result<(), Error> {
         let mut header_string_table = HeaderStringTable::default();
-        let initial_position = self.cursor.position() as u32;
-        let token = self.cursor.read_u32::<LittleEndian>()?;
-        println!("Initial position: {}", initial_position);
 
-        if token != TOKEN_STRING_TABLE {
-            return Err(Error::new(ErrorKind::Other, format!("Expected TOKEN_STRING_TABLE ({:X}), but found: {:X}", TOKEN_STRING_TABLE, token)));
-        }
-
-        println!("TOKEN_STRING_TABLE: {:X}, {}", TOKEN_STRING_TABLE, TOKEN_STRING_TABLE);
-
-        header_string_table.chunk = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.string_amount = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.style_amount = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.unknown = self.cursor.read_u32::<LittleEndian>()?;
@@ -124,11 +123,10 @@ impl<'a> BinaryXmlDecoder<'a> {
             string_table.strings.push(s);
         }
 
-        self.cursor.set_position(
-            (initial_position + header_string_table.chunk) as u64
-        );
         self.document.header_string_table = header_string_table;
         self.document.string_table = string_table;
+
+        println!("String table: {:?}", self.document.string_table);
 
         Ok(())
     }
@@ -177,18 +175,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(s)
     }
 
-    fn parse_resource_table(&mut self) -> Result<(), Error> {
-        let initial_position = self.cursor.position();
-        let token = self.cursor.read_u32::<LittleEndian>()?;
-        let chunk = self.cursor.read_u32::<LittleEndian>()?;
-        self.document.header_resource_table = HeaderResourceTable {
-            chunk: chunk,
-        };
-
-        if token != TOKEN_RESOURCE_TABLE {
-            return Err(Error::new(ErrorKind::Other, format!("Expected TOKEN_RESOURCE_TABLE ({:X}), but found: {:X}", TOKEN_RESOURCE_TABLE, token)));
-        }
-
+    fn parse_resource_table(&mut self, chunk: u32) -> Result<(), Error> {
         let amount = (chunk / 4) - 2;
         let resource_table = (1..amount).into_iter().map(|_| {
             self.cursor.read_u32::<LittleEndian>().unwrap()
@@ -197,13 +184,11 @@ impl<'a> BinaryXmlDecoder<'a> {
         self.document.resource_table = ResourceTable {
                 resources: resource_table,
         };
-        self.cursor.set_position(initial_position + chunk as u64);
 
         Ok(())
     }
 
     fn parse_namespace_start(&mut self) -> Result<(), Error> {
-        let chunk = self.cursor.read_u32::<LittleEndian>()?;
         let line = self.cursor.read_u32::<LittleEndian>()?;
         let unknown = self.cursor.read_u32::<LittleEndian>()?;
         let prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -218,7 +203,6 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_namespace_end(&mut self) -> Result<(), Error> {
-        let chunk = self.cursor.read_u32::<LittleEndian>()?;
         let line = self.cursor.read_u32::<LittleEndian>()?;
         let unknown = self.cursor.read_u32::<LittleEndian>()?;
         let prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -231,8 +215,6 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_start_tag(&mut self) -> Result<(), Error> {
-        let initial_position = self.cursor.position();
-        let chunk = self.cursor.read_u32::<LittleEndian>()?;
         let line = self.cursor.read_u32::<LittleEndian>()?;
         let unknown = self.cursor.read_u32::<LittleEndian>()?;
         let ns_uri = self.cursor.read_u32::<LittleEndian>()?;
@@ -253,9 +235,6 @@ impl<'a> BinaryXmlDecoder<'a> {
         }
 
         self.current_element = Some(Element::new(element_name, attributes));
-        println!("Start element: {:?}", self.current_element);
-        println!("Current position: {}; Following: {}", self.cursor.position(), initial_position + chunk as u64);
-        self.cursor.set_position(initial_position + chunk as u64 - 4);
 
         Ok(())
     }
@@ -294,8 +273,6 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_end_tag(&mut self) -> Result<(), Error> {
-        let initial_position = self.cursor.position();
-        let chunk = self.cursor.read_u32::<LittleEndian>()?;
         let line = self.cursor.read_u32::<LittleEndian>()?;
         let unknown = self.cursor.read_u32::<LittleEndian>()?;
         let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -306,12 +283,6 @@ impl<'a> BinaryXmlDecoder<'a> {
         if uri_idx != TOKEN_VOID {
             maybe_uri = Some(self.document.string_table.strings.get(uri_idx as usize).unwrap().clone());
         }
-
-        println!("{:?}", self.current_element);
-        println!("Element name: {}", element_name);
-        println!("Uri: {:?}", maybe_uri);
-
-        self.cursor.set_position(initial_position + chunk as u64 - 4);
 
         Ok(())
     }
@@ -403,12 +374,6 @@ mod tests {
         let mut parser = BinaryXmlDecoder::new(&original_file);
         let result = parser.uncompress_xml();
         println!("{:?}", result);
-        // uncompress_xml(original_file).unwrap();
-
-        // println!("{:X}", rdr.read_u32::<LittleEndian>().unwrap());
-
-        // println!("{:?}", original_file);
-        panic!("");
     }
 
     fn file_get_contents(path: &str) -> Vec<u8>{
