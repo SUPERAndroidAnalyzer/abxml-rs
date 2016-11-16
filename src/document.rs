@@ -67,7 +67,7 @@ impl Element {
 pub enum Value {
     String(String),
     Dimension(String),
-    Fraction,
+    Fraction(String),
     Float(f64),
     Integer(u64),
     Flags(u64),
