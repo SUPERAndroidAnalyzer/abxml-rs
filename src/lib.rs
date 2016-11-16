@@ -3,7 +3,7 @@ extern crate byteorder;
 mod document;
 
 use std::io::Cursor;
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::{Error, ErrorKind};
 use document::*;
 
@@ -290,10 +290,10 @@ impl<'a> BinaryXmlDecoder<'a> {
     fn parse_value(&mut self, value_type: u32, data: u32) -> Result<Value, Error> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID => {
-                Value::String(format!("@id/0x{:#8}", data))
+                Value::ReferenceId(format!("@id/0x{:#8}", data))
             },
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
-                Value::String(format!("?id/0x{:#8}", data))
+                Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
             },
             TOKEN_TYPE_STRING => {
                 Value::String(self.document.string_table.strings.get(data as usize).unwrap().clone())
@@ -316,27 +316,32 @@ impl<'a> BinaryXmlDecoder<'a> {
                 let value = (data as f64) / (0x7FFFFFFF as f64);
                 let formatted_fraction = format!("{:.*}", 2, value);
 
-                Value::String(formatted_fraction)
+                Value::Fraction(formatted_fraction)
             },
-            TOKEN_TYPE_INTEGER | TOKEN_TYPE_FLAGS => {
-                let formatted = format!("{}", data);
-
-                Value::String(formatted)
+            TOKEN_TYPE_INTEGER => {
+                Value::Integer(data as u64)
             },
+            TOKEN_TYPE_FLAGS => {
+                Value::Flags(data as u64)
+            }
             TOKEN_TYPE_FLOAT => {
                 Value::Float(data as f64)
             },
             TOKEN_TYPE_BOOLEAN => {
                 if data > 0 {
-                    Value::String("true".to_string())
+                    Value::Boolean(true)
                 } else {
-                    Value::String("false".to_string())
+                    Value::Boolean(false)
                 }
             },
-            TOKEN_TYPE_COLOR | TOKEN_TYPE_COLOR2 => {
+            TOKEN_TYPE_COLOR => {
                 let formatted_color = format!("#{:#8}", data);
-                Value::String(formatted_color)
+                Value::Color(formatted_color)
             },
+            TOKEN_TYPE_COLOR2 => {
+                let formatted_color = format!("#{:#8}", data);
+                Value::Color2(formatted_color)
+            }
             _ => Value::Unknown,
 
         };
@@ -365,7 +370,7 @@ mod tests {
     use std::path::Path;
     use super::*;
     use std::io::Cursor;
-    use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+    use byteorder::{LittleEndian, ReadBytesExt};
 
     #[test]
     fn it_works() {
