@@ -1,4 +1,3 @@
 target
 Cargo.lock
-AndroidManifest.xml
-AndroidManifest_uncompressed.xml
+AndroidManifest*.xml
