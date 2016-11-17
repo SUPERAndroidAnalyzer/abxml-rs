@@ -1,3 +1,4 @@
+#![feature(repeat_str)]
 extern crate byteorder;
 
 mod document;
@@ -35,6 +36,7 @@ pub struct BinaryXmlDecoder<'a> {
     raw_data: &'a [u8],
     document: Document,
     current_element: Option<Element>,
+    element_container: ElementContainer,
 }
 
 impl<'a> BinaryXmlDecoder<'a> {
@@ -45,47 +47,41 @@ impl<'a> BinaryXmlDecoder<'a> {
             raw_data: data,
             document: Document::default(),
             current_element: None,
+            element_container: ElementContainer::new(),
         }
     }
 
-    pub fn uncompress_xml(&mut self) -> Result<Vec<u8>, Error> {
+    pub fn uncompress_xml(mut self) -> Result<Vec<u8>, Error> {
         let v = Vec::new();
-
-        println!("Buffer with {} bytes", self.cursor.get_ref().len());
 
         // Read document header
         self.parse_document_header()?;
-        // Read strings table
-        //self.parse_string_table()?;
-        // Read resource table
-        // self.parse_resource_table();
 
+        // Loop trough all of the frames
         loop {
             let initial_position = self.cursor.position();
+            if initial_position == self.document.header.size as u64 {
+                break;
+            }
             let code = self.cursor.read_u32::<LittleEndian>();
             let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
-
-            println!("Code: {:?}; Chunk size: {:?}", code, chunk_size);
 
             match code {
                 Ok(TOKEN_STRING_TABLE) => self.parse_string_table(initial_position as u32)?,
                 Ok(TOKEN_RESOURCE_TABLE) => self.parse_resource_table(chunk_size)?,
-                Ok(TOKEN_NAMESPACE_START) => {println!("NS Start"); self.parse_namespace_start()?},
-                Ok(TOKEN_NAMESPACE_END) => {println!("NS End"); self.parse_namespace_end()?},
-                Ok(TOKEN_START_TAG) => {println!("Tag Start"); self.parse_start_tag()?},
-                Ok(TOKEN_END_TAG) => {println!("Tag end"); self.parse_end_tag()?},
-                Ok(t) => {println!("Unkown {:X}", t); panic!("")},
+                Ok(TOKEN_NAMESPACE_START) => {self.parse_namespace_start()?},
+                Ok(TOKEN_NAMESPACE_END) => {self.parse_namespace_end()?},
+                Ok(TOKEN_START_TAG) => {self.parse_start_tag()?},
+                Ok(TOKEN_END_TAG) => {self.parse_end_tag()?},
+                Ok(t) => {() /* Add some warning on a logger */},
                 Err(_) => break,
-                // _ => unreachable!(""),
             }
-            println!("Pointing to: {} -> {}", initial_position,  initial_position + chunk_size as u64);
+
             self.cursor.set_position(initial_position + chunk_size as u64);
         }
 
-        /*let next_section = self.cursor.read_u32::<LittleEndian>()?;
-        println!("Next section: {:X} {}", next_section, next_section);*/
+        let element = self.element_container.get_root().unwrap();
 
-        println!("{:?}", self.document);
         Ok(v)
     }
 
@@ -126,8 +122,6 @@ impl<'a> BinaryXmlDecoder<'a> {
         self.document.header_string_table = header_string_table;
         self.document.string_table = string_table;
 
-        println!("String table: {:?}", self.document.string_table);
-
         Ok(())
     }
 
@@ -167,8 +161,6 @@ impl<'a> BinaryXmlDecoder<'a> {
             }
         }
 
-
-        println!("Sizes: {}, {}", size1, size2);
         let s = String::new();
 
         self.pop_state();
@@ -209,7 +201,6 @@ impl<'a> BinaryXmlDecoder<'a> {
         let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
 
         let uri = self.document.string_table.strings.get(uri_idx as usize).unwrap().clone();
-        self.document.resources.remove(&uri);
 
         Ok(())
     }
@@ -234,7 +225,7 @@ impl<'a> BinaryXmlDecoder<'a> {
             return Err(Error::new(ErrorKind::Other, format!("Expected a different amount of elements {} {}", attributes.len(), attributes_amount)));
         }
 
-        self.current_element = Some(Element::new(element_name, attributes));
+        self.element_container.start_element(Element::new(element_name.clone(), attributes));
 
         Ok(())
     }
@@ -283,6 +274,8 @@ impl<'a> BinaryXmlDecoder<'a> {
         if uri_idx != TOKEN_VOID {
             maybe_uri = Some(self.document.string_table.strings.get(uri_idx as usize).unwrap().clone());
         }
+
+        self.element_container.end_element();
 
         Ok(())
     }
@@ -379,6 +372,7 @@ mod tests {
         let mut parser = BinaryXmlDecoder::new(&original_file);
         let result = parser.uncompress_xml();
         println!("{:?}", result);
+        panic!("");
     }
 
     fn file_get_contents(path: &str) -> Vec<u8>{

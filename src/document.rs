@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter, Error};
 
 #[derive(Default, Debug)]
 pub struct Document {
@@ -52,6 +53,8 @@ pub struct HeaderNamespace {
 pub struct Element {
     tag: String,
     attrs: Vec<Attribute>,
+    children: Vec<Element>,
+    level: u32,
 }
 
 impl Element {
@@ -59,7 +62,35 @@ impl Element {
         Element {
             tag: tag,
             attrs: attrs,
+            children: Vec::new(),
+            level: 0,
         }
+    }
+
+    pub fn append(&mut self, element: Element) {
+        self.children.push(element)
+    }
+
+    pub fn set_level(&mut self, level: u32) {
+        self.level = level;
+    }
+
+    pub fn get_attributes(&self) -> &Vec<Attribute> {
+        &self.attrs
+    }
+}
+
+impl Display for Element {
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), Error> {
+        let tabs = "\t".to_string().repeat(self.level as usize);
+        write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
+
+        for c in &self.children {
+            // let c_fmt = format!("\t{}", c)?;
+            write!(formatter, "{}", c);
+        };
+
+        Ok(())
     }
 }
 
@@ -95,5 +126,43 @@ impl Attribute {
             prefix: prefix,
             value: value,
         }
+    }
+}
+
+pub struct ElementContainer {
+    stack: Vec<Element>,
+    root: Option<Element>,
+}
+
+impl ElementContainer {
+    pub fn new() -> Self {
+        ElementContainer {
+            stack: Vec::new(),
+            root: None,
+        }
+    }
+
+    pub fn start_element(&mut self, mut element: Element) {
+        println!("Start element");
+        element.set_level(self.stack.len() as u32);
+        self.stack.push(element);
+    }
+
+    pub fn end_element(&mut self) {
+        println!("End element");
+        let element = self.stack.pop().unwrap();
+        let stack_size = self.stack.len();
+
+        if self.stack.len() == 0 {
+            self.root = Some(element);
+        } else {
+            // Append child to current element
+            let last_element = self.stack.len();
+            self.stack[last_element - 1].append(element);
+        }
+    }
+
+    pub fn get_root(self) -> Option<Element> {
+        self.root
     }
 }
