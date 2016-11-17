@@ -89,7 +89,7 @@ impl Display for Element {
         for c in &self.children {
             // let c_fmt = format!("\t{}", c)?;
             write!(formatter, "{}", c);
-        };
+        }
 
         Ok(())
     }
@@ -108,7 +108,7 @@ pub enum Value {
     Color2(String),
     ReferenceId(String),
     AttributeReferenceId(String),
-    Unknown
+    Unknown,
 }
 
 #[derive(Debug)]
@@ -120,7 +120,11 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    pub fn new(name: String, value: Value, namespace: Option<String>, prefix: Option<String>) -> Self {
+    pub fn new(name: String,
+               value: Value,
+               namespace: Option<String>,
+               prefix: Option<String>)
+               -> Self {
         Attribute {
             name: name,
             namespace: namespace,
