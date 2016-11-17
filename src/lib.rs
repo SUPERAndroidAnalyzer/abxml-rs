@@ -64,11 +64,13 @@ impl<'a> BinaryXmlDecoder<'a> {
             match code {
                 Ok(TOKEN_STRING_TABLE) => self.parse_string_table(initial_position as u32)?,
                 Ok(TOKEN_RESOURCE_TABLE) => self.parse_resource_table(chunk_size)?,
-                Ok(TOKEN_NAMESPACE_START) => {self.parse_namespace_start()?},
-                Ok(TOKEN_NAMESPACE_END) => {self.parse_namespace_end()?},
-                Ok(TOKEN_START_TAG) => {self.parse_start_tag()?},
-                Ok(TOKEN_END_TAG) => {self.parse_end_tag()?},
-                Ok(t) => {() /* Add some warning on a logger */},
+                Ok(TOKEN_NAMESPACE_START) => self.parse_namespace_start()?,
+                Ok(TOKEN_NAMESPACE_END) => self.parse_namespace_end()?,
+                Ok(TOKEN_START_TAG) => self.parse_start_tag()?,
+                Ok(TOKEN_END_TAG) => self.parse_end_tag()?,
+                Ok(t) => {
+                    () /* Add some warning on a logger */
+                }
                 Err(_) => break,
             }
 
@@ -84,12 +86,13 @@ impl<'a> BinaryXmlDecoder<'a> {
         let first_token = self.cursor.read_u32::<LittleEndian>()?;
         let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
         if first_token != TOKEN_START_DOCUMENT {
-            return Err(Error::new(ErrorKind::Other, format!("Document not starting with the START_DOCUMENT number: {:X}", first_token)));
+            return Err(Error::new(ErrorKind::Other,
+                                  format!("Document not starting with the START_DOCUMENT \
+                                           number: {:X}",
+                                          first_token)));
         }
 
-        let header = Header {
-            size: chunk_size,
-        };
+        let header = Header { size: chunk_size };
         self.document.header = header;
 
         Ok(())
@@ -133,8 +136,7 @@ impl<'a> BinaryXmlDecoder<'a> {
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
-            let raw_str: Vec<u8> = subslice
-                .iter()
+            let raw_str: Vec<u8> = subslice.iter()
                 .cloned()
                 .collect();
 
@@ -143,8 +145,7 @@ impl<'a> BinaryXmlDecoder<'a> {
                 Err(e) => Err(Error::new(ErrorKind::Other, e)),
             }
         } else {
-            let str_len = ((size2 << 8) & 0xFF00) |
-                            size1 & 0xFF;
+            let str_len = ((size2 << 8) & 0xFF00) | size1 & 0xFF;
             let position = offset + 2;
             let mut i = 0;
             let a = position;
@@ -152,8 +153,7 @@ impl<'a> BinaryXmlDecoder<'a> {
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
-            let raw_str: Vec<u8> = subslice
-                .iter()
+            let raw_str: Vec<u8> = subslice.iter()
                 .cloned()
                 .filter(|_| {
                     let result = i % 2 == 0;
@@ -172,13 +172,12 @@ impl<'a> BinaryXmlDecoder<'a> {
 
     fn parse_resource_table(&mut self, chunk: u32) -> Result<(), Error> {
         let amount = (chunk / 4) - 2;
-        let resource_table = (1..amount).into_iter().map(|_| {
-            self.cursor.read_u32::<LittleEndian>().unwrap()
-        }).collect::<Vec<u32>>();
+        let resource_table = (1..amount)
+            .into_iter()
+            .map(|_| self.cursor.read_u32::<LittleEndian>().unwrap())
+            .collect::<Vec<u32>>();
 
-        self.document.resource_table = ResourceTable {
-                resources: resource_table,
-        };
+        self.document.resource_table = ResourceTable { resources: resource_table };
 
         Ok(())
     }
@@ -217,7 +216,8 @@ impl<'a> BinaryXmlDecoder<'a> {
         let attributes_amount = self.cursor.read_u32::<LittleEndian>()? as usize;
         let unknwon3 = self.cursor.read_u32::<LittleEndian>()?;
 
-        let element_name = self.document.string_table.strings.get(element_name_idx as usize).unwrap().clone();
+        let element_name =
+            self.document.string_table.strings.get(element_name_idx as usize).unwrap().clone();
         let mut attributes = Vec::new();
         for i in 0..attributes_amount {
             let attribute = self.parse_attribute()?;
@@ -225,7 +225,10 @@ impl<'a> BinaryXmlDecoder<'a> {
         }
 
         if attributes.len() != attributes_amount {
-            return Err(Error::new(ErrorKind::Other, format!("Expected a different amount of elements {} {}", attributes.len(), attributes_amount)));
+            return Err(Error::new(ErrorKind::Other,
+                                  format!("Expected a different amount of elements {} {}",
+                                          attributes.len(),
+                                          attributes_amount)));
         }
 
         self.element_container.start_element(Element::new(element_name.clone(), attributes));
@@ -233,7 +236,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_attribute(&mut self) -> Result <Attribute, Error> {
+    fn parse_attribute(&mut self) -> Result<Attribute, Error> {
         let attr_ns_idx = self.cursor.read_u32::<LittleEndian>()?;
         let attr_name_idx = self.cursor.read_u32::<LittleEndian>()?;
         let attr_value_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -250,18 +253,24 @@ impl<'a> BinaryXmlDecoder<'a> {
                 Some(uri_prefix) => {
                     namespace = Some(uri);
                     prefix = Some(uri_prefix.clone());
-                },
-                None => ()
+                }
+                None => (),
             };
         }
 
         let value = if attr_value_idx == TOKEN_VOID {
             self.parse_value(attr_type_idx, attr_data)?
         } else {
-            Value::String(self.document.string_table.strings.get(attr_value_idx as usize).unwrap().clone())
+            Value::String(self.document
+                .string_table
+                .strings
+                .get(attr_value_idx as usize)
+                .unwrap()
+                .clone())
         };
 
-        let element_name = self.document.string_table.strings.get(attr_name_idx as usize).unwrap().clone();
+        let element_name =
+            self.document.string_table.strings.get(attr_name_idx as usize).unwrap().clone();
 
         Ok(Attribute::new(element_name, value, namespace, prefix))
     }
@@ -272,10 +281,12 @@ impl<'a> BinaryXmlDecoder<'a> {
         let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
         let name_idx = self.cursor.read_u32::<LittleEndian>()?;
 
-        let element_name = self.document.string_table.strings.get(name_idx as usize).unwrap().clone();
+        let element_name =
+            self.document.string_table.strings.get(name_idx as usize).unwrap().clone();
         let mut maybe_uri = None;
         if uri_idx != TOKEN_VOID {
-            maybe_uri = Some(self.document.string_table.strings.get(uri_idx as usize).unwrap().clone());
+            maybe_uri =
+                Some(self.document.string_table.strings.get(uri_idx as usize).unwrap().clone());
         }
 
         self.element_container.end_element();
@@ -285,15 +296,18 @@ impl<'a> BinaryXmlDecoder<'a> {
 
     fn parse_value(&mut self, value_type: u32, data: u32) -> Result<Value, Error> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID => {
-                Value::ReferenceId(format!("@id/0x{:#8}", data))
-            },
+            TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
                 Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
-            },
+            }
             TOKEN_TYPE_STRING => {
-                Value::String(self.document.string_table.strings.get(data as usize).unwrap().clone())
-            },
+                Value::String(self.document
+                    .string_table
+                    .strings
+                    .get(data as usize)
+                    .unwrap()
+                    .clone())
+            }
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dp", "sp", "pt", "in", "mm"];
                 let mut size = (data >> 8).to_string();
@@ -302,38 +316,34 @@ impl<'a> BinaryXmlDecoder<'a> {
                 match units.get(unit_idx as usize) {
                     Some(unit) => size.push_str(unit),
                     None => {
-                        return Err(Error::new(ErrorKind::Other, format!("Expected a valid unit index. Got: {}", unit_idx)));
+                        return Err(Error::new(ErrorKind::Other,
+                                              format!("Expected a valid unit index. Got: {}",
+                                                      unit_idx)));
                     }
                 }
 
                 Value::Dimension(size)
-            },
+            }
             TOKEN_TYPE_FRACTION => {
                 let value = (data as f64) / (0x7FFFFFFF as f64);
                 let formatted_fraction = format!("{:.*}", 2, value);
 
                 Value::Fraction(formatted_fraction)
-            },
-            TOKEN_TYPE_INTEGER => {
-                Value::Integer(data as u64)
-            },
-            TOKEN_TYPE_FLAGS => {
-                Value::Flags(data as u64)
             }
-            TOKEN_TYPE_FLOAT => {
-                Value::Float(data as f64)
-            },
+            TOKEN_TYPE_INTEGER => Value::Integer(data as u64),
+            TOKEN_TYPE_FLAGS => Value::Flags(data as u64),
+            TOKEN_TYPE_FLOAT => Value::Float(data as f64),
             TOKEN_TYPE_BOOLEAN => {
                 if data > 0 {
                     Value::Boolean(true)
                 } else {
                     Value::Boolean(false)
                 }
-            },
+            }
             TOKEN_TYPE_COLOR => {
                 let formatted_color = format!("#{:#8}", data);
                 Value::Color(formatted_color)
-            },
+            }
             TOKEN_TYPE_COLOR2 => {
                 let formatted_color = format!("#{:#8}", data);
                 Value::Color2(formatted_color)
@@ -365,23 +375,21 @@ mod tests {
         panic!("");
     }
 
-    fn file_get_contents(path: &str) -> Vec<u8>{
+    fn file_get_contents(path: &str) -> Vec<u8> {
         let path = Path::new(path);
         let display = path.display();
 
         let mut file = match File::open(&path) {
             // The `description` method of `io::Error` returns a string that
             // describes the error
-            Err(why) => panic!("couldn't open {}: {}", display,
-                                                       why.description()),
+            Err(why) => panic!("couldn't open {}: {}", display, why.description()),
             Ok(file) => file,
         };
 
         // Read the file contents into a string, returns `io::Result<usize>`
         let mut v: Vec<u8> = Vec::new();
         match file.read_to_end(&mut v) {
-            Err(why) => panic!("couldn't read {}: {}", display,
-                                                       why.description()),
+            Err(why) => panic!("couldn't read {}: {}", display, why.description()),
             Ok(_) => (),
         };
 
