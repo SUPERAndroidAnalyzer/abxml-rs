@@ -11,6 +11,7 @@ pub struct Document {
     pub string_table: StringTable,
     pub resource_table: ResourceTable,
     pub resources: BTreeMap<String, String>,
+    pub root_element: Element,
 }
 
 #[derive(Default, Debug)]
@@ -143,13 +144,11 @@ impl ElementContainer {
     }
 
     pub fn start_element(&mut self, mut element: Element) {
-        println!("Start element");
         element.set_level(self.stack.len() as u32);
         self.stack.push(element);
     }
 
     pub fn end_element(&mut self) {
-        println!("End element");
         let element = self.stack.pop().unwrap();
         let stack_size = self.stack.len();
 
