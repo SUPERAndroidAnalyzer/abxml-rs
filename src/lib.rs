@@ -31,29 +31,23 @@ const TOKEN_TYPE_COLOR: u32 = 0x1C000008;
 const TOKEN_TYPE_COLOR2: u32 = 0x1D000008;
 
 pub struct BinaryXmlDecoder<'a> {
-    states_stack: Vec<u64>,
     cursor: Cursor<&'a [u8]>,
     raw_data: &'a [u8],
     document: Document,
-    current_element: Option<Element>,
     element_container: ElementContainer,
 }
 
 impl<'a> BinaryXmlDecoder<'a> {
     pub fn new(data: &'a [u8]) -> Self {
         BinaryXmlDecoder {
-            states_stack: Vec::new(),
             cursor: Cursor::new(data),
             raw_data: data,
             document: Document::default(),
-            current_element: None,
             element_container: ElementContainer::new(),
         }
     }
 
-    pub fn uncompress_xml(mut self) -> Result<Vec<u8>, Error> {
-        let v = Vec::new();
-
+    pub fn decode(mut self) -> Result<Document, Error> {
         // Read document header
         self.parse_document_header()?;
 
@@ -61,6 +55,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         loop {
             let initial_position = self.cursor.position();
             if initial_position == self.document.header.size as u64 {
+                // We are at the end of the document. We are done!
                 break;
             }
             let code = self.cursor.read_u32::<LittleEndian>();
@@ -80,9 +75,9 @@ impl<'a> BinaryXmlDecoder<'a> {
             self.cursor.set_position(initial_position + chunk_size as u64);
         }
 
-        let element = self.element_container.get_root().unwrap();
+        self.document.root_element = self.element_container.get_root().unwrap();
 
-        Ok(v)
+        Ok(self.document)
     }
 
     fn parse_document_header(&mut self) -> Result<(), Error> {
@@ -126,17 +121,31 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_string(&mut self, offset: u32) -> Result<String, Error> {
-        self.push_state_forward(offset as u64);
-        let size1 = self.cursor.read_u8()? as u64;
-        let size2 = self.cursor.read_u8()? as u64;
+        let size1: u32 = self.raw_data[offset as usize] as u32;
+        let size2: u32 = self.raw_data[(offset + 1) as usize] as u32;
 
         if size1 == size2 {
-            // Collect iterative
-            println!("Size 1 === size2");
+            let str_len = size1;
+            let position = offset + 2;
+            let mut i = 0;
+            let a = position;
+            let b = position + str_len;
+
+            let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
+
+            let raw_str: Vec<u8> = subslice
+                .iter()
+                .cloned()
+                .collect();
+
+            match String::from_utf8(raw_str) {
+                Ok(s) => Ok(s),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
+            }
         } else {
             let str_len = ((size2 << 8) & 0xFF00) |
                             size1 & 0xFF;
-            let position = self.cursor.position();
+            let position = offset + 2;
             let mut i = 0;
             let a = position;
             let b = position + (str_len * 2);
@@ -154,17 +163,11 @@ impl<'a> BinaryXmlDecoder<'a> {
                 })
                 .collect();
 
-            self.pop_state();
-            return match String::from_utf8(raw_str) {
+            match String::from_utf8(raw_str) {
                 Ok(s) => Ok(s),
                 Err(e) => Err(Error::new(ErrorKind::Other, e)),
             }
         }
-
-        let s = String::new();
-
-        self.pop_state();
-        Ok(s)
     }
 
     fn parse_resource_table(&mut self, chunk: u32) -> Result<(), Error> {
@@ -341,18 +344,6 @@ impl<'a> BinaryXmlDecoder<'a> {
 
         Ok(value)
     }
-
-    fn push_state_forward(&mut self, new_offset: u64) {
-        self.states_stack.push(self.cursor.position());
-        self.cursor.set_position(new_offset);
-    }
-
-    fn pop_state(&mut self) {
-        if self.states_stack.len() > 0 {
-            let new_offset = self.states_stack.pop().unwrap();
-            self.cursor.set_position(new_offset);
-        }
-    }
 }
 
 #[cfg(test)]
@@ -368,9 +359,8 @@ mod tests {
     #[test]
     fn it_works() {
         let original_file = file_get_contents("AndroidManifest.xml");
-        // let mut rdr = Cursor::new(original_file);
         let mut parser = BinaryXmlDecoder::new(&original_file);
-        let result = parser.uncompress_xml();
+        let result = parser.decode();
         println!("{:?}", result);
         panic!("");
     }
