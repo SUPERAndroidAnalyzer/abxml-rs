@@ -1,5 +1,6 @@
-#![feature(repeat_str)]
+#![feature(repeat_str, test)]
 extern crate byteorder;
+extern crate test;
 
 mod document;
 
@@ -366,13 +367,25 @@ mod tests {
     use std::io::Cursor;
     use byteorder::{LittleEndian, ReadBytesExt};
 
+    use test::Bencher;
+
     #[test]
     fn it_works() {
-        let original_file = file_get_contents("AndroidManifest.xml");
+        let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
         let mut parser = BinaryXmlDecoder::new(&original_file);
         let result = parser.decode();
         println!("{:?}", result);
         panic!("");
+    }
+
+    #[bench]
+    fn bench_manifest_parsing(b: &mut Bencher) {
+        let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
+
+        b.iter(move || {
+            let mut parser = BinaryXmlDecoder::new(&original_file);
+            parser.decode();
+        });
     }
 
     fn file_get_contents(path: &str) -> Vec<u8> {
