@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter, Error};
+use std::rc::Rc;
 
 #[derive(Default, Debug)]
 pub struct Document {
@@ -10,7 +11,7 @@ pub struct Document {
 
     pub string_table: StringTable,
     pub resource_table: ResourceTable,
-    pub resources: BTreeMap<String, String>,
+    pub resources: BTreeMap<Rc<String>, Rc<String>>,
     pub root_element: Element,
 }
 
@@ -31,8 +32,8 @@ pub struct HeaderStringTable {
 
 #[derive(Default, Debug)]
 pub struct StringTable {
-    pub strings: Vec<String>,
-    pub styles: Vec<String>,
+    pub strings: Vec<Rc<String>>,
+    pub styles: Vec<Rc<String>>,
 }
 
 #[derive(Default, Debug)]
@@ -52,14 +53,14 @@ pub struct HeaderNamespace {
 
 #[derive(Default, Debug)]
 pub struct Element {
-    tag: String,
+    tag: Rc<String>,
     attrs: Vec<Attribute>,
     children: Vec<Element>,
     level: u32,
 }
 
 impl Element {
-    pub fn new(tag: String, attrs: Vec<Attribute>) -> Self {
+    pub fn new(tag: Rc<String>, attrs: Vec<Attribute>) -> Self {
         Element {
             tag: tag,
             attrs: attrs,
@@ -97,7 +98,7 @@ impl Display for Element {
 
 #[derive(Debug)]
 pub enum Value {
-    String(String),
+    String(Rc<String>),
     Dimension(String),
     Fraction(String),
     Float(f64),
@@ -113,17 +114,17 @@ pub enum Value {
 
 #[derive(Debug)]
 pub struct Attribute {
-    name: String,
-    namespace: Option<String>,
-    prefix: Option<String>,
+    name: Rc<String>,
+    namespace: Option<Rc<String>>,
+    prefix: Option<Rc<String>>,
     value: Value,
 }
 
 impl Attribute {
-    pub fn new(name: String,
+    pub fn new(name: Rc<String>,
                value: Value,
-               namespace: Option<String>,
-               prefix: Option<String>)
+               namespace: Option<Rc<String>>,
+               prefix: Option<Rc<String>>)
                -> Self {
         Attribute {
             name: name,
