@@ -8,6 +8,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::{Error, ErrorKind};
 use document::*;
+use std::rc::Rc;
 
 const TOKEN_START_DOCUMENT: u32 = 0x00080003;
 const TOKEN_STRING_TABLE: u32 = 0x001C0001;
@@ -115,7 +116,7 @@ impl<'a> BinaryXmlDecoder<'a> {
             let current_offset = self.cursor.read_u32::<LittleEndian>()?;
             let position = str_offset + current_offset;
             let s = self.parse_string(position)?;
-            string_table.strings.push(s);
+            string_table.strings.push(Rc::new(s));
         }
 
         self.document.header_string_table = header_string_table;
