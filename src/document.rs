@@ -88,8 +88,7 @@ impl Display for Element {
         write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
 
         for c in &self.children {
-            // let c_fmt = format!("\t{}", c)?;
-            write!(formatter, "{}", c);
+            write!(formatter, "{}", c)?;
         }
 
         Ok(())
@@ -155,7 +154,6 @@ impl ElementContainer {
 
     pub fn end_element(&mut self) {
         let element = self.stack.pop().unwrap();
-        let stack_size = self.stack.len();
 
         if self.stack.len() == 0 {
             self.root = Some(element);
