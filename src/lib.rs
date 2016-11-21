@@ -70,7 +70,7 @@ impl<'a> BinaryXmlDecoder<'a> {
                 Ok(TOKEN_NAMESPACE_END) => self.parse_namespace_end()?,
                 Ok(TOKEN_START_TAG) => self.parse_start_tag()?,
                 Ok(TOKEN_END_TAG) => self.parse_end_tag()?,
-                Ok(t) => {
+                Ok(_) => {
                     () /* Add some warning on a logger */
                 }
                 Err(_) => break,
@@ -112,7 +112,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         let mut string_table = StringTable::default();
         let str_offset = initial_position + header_string_table.string_offset;
 
-        for i in 0..header_string_table.string_amount {
+        for _ in 0..header_string_table.string_amount {
             let current_offset = self.cursor.read_u32::<LittleEndian>()?;
             let position = str_offset + current_offset;
             let s = self.parse_string(position)?;
@@ -132,7 +132,6 @@ impl<'a> BinaryXmlDecoder<'a> {
         if size1 == size2 {
             let str_len = size1;
             let position = offset + 2;
-            let mut i = 0;
             let a = position;
             let b = position + str_len;
 
@@ -185,8 +184,8 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_namespace_start(&mut self) -> Result<(), Error> {
-        let line = self.cursor.read_u32::<LittleEndian>()?;
-        let unknown = self.cursor.read_u32::<LittleEndian>()?;
+        let _line = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknown = self.cursor.read_u32::<LittleEndian>()?;
         let prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
         let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
 
@@ -199,29 +198,29 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_namespace_end(&mut self) -> Result<(), Error> {
-        let line = self.cursor.read_u32::<LittleEndian>()?;
-        let unknown = self.cursor.read_u32::<LittleEndian>()?;
-        let prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
-        let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
+        let _line = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknown = self.cursor.read_u32::<LittleEndian>()?;
+        let _prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
+        let _uri_idx = self.cursor.read_u32::<LittleEndian>()?;
 
-        let uri = self.document.string_table.strings.get(uri_idx as usize).unwrap().clone();
+        // TODO: What should we do on NS end
 
         Ok(())
     }
 
     fn parse_start_tag(&mut self) -> Result<(), Error> {
-        let line = self.cursor.read_u32::<LittleEndian>()?;
-        let unknown = self.cursor.read_u32::<LittleEndian>()?;
-        let ns_uri = self.cursor.read_u32::<LittleEndian>()?;
+        let _line = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknown = self.cursor.read_u32::<LittleEndian>()?;
+        let _ns_uri = self.cursor.read_u32::<LittleEndian>()?;
         let element_name_idx = self.cursor.read_u32::<LittleEndian>()?;
-        let unknwon2 = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknwon2 = self.cursor.read_u32::<LittleEndian>()?;
         let attributes_amount = self.cursor.read_u32::<LittleEndian>()? as usize;
-        let unknwon3 = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknwon3 = self.cursor.read_u32::<LittleEndian>()?;
 
         let element_name =
             self.document.string_table.strings.get(element_name_idx as usize).unwrap().clone();
         let mut attributes = Vec::new();
-        for i in 0..attributes_amount {
+        for _ in 0..attributes_amount {
             let attribute = self.parse_attribute()?;
             attributes.push(attribute);
         }
@@ -278,18 +277,20 @@ impl<'a> BinaryXmlDecoder<'a> {
     }
 
     fn parse_end_tag(&mut self) -> Result<(), Error> {
-        let line = self.cursor.read_u32::<LittleEndian>()?;
-        let unknown = self.cursor.read_u32::<LittleEndian>()?;
-        let uri_idx = self.cursor.read_u32::<LittleEndian>()?;
+        let _line = self.cursor.read_u32::<LittleEndian>()?;
+        let _unknown = self.cursor.read_u32::<LittleEndian>()?;
+        let _uri_idx = self.cursor.read_u32::<LittleEndian>()?;
         let name_idx = self.cursor.read_u32::<LittleEndian>()?;
 
-        let element_name =
-            self.document.string_table.strings.get(name_idx as usize).unwrap().clone();
-        let mut maybe_uri = None;
-        if uri_idx != TOKEN_VOID {
-            maybe_uri =
-                Some(self.document.string_table.strings.get(uri_idx as usize).unwrap().clone());
-        }
+        let _ = self.document.string_table.strings.get(name_idx as usize).unwrap().clone();
+
+        // TODO: Is this needed?
+        // let mut maybe_uri = None;
+        // if uri_idx != TOKEN_VOID {
+        // maybe_uri =
+        // Some(element_name);
+        // }
+
 
         self.element_container.end_element();
 
@@ -365,15 +366,13 @@ mod tests {
     use std::io::prelude::*;
     use std::path::Path;
     use super::*;
-    use std::io::Cursor;
-    use byteorder::{LittleEndian, ReadBytesExt};
 
     use test::Bencher;
 
     #[test]
     fn it_works() {
         let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
-        let mut parser = BinaryXmlDecoder::new(&original_file);
+        let parser = BinaryXmlDecoder::new(&original_file);
         let result = parser.decode();
         println!("{:?}", result);
         panic!("");
@@ -384,8 +383,8 @@ mod tests {
         let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
 
         b.iter(move || {
-            let mut parser = BinaryXmlDecoder::new(&original_file);
-            parser.decode();
+            let parser = BinaryXmlDecoder::new(&original_file);
+            parser.decode().unwrap();
         });
     }
 
