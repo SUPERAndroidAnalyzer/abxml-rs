@@ -257,7 +257,7 @@ impl<'a> BinaryXmlDecoder<'a> {
                     namespace = Some(uri);
                     prefix = Some(uri_prefix.clone());
                 }
-                None => (),
+                None =>(),
             };
         }
 
