@@ -1,8 +1,10 @@
 #![feature(repeat_str, test)]
 extern crate byteorder;
 extern crate test;
+extern crate quick_xml;
 
 mod document;
+mod encoder;
 
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -375,7 +377,6 @@ mod tests {
         let parser = BinaryXmlDecoder::new(&original_file);
         let result = parser.decode();
         println!("{:?}", result);
-        panic!("");
     }
 
     #[bench]

@@ -5,3 +5,4 @@ authors = ["Guillem Nieto <guillem.nieto@socialpoint.es>"]
 
 [dependencies]
 byteorder = "0.5"
+quick-xml = "0.4.1"
