@@ -80,6 +80,14 @@ impl Element {
     pub fn get_attributes(&self) -> &Vec<Attribute> {
         &self.attrs
     }
+
+    pub fn get_tag(&self) -> Rc<String> {
+        self.tag.clone()
+    }
+
+    pub fn get_children(&self) -> &Vec<Element> {
+        &self.children
+    }
 }
 
 impl Display for Element {
@@ -111,6 +119,16 @@ pub enum Value {
     Unknown,
 }
 
+impl Value {
+    pub fn to_string(&self) -> String {
+        match self {
+            &Value::Float(f) => f.to_string(),
+            _ => "Unknown".to_string(),
+        }
+
+    }
+}
+
 #[derive(Debug)]
 pub struct Attribute {
     name: Rc<String>,
@@ -131,6 +149,14 @@ impl Attribute {
             prefix: prefix,
             value: value,
         }
+    }
+
+    pub fn get_name(&self) -> Rc<String> {
+        self.name.clone()
+    }
+
+    pub fn get_value(&self) -> String {
+        self.value.to_string()
     }
 }
 
