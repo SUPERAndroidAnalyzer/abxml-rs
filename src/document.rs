@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter, Error};
 use std::rc::Rc;
+use std::ops::Deref;
 
 #[derive(Default, Debug)]
 pub struct Document {
@@ -122,7 +123,17 @@ pub enum Value {
 impl Value {
     pub fn to_string(&self) -> String {
         match self {
+            &Value::String(ref s) => s.deref().clone(),
+            &Value::Dimension(ref s) => s.clone(),
+            &Value::Fraction(ref s) => s.clone(),
             &Value::Float(f) => f.to_string(),
+            &Value::Integer(i) => i.to_string(),
+            &Value::Flags(i) => i.to_string(),
+            &Value::Boolean(b) => b.to_string(),
+            &Value::Color(ref s) => s.clone(),
+            &Value::Color2(ref s) => s.clone(),
+            &Value::ReferenceId(ref s) => s.clone(),
+            &Value::AttributeReferenceId(ref s) => s.clone(),
             _ => "Unknown".to_string(),
         }
 
