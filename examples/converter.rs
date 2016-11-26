@@ -21,7 +21,7 @@ fn main() {
     let content = file_get_contents(&path);
     let parser = BinaryXmlDecoder::new(&content);
     let result = parser.decode().unwrap();
-    let xml_content = Xml::encode(&result.root_element).unwrap();
+    let xml_content = Xml::encode(&result.resources, &result.root_element).unwrap();
     println!("{}", xml_content);
 }
 

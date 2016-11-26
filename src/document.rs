@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Error};
 use std::rc::Rc;
 use std::ops::Deref;
 
+pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 #[derive(Default, Debug)]
 pub struct Document {
     pub header: Header,
@@ -12,7 +13,7 @@ pub struct Document {
 
     pub string_table: StringTable,
     pub resource_table: ResourceTable,
-    pub resources: BTreeMap<Rc<String>, Rc<String>>,
+    pub resources: Namespaces,
     pub root_element: Element,
 }
 
@@ -168,6 +169,10 @@ impl Attribute {
 
     pub fn get_value(&self) -> String {
         self.value.to_string()
+    }
+
+    pub fn get_prefix(&self) -> Option<Rc<String>> {
+        self.prefix.clone()
     }
 }
 
