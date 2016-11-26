@@ -4,7 +4,7 @@ extern crate test;
 extern crate quick_xml;
 
 mod document;
-mod encoder;
+pub mod encoder;
 
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};

@@ -1,5 +1,5 @@
 [package]
-name = "android-xml-decoder"
+name = "abxml"
 version = "0.1.0"
 authors = ["Guillem Nieto <guillem.nieto@socialpoint.es>"]
 
