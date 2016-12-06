@@ -25,12 +25,12 @@ pub enum Chunk {
 pub struct ChunkLoader;
 
 impl ChunkLoader {
-    pub fn read_all<'a>(mut cursor: Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>, Error> {
+    pub fn read_all<'a>(mut cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>, Error> {
         let mut chunks = Vec::new();
+
         // Loop trough all of the frames
         loop {
              let initial_position = cursor.position();
-             println!("Initial position {}", initial_position);
              if initial_position == ending as u64 {
                  // We are at the end of the document. We are done!
                  break;
@@ -39,9 +39,7 @@ impl ChunkLoader {
              let token = cursor.read_u16::<LittleEndian>()?;
              let header_size = cursor.read_u16::<LittleEndian>()?;
              let chunk_size = cursor.read_u32::<LittleEndian>()?;
-
              let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
-             println!("Chunk: {}", chunk_header);
 
              let chunk = match token {
                  TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
@@ -50,8 +48,7 @@ impl ChunkLoader {
              };
 
              chunks.push(chunk);
-
-             println!("Next position {}", initial_position as u64 + chunk_size as u64);
+             
              cursor.set_position(chunk_header.get_chunk_end());
         }
 
