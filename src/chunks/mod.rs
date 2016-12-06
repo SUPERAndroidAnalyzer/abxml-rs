@@ -7,18 +7,25 @@ use document::StringTable;
 pub mod string_table;
 pub mod package;
 mod chunk_header;
+mod table_type;
 
 pub use self::string_table::StringTableDecoder as StringTableDecoder;
 pub use self::package::PackageDecoder as PackageDecoder;
 pub use self::chunk_header::ChunkHeader as ChunkHeader;
+pub use self::table_type::TableTypeDecoder as TableTypeDecoder;
+
+use self::table_type::ResourceConfiguration;
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_PACKAGE: u16 = 0x0200;
+const TOKEN_TABLE_TYPE: u16 = 0x201;
+const TOKEN_TABLE_SPEC: u16 = 0x202;
 
 #[derive(Debug)]
 pub enum Chunk {
     StringTable(StringTable),
     Package,
+    TableType(Box<ResourceConfiguration>),
     Unknown,
 }
 
@@ -44,11 +51,16 @@ impl ChunkLoader {
              let chunk = match token {
                  TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
                  TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
-                 _ => Chunk::Unknown,
+                 TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
+                 t => {
+                     println!("{:X}", t);
+
+                     Chunk::Unknown
+                 },
              };
 
              chunks.push(chunk);
-             
+
              cursor.set_position(chunk_header.get_chunk_end());
         }
 
