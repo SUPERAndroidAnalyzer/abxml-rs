@@ -19,7 +19,7 @@ impl TableTypeDecoder {
 
         let config = ResourceConfiguration::from_cursor(cursor)?;
 
-        Ok(Chunk::TableType(Box::new(config)))
+        Ok(Chunk::TableType(id, Box::new(config)))
     }
 }
 

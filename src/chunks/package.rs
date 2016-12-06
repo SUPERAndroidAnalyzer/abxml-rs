@@ -35,6 +35,18 @@ impl PackageDecoder {
 
         let cursor_len = cursor.get_ref().len() as u64;
         let inner_chunks = ChunkLoader::read_all(cursor, cursor_len)?;
+
+        for c in inner_chunks {
+            match c {
+                Chunk::TableType(i, _) => {
+                    println!("Table type: {}", i)
+                },
+                Chunk::TableTypeSpec(i, _) => {
+                    println!("Table type spec: {}", i)
+                },
+                _ => (),
+            }
+        }
         // chunks.extend(inner_chunks);
 
         Ok(Chunk::Package)

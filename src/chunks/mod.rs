@@ -8,11 +8,13 @@ pub mod string_table;
 pub mod package;
 mod chunk_header;
 mod table_type;
+mod table_type_spec;
 
 pub use self::string_table::StringTableDecoder as StringTableDecoder;
 pub use self::package::PackageDecoder as PackageDecoder;
 pub use self::chunk_header::ChunkHeader as ChunkHeader;
 pub use self::table_type::TableTypeDecoder as TableTypeDecoder;
+pub use self::table_type_spec::TableTypeSpecDecoder as TableTypeSpecDecoder;
 
 use self::table_type::ResourceConfiguration;
 
@@ -25,7 +27,8 @@ const TOKEN_TABLE_SPEC: u16 = 0x202;
 pub enum Chunk {
     StringTable(StringTable),
     Package,
-    TableType(Box<ResourceConfiguration>),
+    TableType(u32, Box<ResourceConfiguration>),
+    TableTypeSpec(u32, Vec<u32>),
     Unknown,
 }
 
@@ -52,6 +55,7 @@ impl ChunkLoader {
                  TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
                  TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
                  TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
+                 TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
                  t => {
                      println!("{:X}", t);
 
