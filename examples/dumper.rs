@@ -8,6 +8,7 @@ use std::fs::File;
 use std::error::Error;
 use std::io::prelude::*;
 use abxml::parser::ArscDecoder;
+use abxml::chunks::Chunk;
 
 fn main() {
     let path = match env::args().nth(1) {
@@ -20,8 +21,21 @@ fn main() {
 
     let content = file_get_contents(&path);
     let decoder = ArscDecoder;
-    let result = decoder.decode(&content);
-    println!("{:?}", result);
+    let chunks = decoder.decode(&content).unwrap();
+
+    for c in chunks {
+        match c {
+            Chunk::Unknown => {
+                println!("Unknown chunk!");
+            },
+            Chunk::StringTable(st) => {
+                println!("Strint table chunk");
+                println!("Strings size {}", st.strings.len());
+                println!("Styles size {}", st.styles.len());
+            }
+        }
+    }
+    // println!("{:?}", result);
     // Add the new decoder
 }
 
