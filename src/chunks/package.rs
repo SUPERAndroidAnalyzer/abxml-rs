@@ -31,8 +31,11 @@ impl PackageDecoder {
 
         cursor.set_position(header.get_data_offset());
 
+        //chunks.push(Chunk::Package);
+
         let cursor_len = cursor.get_ref().len() as u64;
-        let chunks = ChunkLoader::read_all(cursor, cursor_len).unwrap();
+        let inner_chunks = ChunkLoader::read_all(cursor, cursor_len)?;
+        // chunks.extend(inner_chunks);
 
         Ok(Chunk::Package)
     }
