@@ -1,5 +1,5 @@
 use std::io::{Error, ErrorKind};
-use chunks::Chunk;
+use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
@@ -8,7 +8,7 @@ use document::{HeaderStringTable, StringTable};
 pub struct StringTableDecoder;
 
 impl StringTableDecoder {
-    pub fn decode(raw_data:&[u8], cursor: &mut Cursor<&[u8]>, initial_position: u32)  -> Result<Chunk, Error> {
+    pub fn decode(raw_data:&[u8], cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
          let mut header_string_table = HeaderStringTable::default();
 
          header_string_table.string_amount = cursor.read_u32::<LittleEndian>()?;
@@ -20,7 +20,7 @@ impl StringTableDecoder {
          println!("Header: {:?}", header_string_table);
 
          let mut string_table = StringTable::default();
-         let str_offset = initial_position + header_string_table.string_offset;
+         let str_offset = header.get_offset() as u32 + header_string_table.string_offset;
 
          let mut max_offset = 0;
 
