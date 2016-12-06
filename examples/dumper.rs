@@ -32,6 +32,9 @@ fn main() {
                 println!("Strint table chunk");
                 println!("Strings size {}", st.strings.len());
                 println!("Styles size {}", st.styles.len());
+            },
+            Chunk::Package => {
+                println!("Package chunk");
             }
         }
     }
