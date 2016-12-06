@@ -8,7 +8,7 @@ use document::{HeaderStringTable, StringTable};
 pub struct PackageDecoder;
 
 impl PackageDecoder {
-    pub fn decode(raw_data:&[u8], cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
         let id = cursor.read_u32::<LittleEndian>()?;
         println!("Package name position: {:X}", header.get_offset() + 4);
         // let package_name = self.package_name(raw_data, cursor.position() as u32)?;

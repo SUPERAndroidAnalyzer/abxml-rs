@@ -8,7 +8,7 @@ use document::{HeaderStringTable, StringTable};
 pub struct StringTableDecoder;
 
 impl StringTableDecoder {
-    pub fn decode(raw_data:&[u8], cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
          let mut header_string_table = HeaderStringTable::default();
 
          header_string_table.string_amount = cursor.read_u32::<LittleEndian>()?;
@@ -31,7 +31,7 @@ impl StringTableDecoder {
              let position = str_offset + max_offset + current_offset;
              // println!("Position: {}", position);
 
-             let s = Self::parse_string(raw_data, position, true).unwrap_or(String::new());
+             let s = Self::parse_string(cursor.get_ref(), position, true).unwrap_or(String::new());
 
              // println!("String: {}", s);
              // println!("i: {} => {}", i, s);

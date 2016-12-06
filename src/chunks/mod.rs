@@ -25,7 +25,7 @@ pub enum Chunk {
 pub struct ChunkLoader;
 
 impl ChunkLoader {
-    pub fn read_all<'a>(raw_data:&[u8], cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>, Error> {
+    pub fn read_all<'a>(mut cursor: Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>, Error> {
         let mut chunks = Vec::new();
         // Loop trough all of the frames
         loop {
@@ -43,22 +43,16 @@ impl ChunkLoader {
              let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
              println!("Chunk: {}", chunk_header);
 
-             let from = cursor.position() as usize;
-             let to = (from + chunk_size as usize - 8) as usize;
-
-             let slice = &raw_data[from..to];
-             let mut chunk_cursor = Cursor::new(slice);
-
              let chunk = match token {
-                 TOKEN_STRING_TABLE => StringTableDecoder::decode(raw_data, &mut chunk_cursor, &chunk_header)?,
-                 TOKEN_PACKAGE => PackageDecoder::decode(raw_data, &mut chunk_cursor, &chunk_header)?,
+                 TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
+                 TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
                  _ => Chunk::Unknown,
              };
 
              chunks.push(chunk);
 
              println!("Next position {}", initial_position as u64 + chunk_size as u64);
-             cursor.set_position(initial_position as u64 + chunk_size as u64);
+             cursor.set_position(chunk_header.get_chunk_end());
         }
 
         Ok(chunks)
