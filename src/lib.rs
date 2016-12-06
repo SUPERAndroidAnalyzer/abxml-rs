@@ -120,7 +120,7 @@ impl<'a> BinaryXmlDecoder<'a> {
 
         header_string_table.string_amount = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.style_amount = self.cursor.read_u32::<LittleEndian>()?;
-        header_string_table.unknown = self.cursor.read_u32::<LittleEndian>()?;
+        header_string_table.flags = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.string_offset = self.cursor.read_u32::<LittleEndian>()?;
         header_string_table.style_offset = self.cursor.read_u32::<LittleEndian>()?;
 

@@ -27,7 +27,7 @@ pub struct HeaderStringTable {
     pub chunk: u32,
     pub string_amount: u32,
     pub style_amount: u32,
-    pub unknown: u32,
+    pub flags: u32,
     pub string_offset: u32,
     pub style_offset: u32,
 }
