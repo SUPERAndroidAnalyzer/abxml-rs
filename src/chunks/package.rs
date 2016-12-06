@@ -28,22 +28,11 @@ impl PackageDecoder {
         println!("Key string offset: {}", key_string_offset);
         println!("Last public key: {}", last_public_key);
         println!("Type ID offset: {}", type_id_offset);
-        //println!("Package name: {}", package_name);
-        println!("Cursor pos: {}", header.get_offset() as u64 + cursor.position());
-        cursor.read_u32::<LittleEndian>()?;
-        cursor.read_u32::<LittleEndian>()?;
-        cursor.read_u32::<LittleEndian>()?;
-        let token = cursor.read_u16::<LittleEndian>()?;
-        let header_size = cursor.read_u16::<LittleEndian>()?;
-        let chunk_size = cursor.read_u32::<LittleEndian>()?;
-        println!("Chunk ID: {:X}; HeaderSize: {}; Size: {}", token, header_size, chunk_size);
-        /*
-        let cursor_len = cursor.get_ref().len() as u64;
-        let mut new_cursor = Cursor::new(raw_data);
-        let chunks = ChunkLoader::read_all(raw_data, &mut new_cursor, cursor_len);
 
-        println!("Chunks: {}", chunks.unwrap().len());
-        */
+        cursor.set_position(header.get_data_offset());
+
+        let cursor_len = cursor.get_ref().len() as u64;
+        let chunks = ChunkLoader::read_all(cursor, cursor_len).unwrap();
 
         Ok(Chunk::Package)
     }
