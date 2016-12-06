@@ -9,6 +9,8 @@ extern crate error_chain;
 
 mod document;
 pub mod encoder;
+pub mod parser;
+pub mod chunks;
 
 pub mod errors {
     // Create the Error, ErrorKind, ResultExt, and Result types
