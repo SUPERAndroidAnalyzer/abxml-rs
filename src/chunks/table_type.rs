@@ -7,19 +7,108 @@ use document::{HeaderStringTable, StringTable};
 
 pub struct TableTypeDecoder;
 
+const MASK_COMPLEX: u16 = 0x0001;
+
 impl TableTypeDecoder {
     pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
         let id = cursor.read_u32::<LittleEndian>()?;
         let count =  cursor.read_u32::<LittleEndian>()?;
         let start = cursor.read_u32::<LittleEndian>()?;
 
-        // println!("Id: {}", id);
-        // println!("Count: {}", count);
-        // sprintln!("Start: {}", start);
-
         let config = ResourceConfiguration::from_cursor(cursor)?;
 
+        cursor.set_position(start as u64);
+
+        Self::decode_entries(cursor, count);
+
         Ok(Chunk::TableType(id, Box::new(config)))
+    }
+
+    fn decode_entries(cursor: &mut Cursor<&[u8]>, entry_amount: u32) -> Result<Vec<Entry>, Error> {
+        let base_offset = cursor.position();
+        let mut entries = Vec::new();
+
+        for i in 0..entry_amount {
+            // let entry = Self::decode_entry(raw_data)
+            let offset = cursor.read_u32::<LittleEndian>()?;
+            if (offset == 0xFFFFFFFF) {
+                continue;
+            }
+
+            let position = cursor.position();
+            cursor.set_position(base_offset + offset as u64);
+
+            let header_size = cursor.read_u16::<LittleEndian>()?;
+            let flags = cursor.read_u16::<LittleEndian>()?;
+            let key_index = cursor.read_u32::<LittleEndian>()?;
+
+            //println!("Header size: {}", header_size);
+            //println!("Flags: {}", flags);
+            //println!("Key index: {}", key_index);
+
+            let mut parent_entry = 0;
+            if (flags & MASK_COMPLEX) == MASK_COMPLEX {
+                parent_entry = cursor.read_u32::<LittleEndian>()?;
+                let value_count = cursor.read_u32::<LittleEndian>()?;
+
+                for j in 0..value_count {
+                    let val_id = cursor.read_u32::<LittleEndian>()?;
+                    // Resource value
+                    let size = cursor.read_u16::<LittleEndian>()?;
+                    // Padding
+                    cursor.read_u8()?;
+                    let val_type = cursor.read_u8()?;
+                    let data = cursor.read_u32::<LittleEndian>()?;
+                }
+            } else {
+                let size = cursor.read_u16::<LittleEndian>()?;
+                // Padding
+                cursor.read_u8()?;
+                let val_type = cursor.read_u8()?;
+                let data = cursor.read_u32::<LittleEndian>()?;
+            }
+
+            cursor.set_position(position);
+
+            let entry = Entry::new(
+                header_size,
+                flags,
+                key_index,
+                None,
+                parent_entry
+            );
+
+            entries.push(entry);
+        }
+
+        Ok(entries)
+    }
+}
+
+#[derive(Debug)]
+pub struct Entry {
+    header_size: u16,
+    flags: u16,
+    key_index: u32,
+    value: Option<u32>,
+    parent_entry: u32,
+}
+
+impl Entry {
+    pub fn new(
+        header_size: u16,
+        flags: u16,
+        key_index: u32,
+        value: Option<u32>,
+        parent_entry: u32,
+    ) -> Self {
+        Entry {
+            header_size: header_size,
+            flags: flags,
+            key_index: key_index,
+            value: value,
+            parent_entry: parent_entry,
+        }
     }
 }
 

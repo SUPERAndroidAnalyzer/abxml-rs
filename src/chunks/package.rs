@@ -44,6 +44,9 @@ impl PackageDecoder {
                 Chunk::TableTypeSpec(i, masks) => {
                     println!("Table type spec: {} {:?}", i, masks);
                 },
+                Chunk::StringTable(_) => {
+                    println!("String table!");
+                },
                 _ => (),
             }
         }
