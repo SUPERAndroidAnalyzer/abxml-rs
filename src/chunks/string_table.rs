@@ -33,7 +33,7 @@ impl StringTableDecoder {
              let s = Self::parse_string(cursor.get_ref(), position, true).unwrap_or(String::new());
 
              // println!("String: {}", s);
-             println!("i: {} => {}", i, s);
+             // println!("i: {} => {}", i, s);
              string_table.strings.push(Rc::new(s));
 
              if current_offset > max_offset {
