@@ -28,13 +28,12 @@ impl StringTableDecoder {
              // println!("Position: {}", cursor.position());
              let current_offset = cursor.read_u32::<LittleEndian>()?;
              // println!("Offset: {}", current_offset);
-             let position = str_offset + max_offset + current_offset;
-             // println!("Position: {}", position);
+             let position = str_offset + current_offset;
 
              let s = Self::parse_string(cursor.get_ref(), position, true).unwrap_or(String::new());
 
              // println!("String: {}", s);
-             // println!("i: {} => {}", i, s);
+             println!("i: {} => {}", i, s);
              string_table.strings.push(Rc::new(s));
 
              if current_offset > max_offset {
@@ -49,12 +48,11 @@ impl StringTableDecoder {
 
      fn parse_string(raw_data: &[u8], offset: u32, utf8: bool) -> Result<String, Error> {
          let mut final_offset = offset;
-         //let val = raw_data[offset as usize] as u8;
 
          let size1: u32 = raw_data[offset as usize] as u32;
          let size2: u32 = raw_data[(offset + 1) as usize] as u32;
 
-         if size1 == size2 || true {
+         if size1 == size2 {
              let str_len = size1;
              let position = offset + 2;
              let a = position;
