@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter, Error};
+use std::fmt::{Display, Formatter};
+use std::fmt::Error as FmtError;
 use std::rc::Rc;
 use std::ops::Deref;
+use std::io::{Error, ErrorKind};
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 #[derive(Default, Debug)]
@@ -93,7 +95,7 @@ impl Element {
 }
 
 impl Display for Element {
-    fn fmt(&self, formatter: &mut Formatter) -> Result<(), Error> {
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), FmtError> {
         let tabs = "\t".to_string().repeat(self.level as usize);
         write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
 
@@ -121,6 +123,20 @@ pub enum Value {
     Unknown,
 }
 
+const TOKEN_VOID: u32 = 0xFFFFFFFF;
+
+const TOKEN_TYPE_REFERENCE_ID: u32 = 0x01000008;
+const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u32 = 0x02000008;
+const TOKEN_TYPE_STRING: u32 = 0x03000008;
+const TOKEN_TYPE_DIMENSION: u32 = 0x05000008;
+const TOKEN_TYPE_FRACTION: u32 = 0x06000008;
+const TOKEN_TYPE_INTEGER: u32 = 0x10000008;
+const TOKEN_TYPE_FLOAT: u32 = 0x04000008;
+const TOKEN_TYPE_FLAGS: u32 = 0x11000008;
+const TOKEN_TYPE_BOOLEAN: u32 = 0x12000008;
+const TOKEN_TYPE_COLOR: u32 = 0x1C000008;
+const TOKEN_TYPE_COLOR2: u32 = 0x1D000008;
+
 impl Value {
     pub fn to_string(&self) -> String {
         match self {
@@ -137,7 +153,67 @@ impl Value {
             &Value::AttributeReferenceId(ref s) => s.clone(),
             _ => "Unknown".to_string(),
         }
+    }
 
+    pub fn new(value_type: u32, data: u32, str_table: &StringTable) -> Result<Self, Error> {
+        let value = match value_type {
+            TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
+            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
+                Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
+            }
+            TOKEN_TYPE_STRING => {
+                Value::String(str_table
+                    .strings
+                    .get(data as usize)
+                    .unwrap()
+                    .clone()
+                )
+            }
+            TOKEN_TYPE_DIMENSION => {
+                let units: [&str; 6] = ["px", "dp", "sp", "pt", "in", "mm"];
+                let mut size = (data >> 8).to_string();
+                let unit_idx = data & 0xFF;
+
+                match units.get(unit_idx as usize) {
+                    Some(unit) => size.push_str(unit),
+                    None => {
+                        return Err(Error::new(ErrorKind::Other,
+                                              format!("Expected a valid unit index. Got: {}",
+                                                      unit_idx)));
+                    }
+                }
+
+                Value::Dimension(size)
+            }
+            TOKEN_TYPE_FRACTION => {
+                let value = (data as f64) / (0x7FFFFFFF as f64);
+                let formatted_fraction = format!("{:.*}", 2, value);
+
+                Value::Fraction(formatted_fraction)
+            }
+            TOKEN_TYPE_INTEGER => Value::Integer(data as u64),
+            TOKEN_TYPE_FLAGS => Value::Flags(data as u64),
+            TOKEN_TYPE_FLOAT => Value::Float(data as f64),
+            TOKEN_TYPE_BOOLEAN => {
+                if data > 0 {
+                    Value::Boolean(true)
+                } else {
+                    Value::Boolean(false)
+                }
+            }
+            TOKEN_TYPE_COLOR => {
+                let formatted_color = format!("#{:#8}", data);
+                Value::Color(formatted_color)
+            }
+            TOKEN_TYPE_COLOR2 => {
+                let formatted_color = format!("#{:#8}", data);
+                Value::Color2(formatted_color)
+            }
+            _ => Value::Unknown,
+
+        };
+
+        Ok(value)
     }
 }
 

@@ -31,7 +31,7 @@ impl TableTypeDecoder {
         for i in 0..entry_amount {
             // let entry = Self::decode_entry(raw_data)
             let offset = cursor.read_u32::<LittleEndian>()?;
-            if (offset == 0xFFFFFFFF) {
+            if offset == 0xFFFFFFFF {
                 continue;
             }
 

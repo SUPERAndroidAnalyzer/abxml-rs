@@ -31,11 +31,9 @@ impl PackageDecoder {
 
         cursor.set_position(header.get_data_offset());
 
-        //chunks.push(Chunk::Package);
-
         let cursor_len = cursor.get_ref().len() as u64;
-        let chunk1 = ChunkLoader::read(cursor);
-        let chunk2 = ChunkLoader::read(cursor);
+        let type_string_table = Self::get_string_table(ChunkLoader::read(cursor).unwrap()).unwrap();
+        let key_string_table = Self::get_string_table(ChunkLoader::read(cursor).unwrap()).unwrap();
 
         let inner_chunks = ChunkLoader::read_all(cursor, cursor_len)?;
 
@@ -56,5 +54,12 @@ impl PackageDecoder {
         // chunks.extend(inner_chunks);
 
         Ok(Chunk::Package)
+    }
+
+    fn get_string_table(chunk: Chunk) -> Option<StringTable> {
+        match chunk {
+            Chunk::StringTable(st) => Some(st),
+            _ => None,
+        }
     }
 }
