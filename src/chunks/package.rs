@@ -34,6 +34,9 @@ impl PackageDecoder {
         //chunks.push(Chunk::Package);
 
         let cursor_len = cursor.get_ref().len() as u64;
+        let chunk1 = ChunkLoader::read(cursor);
+        let chunk2 = ChunkLoader::read(cursor);
+
         let inner_chunks = ChunkLoader::read_all(cursor, cursor_len)?;
 
         for c in inner_chunks {

@@ -70,4 +70,27 @@ impl ChunkLoader {
 
         Ok(chunks)
     }
+
+    pub fn read<'a>(mut cursor: &mut Cursor<&'a [u8]>) -> Result<Chunk, Error> {
+         let initial_position = cursor.position();
+         let token = cursor.read_u16::<LittleEndian>()?;
+         let header_size = cursor.read_u16::<LittleEndian>()?;
+         let chunk_size = cursor.read_u32::<LittleEndian>()?;
+         let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
+
+         let chunk = match token {
+             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
+             t => {
+                 println!("{:X}", t);
+
+                 Chunk::Unknown
+             },
+         };
+
+         cursor.set_position(chunk_header.get_chunk_end());
+         Ok(chunk)
+    }
 }
