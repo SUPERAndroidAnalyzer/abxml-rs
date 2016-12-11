@@ -28,6 +28,14 @@ impl ChunkHeader {
     pub fn get_chunk_end(&self) -> u64 {
         self.offset + self.chunk_size as u64
     }
+
+    pub fn relative(&self, absolute: u64) -> u64 {
+        if self.offset > absolute {
+            0
+        } else {
+            absolute - self.offset
+        }
+    }
 }
 
 impl fmt::Display for ChunkHeader {
