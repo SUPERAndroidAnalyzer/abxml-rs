@@ -40,32 +40,12 @@ impl ChunkLoader {
 
         // Loop trough all of the frames
         loop {
-             let initial_position = cursor.position();
-             if initial_position == ending as u64 {
-                 // We are at the end of the document. We are done!
+             if cursor.position() == ending {
                  break;
              }
 
-             let token = cursor.read_u16::<LittleEndian>()?;
-             let header_size = cursor.read_u16::<LittleEndian>()?;
-             let chunk_size = cursor.read_u32::<LittleEndian>()?;
-             let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
-
-             let chunk = match token {
-                 TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
-                 TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
-                 TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
-                 TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
-                 t => {
-                     println!("{:X}", t);
-
-                     Chunk::Unknown
-                 },
-             };
-
+             let chunk = Self::read(&mut cursor)?;
              chunks.push(chunk);
-
-             cursor.set_position(chunk_header.get_chunk_end());
         }
 
         Ok(chunks)
