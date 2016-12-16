@@ -11,103 +11,198 @@ const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
-        let id = cursor.read_u32::<LittleEndian>()?;
+        println!("Table type decoder. Real pos: {}", header.get_offset());
+        let id = cursor.read_u8()?;
+        cursor.read_u8()?;  // Padding
+        cursor.read_u16::<LittleEndian>()?; // Padding
         let count =  cursor.read_u32::<LittleEndian>()?;
         let start = cursor.read_u32::<LittleEndian>()?;
 
         let config = ResourceConfiguration::from_cursor(cursor)?;
 
-        cursor.set_position(start as u64);
+        println!("");
+        println!("");
+        println!("");
+        println!("");
+        println!("Data start: {}", header.get_header_size());
+        println!("Count: {}, Start offset: {}; Given: {}; absolute: {}", count, start, header.relative(start as u64), header.absolute(start as u64));
+        cursor.set_position(header.get_data_offset());
+        println!("Type ID: {}; Start data: {}", id, start);
 
-        Self::decode_entries(cursor, count);
+        /*let entries = */Self::decode_entries(cursor, count)?;
 
-        Ok(Chunk::TableType(id, Box::new(config)))
+        Ok(Chunk::TableType(id, Box::new(config), Vec::new()))
     }
 
     fn decode_entries(cursor: &mut Cursor<&[u8]>, entry_amount: u32) -> Result<Vec<Entry>, Error> {
         let base_offset = cursor.position();
         let mut entries = Vec::new();
+        println!("BO: {}", base_offset);
+        let mut offsets = Vec::new();
 
         for i in 0..entry_amount {
-            // let entry = Self::decode_entry(raw_data)
+            println!("Entries {}/{}", i, entry_amount);
+
             let offset = cursor.read_u32::<LittleEndian>()?;
+            offsets.push(offset);
+            let prev_pos = cursor.position();
+            println!("Stash position: {}", prev_pos);
+            println!("Offset: {}", offset);
             if offset == 0xFFFFFFFF {
                 continue;
             }
 
-            let position = cursor.position();
-            cursor.set_position(base_offset + offset as u64);
+            let maybe_entry = Self::decode_entry(cursor, base_offset, offset as u64)?;
 
-            let header_size = cursor.read_u16::<LittleEndian>()?;
-            let flags = cursor.read_u16::<LittleEndian>()?;
-            let key_index = cursor.read_u32::<LittleEndian>()?;
-
-            //println!("Header size: {}", header_size);
-            //println!("Flags: {}", flags);
-            //println!("Key index: {}", key_index);
-
-            let mut parent_entry = 0;
-            if (flags & MASK_COMPLEX) == MASK_COMPLEX {
-                parent_entry = cursor.read_u32::<LittleEndian>()?;
-                let value_count = cursor.read_u32::<LittleEndian>()?;
-
-                for j in 0..value_count {
-                    let val_id = cursor.read_u32::<LittleEndian>()?;
-                    // Resource value
-                    let size = cursor.read_u16::<LittleEndian>()?;
-                    // Padding
-                    cursor.read_u8()?;
-                    let val_type = cursor.read_u8()?;
-                    let data = cursor.read_u32::<LittleEndian>()?;
+            match maybe_entry {
+                Some(e) => entries.push(e),
+                None => {
+                    println!("None entry found")
                 }
-            } else {
-                let size = cursor.read_u16::<LittleEndian>()?;
-                // Padding
-                cursor.read_u8()?;
-                let val_type = cursor.read_u8()?;
-                let data = cursor.read_u32::<LittleEndian>()?;
             }
 
-            cursor.set_position(position);
-
-            let entry = Entry::new(
-                header_size,
-                flags,
-                key_index,
-                None,
-                parent_entry
-            );
-
-            entries.push(entry);
+            cursor.set_position(prev_pos);
         }
 
+        println!("{:?}", offsets);
+
         Ok(entries)
+    }
+
+    fn decode_entry(cursor: &mut Cursor<&[u8]>, base_offset: u64, offset: u64) -> Result<Option<Entry>, Error> {
+        let position = cursor.position();
+        println!("Offsets: {} + {} = {}", base_offset, offset, base_offset + offset);
+        cursor.set_position(base_offset + offset as u64);
+
+        let header_size = cursor.read_u16::<LittleEndian>()?;
+        let flags = cursor.read_u16::<LittleEndian>()?;
+        let key_index = cursor.read_u32::<LittleEndian>()?;
+
+        let header_entry = EntryHeader::new(header_size, flags, key_index);
+
+        if header_entry.is_complex() {
+            Self::decode_complex_entry(cursor, &header_entry)
+        } else {
+            Self::decode_simple_entry(cursor, &header_entry)
+        }
+    }
+
+    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>, Error> {
+        let size = cursor.read_u16::<LittleEndian>()?;
+        // Padding
+        cursor.read_u8()?;
+        let val_type = cursor.read_u8()?;
+        let data = cursor.read_u32::<LittleEndian>()?;
+
+        let entry = Entry::new_simple(
+            header.get_key_index(),
+            size,
+            val_type,
+            data,
+        );
+
+        Ok(Some(entry))
+    }
+
+    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>, Error> {
+        let parent_entry = cursor.read_u32::<LittleEndian>()?;
+        let value_count = cursor.read_u32::<LittleEndian>()?;
+        let mut entries = Vec::with_capacity(value_count as usize);
+
+        if value_count == 0xFFFFFFFF {
+            println!("-1 value count");
+            return Ok(None);
+        }
+        println!("Parent entry: {}; count: {}", parent_entry, value_count);
+
+        for j in 0..value_count {
+            let val_id = cursor.read_u32::<LittleEndian>()?;
+            // Resource value
+            let size = cursor.read_u16::<LittleEndian>()?;
+            // Padding
+            cursor.read_u8()?;
+            let val_type = cursor.read_u8()?;
+            let data = cursor.read_u32::<LittleEndian>()?;
+
+            let simple_entry = Entry::new_simple(
+                header.get_key_index(),
+                size,
+                val_type,
+                data,
+            );
+
+            entries.push(simple_entry);
+        }
+
+        let entry = Entry::new_complex(header.get_key_index(), parent_entry, entries);
+
+        Ok(Some(entry))
+    }
+}
+
+pub struct EntryHeader {
+    header_size: u16,
+    flags: u16,
+    key_index: u32,
+}
+
+impl EntryHeader {
+    pub fn new(header_size: u16, flags: u16, key_index: u32) -> Self {
+        EntryHeader {
+            header_size: header_size,
+            flags: flags,
+            key_index: key_index,
+        }
+    }
+
+    pub fn is_complex(&self) -> bool {
+        (self.flags & MASK_COMPLEX) > 0
+    }
+
+    pub fn get_key_index(&self) -> u32 {
+        self.key_index
     }
 }
 
 #[derive(Debug)]
-pub struct Entry {
-    header_size: u16,
-    flags: u16,
-    key_index: u32,
-    value: Option<u32>,
-    parent_entry: u32,
+pub enum Entry {
+    Simple {
+        key_index: u32,
+        size: u16,
+        value_type: u8,
+        value_data: u32,
+    },
+    Complex {
+        key_index: u32,
+        parent_entry_id: u32,
+        entries: Vec<Entry>,   // TODO: split this class, Entry will be Entry::Simple here and it can be enforce by type system
+    }
 }
 
 impl Entry {
-    pub fn new(
-        header_size: u16,
-        flags: u16,
+    pub fn new_simple(
         key_index: u32,
-        value: Option<u32>,
-        parent_entry: u32,
+        size: u16,
+        value_type: u8,
+        value_data: u32,
     ) -> Self {
-        Entry {
-            header_size: header_size,
-            flags: flags,
+        Entry::Simple {
             key_index: key_index,
-            value: value,
-            parent_entry: parent_entry,
+            size: size,
+            value_type: value_type,
+            value_data: value_data,
+        }
+    }
+
+    pub fn new_complex(
+        key_index: u32,
+        parent_entry_id: u32,
+        entries: Vec<Entry>,
+    ) -> Self {
+        Entry::Complex{
+            key_index: key_index,
+            parent_entry_id: parent_entry_id,
+            entries: entries,
         }
     }
 }
@@ -173,6 +268,7 @@ pub struct ResourceConfiguration {
 
 impl ResourceConfiguration {
     pub fn from_cursor(mut cursor: &mut Cursor<&[u8]>) -> Result<Self, Error> {
+        let initial_position = cursor.position();
         let size = cursor.read_u32::<LittleEndian>()?;
         let mcc = cursor.read_u16::<LittleEndian>()?;
         let mnc = cursor.read_u16::<LittleEndian>()?;
