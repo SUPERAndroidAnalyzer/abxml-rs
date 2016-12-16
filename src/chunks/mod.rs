@@ -16,7 +16,7 @@ pub use self::chunk_header::ChunkHeader as ChunkHeader;
 pub use self::table_type::TableTypeDecoder as TableTypeDecoder;
 pub use self::table_type_spec::TableTypeSpecDecoder as TableTypeSpecDecoder;
 
-use self::table_type::ResourceConfiguration;
+use self::table_type::{Entry, ResourceConfiguration};
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_PACKAGE: u16 = 0x0200;
@@ -27,7 +27,7 @@ const TOKEN_TABLE_SPEC: u16 = 0x202;
 pub enum Chunk {
     StringTable(StringTable),
     Package,
-    TableType(u32, Box<ResourceConfiguration>),
+    TableType(u8, Box<ResourceConfiguration>, Vec<Entry>),
     TableTypeSpec(u32, Vec<u32>),
     Unknown,
 }
