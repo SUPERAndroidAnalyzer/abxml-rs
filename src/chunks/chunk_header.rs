@@ -21,6 +21,10 @@ impl ChunkHeader {
         self.offset
     }
 
+    pub fn get_header_size(&self) -> u16 {
+        self.header_size
+    }
+
     pub fn get_data_offset(&self) -> u64 {
         self.offset + self.header_size as u64
     }
@@ -29,12 +33,18 @@ impl ChunkHeader {
         self.offset + self.chunk_size as u64
     }
 
-    pub fn relative(&self, absolute: u64) -> u64 {
-        if self.offset > absolute {
-            0
-        } else {
-            absolute - self.offset
+    pub fn relative(&self, reference: u64) -> u64 {
+        let offset = reference - 8;
+
+        if offset > self.get_chunk_end() {
+            panic!("Calculated offset greater than chunk end");
         }
+
+        offset
+    }
+
+    pub fn absolute(&self, relative: u64) -> u64 {
+        self.offset + relative
     }
 }
 

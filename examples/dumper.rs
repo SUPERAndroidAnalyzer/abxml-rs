@@ -36,7 +36,7 @@ fn main() {
             Chunk::Package => {
                 println!("Package chunk");
             },
-            Chunk::TableType(id, rc) => {
+            Chunk::TableType(id, rc, entries) => {
                 // println!("Resource config chunk");
                 // println!("Resc config {:?}", rc);
             },
