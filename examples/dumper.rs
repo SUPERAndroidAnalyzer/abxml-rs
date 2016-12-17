@@ -1,6 +1,7 @@
 extern crate abxml;
 #[macro_use]
 extern crate error_chain;
+extern crate ansi_term;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -12,18 +13,26 @@ use abxml::parser::ArscDecoder;
 use abxml::chunks::Chunk;
 use abxml::errors::*;
 
+use ansi_term::Colour::{Red, Green, Blue};
+use ansi_term::Style;
+
 fn main() {
     if let Err(ref e) = run() {
-        println!("error: {}", e);
+        let err_str = Red.bold().paint("Error: ").to_string();
+        println!("{}{}", err_str, Red.paint(e.description()));
 
         for e in e.iter().skip(1) {
-            println!("caused by: {}", e);
+            let err_str = Green.bold().paint("Caused by: ").to_string();
+            println!("\t{}{}", err_str, Green.paint(e.description()));
         }
 
         // The backtrace is not always generated. Try to run this example
         // with `RUST_BACKTRACE=1`.
         if let Some(backtrace) = e.backtrace() {
-            println!("backtrace: {:?}", backtrace);
+            let str_backtrace = format!("{:?}", backtrace);
+
+            let err_str = Blue.bold().paint("Backtrace: ").to_string();
+            println!("\t{}{}", err_str, str_backtrace);
         }
 
         ::std::process::exit(1);
