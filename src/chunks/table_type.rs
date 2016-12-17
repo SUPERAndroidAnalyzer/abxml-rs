@@ -11,12 +11,14 @@ const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
-        println!("Table type decoder. Real pos: {}", header.get_offset());
+        info!("Table type decoding @{}", header.get_offset());
         let id = cursor.read_u8()?;
         cursor.read_u8()?;  // Padding
         cursor.read_u16::<LittleEndian>()?; // Padding
         let count =  cursor.read_u32::<LittleEndian>()?;
         let start = cursor.read_u32::<LittleEndian>()?;
+
+        info!("Resources count: {} starting @{}", count, start);
 
         let config = ResourceConfiguration::from_cursor(cursor)?;
 
@@ -33,7 +35,7 @@ impl TableTypeDecoder {
         let mut offsets = Vec::new();
 
         for i in 0..entry_amount {
-            println!("Entry {}/{}", i, entry_amount - 1);
+            debug!("Entry {}/{}", i, entry_amount - 1);
             let offset = cursor.read_u32::<LittleEndian>()?;
             offsets.push(offset);
             let prev_pos = cursor.position();
@@ -47,7 +49,7 @@ impl TableTypeDecoder {
             match maybe_entry {
                 Some(e) => entries.push(e),
                 None => {
-                    println!("Entry with a negative count");
+                    debug!("Entry with a negative count");
                 }
             }
 
@@ -99,9 +101,9 @@ impl TableTypeDecoder {
         if value_count == 0xFFFFFFFF {
             return Ok(None);
         }
-        println!("Parent entry: {}; count: {}", parent_entry, value_count);
 
         for j in 0..value_count {
+            debug!("Parsing value: {}/{} (@{})", j, value_count - 1, cursor.position());
             // println!("Parsing value #{}", j);
             let val_id = cursor.read_u32::<LittleEndian>()?;
             // Resource value
