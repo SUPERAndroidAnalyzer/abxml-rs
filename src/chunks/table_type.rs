@@ -1,16 +1,16 @@
-use std::io::{Error, ErrorKind};
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
+use errors::*;
 
 pub struct TableTypeDecoder;
 
 const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         println!("Table type decoder. Real pos: {}", header.get_offset());
         let id = cursor.read_u8()?;
         cursor.read_u8()?;  // Padding
@@ -20,34 +20,23 @@ impl TableTypeDecoder {
 
         let config = ResourceConfiguration::from_cursor(cursor)?;
 
-        println!("");
-        println!("");
-        println!("");
-        println!("");
-        println!("Data start: {}", header.get_header_size());
-        println!("Count: {}, Start offset: {}; Given: {}; absolute: {}", count, start, header.relative(start as u64), header.absolute(start as u64));
         cursor.set_position(header.get_data_offset());
-        println!("Type ID: {}; Start data: {}", id, start);
 
-        /*let entries = */Self::decode_entries(cursor, count)?;
+        let entries = Self::decode_entries(cursor, count).chain_err(|| "Entry decoding failed")?;
 
-        Ok(Chunk::TableType(id, Box::new(config), Vec::new()))
+        Ok(Chunk::TableType(id, Box::new(config), entries))
     }
 
-    fn decode_entries(cursor: &mut Cursor<&[u8]>, entry_amount: u32) -> Result<Vec<Entry>, Error> {
+    fn decode_entries(cursor: &mut Cursor<&[u8]>, entry_amount: u32) -> Result<Vec<Entry>> {
         let base_offset = cursor.position();
         let mut entries = Vec::new();
-        println!("BO: {}", base_offset);
         let mut offsets = Vec::new();
 
         for i in 0..entry_amount {
-            println!("Entries {}/{}", i, entry_amount);
-
             let offset = cursor.read_u32::<LittleEndian>()?;
             offsets.push(offset);
             let prev_pos = cursor.position();
-            println!("Stash position: {}", prev_pos);
-            println!("Offset: {}", offset);
+
             if offset == 0xFFFFFFFF {
                 continue;
             }
@@ -57,21 +46,18 @@ impl TableTypeDecoder {
             match maybe_entry {
                 Some(e) => entries.push(e),
                 None => {
-                    println!("None entry found")
+                    return Err(format!("Could not decode entry {} on offset {:X}", i, offset).into());
                 }
             }
 
             cursor.set_position(prev_pos);
         }
 
-        println!("{:?}", offsets);
-
         Ok(entries)
     }
 
-    fn decode_entry(cursor: &mut Cursor<&[u8]>, base_offset: u64, offset: u64) -> Result<Option<Entry>, Error> {
+    fn decode_entry(cursor: &mut Cursor<&[u8]>, base_offset: u64, offset: u64) -> Result<Option<Entry>> {
         let position = cursor.position();
-        println!("Offsets: {} + {} = {}", base_offset, offset, base_offset + offset);
         cursor.set_position(base_offset + offset as u64);
 
         let header_size = cursor.read_u16::<LittleEndian>()?;
@@ -87,7 +73,7 @@ impl TableTypeDecoder {
         }
     }
 
-    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>, Error> {
+    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>> {
         let size = cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
@@ -104,14 +90,15 @@ impl TableTypeDecoder {
         Ok(Some(entry))
     }
 
-    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>, Error> {
+    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
 
         if value_count == 0xFFFFFFFF {
             println!("-1 value count");
-            return Ok(None);
+            // return Ok(None);
+            return Err("Could not parse the file because of negative count".into())
         }
         println!("Parent entry: {}; count: {}", parent_entry, value_count);
 
@@ -220,7 +207,7 @@ impl Region {
         }
     }
 
-    pub fn to_string(&self) -> Result<String, Error> {
+    pub fn to_string(&self) -> Result<String> {
         let mut chrs = Vec::new();
 
         if ((self.low >> 7) & 1) == 1 {
@@ -232,10 +219,7 @@ impl Region {
             chrs.push(self.high);
         }
 
-        match String::from_utf8(chrs) {
-            Ok(s) => Ok(s),
-            Err(e) => Err(Error::new(ErrorKind::Other, e)),
-        }
+        String::from_utf8(chrs).chain_err(|| "Could not UTF-8 encode string")
     }
 }
 
@@ -267,7 +251,7 @@ pub struct ResourceConfiguration {
 }
 
 impl ResourceConfiguration {
-    pub fn from_cursor(mut cursor: &mut Cursor<&[u8]>) -> Result<Self, Error> {
+    pub fn from_cursor(mut cursor: &mut Cursor<&[u8]>) -> Result<Self> {
         let initial_position = cursor.position();
         let size = cursor.read_u32::<LittleEndian>()?;
         let mcc = cursor.read_u16::<LittleEndian>()?;

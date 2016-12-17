@@ -1,14 +1,14 @@
-use std::io::{Error, ErrorKind};
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
+use errors::*;
 
 pub struct TableTypeSpecDecoder;
 
 impl TableTypeSpecDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         let id = cursor.read_u32::<LittleEndian>()? & 0xFF;
         let resource_count = cursor.read_u32::<LittleEndian>()?;
 

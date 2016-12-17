@@ -1,4 +1,3 @@
-use std::io::Error;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::collections::HashMap;
@@ -17,6 +16,7 @@ pub use self::table_type::TableTypeDecoder as TableTypeDecoder;
 pub use self::table_type_spec::TableTypeSpecDecoder as TableTypeSpecDecoder;
 
 use self::table_type::{Entry, ResourceConfiguration};
+use errors::*;
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_PACKAGE: u16 = 0x0200;
@@ -35,7 +35,7 @@ pub enum Chunk {
 pub struct ChunkLoader;
 
 impl ChunkLoader {
-    pub fn read_all<'a>(mut cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>, Error> {
+    pub fn read_all<'a>(mut cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>> {
         let mut chunks = Vec::new();
 
         // Loop trough all of the frames
@@ -51,7 +51,7 @@ impl ChunkLoader {
         Ok(chunks)
     }
 
-    pub fn read<'a>(mut cursor: &mut Cursor<&'a [u8]>) -> Result<Chunk, Error> {
+    pub fn read<'a>(mut cursor: &mut Cursor<&'a [u8]>) -> Result<Chunk> {
          let initial_position = cursor.position();
          let token = cursor.read_u16::<LittleEndian>()?;
          let header_size = cursor.read_u16::<LittleEndian>()?;

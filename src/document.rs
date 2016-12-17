@@ -3,7 +3,8 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Error as FmtError;
 use std::rc::Rc;
 use std::ops::Deref;
-use std::io::{Error, ErrorKind};
+use errors::*;
+use std::result::Result as StdResult;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 #[derive(Default, Debug)]
@@ -111,7 +112,7 @@ impl Element {
 }
 
 impl Display for Element {
-    fn fmt(&self, formatter: &mut Formatter) -> Result<(), FmtError> {
+    fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
         let tabs = "\t".to_string().repeat(self.level as usize);
         write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
 
@@ -171,7 +172,7 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u32, data: u32, str_table: &StringTable) -> Result<Self, Error> {
+    pub fn new(value_type: u32, data: u32, str_table: &StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
@@ -193,9 +194,8 @@ impl Value {
                 match units.get(unit_idx as usize) {
                     Some(unit) => size.push_str(unit),
                     None => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              format!("Expected a valid unit index. Got: {}",
-                                                      unit_idx)));
+                        return Err(format!("Expected a valid unit index. Got: {}",
+                                unit_idx).into())
                     }
                 }
 

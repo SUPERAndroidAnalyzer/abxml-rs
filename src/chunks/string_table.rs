@@ -1,14 +1,14 @@
-use std::io::{Error, ErrorKind};
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
+use errors::*;
 
 pub struct StringTableDecoder;
 
 impl StringTableDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
          let mut header_string_table = HeaderStringTable::default();
 
          header_string_table.string_amount = cursor.read_u32::<LittleEndian>()?;
@@ -46,7 +46,7 @@ impl StringTableDecoder {
          Ok(Chunk::StringTable(string_table))
      }
 
-     fn parse_string(raw_data: &[u8], offset: u32, utf8: bool) -> Result<String, Error> {
+     fn parse_string(raw_data: &[u8], offset: u32, utf8: bool) -> Result<String> {
          let mut final_offset = offset;
 
          let size1: u32 = raw_data[offset as usize] as u32;
@@ -64,10 +64,7 @@ impl StringTableDecoder {
                  .cloned()
                  .collect();
 
-             match String::from_utf8(raw_str) {
-                 Ok(s) => Ok(s),
-                 Err(e) => Err(Error::new(ErrorKind::Other, e)),
-             }
+            String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
          } else {
              let str_len = ((size2 << 8) & 0xFF00) | size1 & 0xFF;
              let position = offset + 2;
@@ -87,10 +84,7 @@ impl StringTableDecoder {
                  })
                  .collect();
 
-             match String::from_utf8(raw_str) {
-                 Ok(s) => Ok(s),
-                 Err(e) => Err(Error::new(ErrorKind::Other, e)),
-             }
+            String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
          }
      }
 }
