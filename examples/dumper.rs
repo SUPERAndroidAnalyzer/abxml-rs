@@ -2,6 +2,9 @@ extern crate abxml;
 #[macro_use]
 extern crate error_chain;
 extern crate ansi_term;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -13,10 +16,14 @@ use abxml::parser::ArscDecoder;
 use abxml::chunks::Chunk;
 use abxml::errors::*;
 
-use ansi_term::Colour::{Red, Green, Blue};
+use ansi_term::Colour::{Red, Green, Blue, Yellow};
 use ansi_term::Style;
+use env_logger::LogBuilder;
+use log::{LogRecord, LogLevelFilter, LogLevel};
 
 fn main() {
+    env_logger::init().unwrap();
+    
     if let Err(ref e) = run() {
         let err_str = Red.bold().paint("Error: ").to_string();
         println!("{}{}", err_str, Red.paint(e.description()));
@@ -79,6 +86,23 @@ fn run() -> Result<()> {
     }
     Ok(())
 }
+
+/*fn initialize_logger() {
+    let format = |record: &LogRecord| {
+        match record.level() {
+            _ => format!("{}: {}", record.level(), record.args()),
+        }
+    };
+
+    let mut builder = LogBuilder::new();
+    let builder_state = builder.format(format)
+        .filter(None, log_level)
+        .init();
+
+    if let Err(e) = builder_state {
+        println!("Could not initialize logger: {}", e);
+    }
+}*/
 
 fn file_get_contents(path: &str) -> Vec<u8> {
     let path = Path::new(path);

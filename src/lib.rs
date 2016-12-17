@@ -6,6 +6,8 @@ extern crate test;
 extern crate quick_xml;
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate log;
 
 mod document;
 pub mod encoder;
@@ -26,6 +28,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use document::*;
 use std::rc::Rc;
 use errors::*;
+use log::{LogRecord, LogLevelFilter, LogLevel};
 
 const TOKEN_START_DOCUMENT: u32 = 0x00080003;
 const TOKEN_STRING_TABLE: u32 = 0x001C0001;
