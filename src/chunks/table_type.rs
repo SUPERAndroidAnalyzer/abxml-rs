@@ -18,10 +18,10 @@ impl TableTypeDecoder {
         let count =  cursor.read_u32::<LittleEndian>()?;
         let start = cursor.read_u32::<LittleEndian>()?;
 
-        info!("Resources count: {} starting @{}", count, start);
+        info!("Resources count: {} [@{}..@{}]", count, start, header.get_chunk_end());
 
         let config = ResourceConfiguration::from_cursor(cursor)?;
-
+        let a = header.get_offset() + (start as u64) - ((count * 4) as u64);
         cursor.set_position(header.get_data_offset());
 
         let entries = Self::decode_entries(cursor, count).chain_err(|| "Entry decoding failed")?;
@@ -34,34 +34,32 @@ impl TableTypeDecoder {
         let mut entries = Vec::new();
         let mut offsets = Vec::new();
 
+        let mut prev_offset = base_offset;
         for i in 0..entry_amount {
-            debug!("Entry {}/{}", i, entry_amount - 1);
-            let offset = cursor.read_u32::<LittleEndian>()?;
-            offsets.push(offset);
-            let prev_pos = cursor.position();
+            offsets.push(cursor.read_u32::<LittleEndian>()?);
+        }
 
-            if offset == 0xFFFFFFFF {
-                continue;
-            }
+        for i in 0..entry_amount {
+            if offsets[i as usize] == 0xFFFFFFFF {
+                let position = cursor.position();
+                cursor.set_position(position + 4);
+            } else {
+                let maybe_entry = Self::decode_entry(cursor)?;
 
-            let maybe_entry = Self::decode_entry(cursor, base_offset, offset as u64)?;
-
-            match maybe_entry {
-                Some(e) => entries.push(e),
-                None => {
-                    debug!("Entry with a negative count");
+                match maybe_entry {
+                    Some(e) => entries.push(e),
+                    None => {
+                        debug!("Entry with a negative count");
+                    }
                 }
             }
-
-            cursor.set_position(prev_pos);
         }
 
         Ok(entries)
     }
 
-    fn decode_entry(cursor: &mut Cursor<&[u8]>, base_offset: u64, offset: u64) -> Result<Option<Entry>> {
+    fn decode_entry(cursor: &mut Cursor<&[u8]>) -> Result<Option<Entry>> {
         let position = cursor.position();
-        cursor.set_position(base_offset + offset as u64);
 
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let flags = cursor.read_u16::<LittleEndian>()?;
@@ -97,12 +95,14 @@ impl TableTypeDecoder {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
+        //println!("Current: {}/{}; Amount of values: {}; parent: {}", cursor.position(), cursor.get_ref().len(), value_count, parent_entry);
 
         if value_count == 0xFFFFFFFF {
             return Ok(None);
         }
 
         for j in 0..value_count {
+            //println!("Current: {}", cursor.position());
             debug!("Parsing value: {}/{} (@{})", j, value_count - 1, cursor.position());
             // println!("Parsing value #{}", j);
             let val_id = cursor.read_u32::<LittleEndian>()?;
@@ -145,7 +145,7 @@ impl EntryHeader {
     }
 
     pub fn is_complex(&self) -> bool {
-        (self.flags & MASK_COMPLEX) > 0
+        (self.flags & MASK_COMPLEX) == MASK_COMPLEX
     }
 
     pub fn get_key_index(&self) -> u32 {
