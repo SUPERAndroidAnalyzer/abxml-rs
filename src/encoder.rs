@@ -7,11 +7,12 @@ use document::Namespaces;
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
+use errors::*;
 
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String, ()> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
         Self::encode_element(&mut writer, Some(namespaces), element);

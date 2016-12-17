@@ -1,16 +1,30 @@
+#![recursion_limit = "1024"]
+
 #![feature(repeat_str, test)]
 extern crate byteorder;
 extern crate test;
 extern crate quick_xml;
+#[macro_use]
+extern crate error_chain;
 
 mod document;
 pub mod encoder;
 
+pub mod errors {
+    // Create the Error, ErrorKind, ResultExt, and Result types
+    error_chain! {
+        foreign_links {
+            Io(::std::io::Error) #[cfg(unix)];
+        }
+    }
+}
+
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::io::{Error, ErrorKind};
+// use std::io::{ErrorKind};
 use document::*;
 use std::rc::Rc;
+use errors::*;
 
 const TOKEN_START_DOCUMENT: u32 = 0x00080003;
 const TOKEN_STRING_TABLE: u32 = 0x001C0001;
@@ -51,7 +65,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         }
     }
 
-    pub fn decode(mut self) -> Result<Document, Error> {
+    pub fn decode(mut self) -> Result<Document> {
         // Read document header
         self.parse_document_header()?;
 
@@ -86,14 +100,11 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(self.document)
     }
 
-    fn parse_document_header(&mut self) -> Result<(), Error> {
+    fn parse_document_header(&mut self) -> Result<()> {
         let first_token = self.cursor.read_u32::<LittleEndian>()?;
         let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
         if first_token != TOKEN_START_DOCUMENT {
-            return Err(Error::new(ErrorKind::Other,
-                                  format!("Document not starting with the START_DOCUMENT \
-                                           number: {:X}",
-                                          first_token)));
+            return Err("Document not starting with the START_DOCUMENT number".into());
         }
 
         let header = Header { size: chunk_size };
@@ -102,7 +113,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_string_table(&mut self, initial_position: u32) -> Result<(), Error> {
+    fn parse_string_table(&mut self, initial_position: u32) -> Result<()> {
         let mut header_string_table = HeaderStringTable::default();
 
         header_string_table.string_amount = self.cursor.read_u32::<LittleEndian>()?;
@@ -127,7 +138,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_string(&mut self, offset: u32) -> Result<String, Error> {
+    fn parse_string(&mut self, offset: u32) -> Result<String> {
         let size1: u32 = self.raw_data[offset as usize] as u32;
         let size2: u32 = self.raw_data[(offset + 1) as usize] as u32;
 
@@ -143,10 +154,7 @@ impl<'a> BinaryXmlDecoder<'a> {
                 .cloned()
                 .collect();
 
-            match String::from_utf8(raw_str) {
-                Ok(s) => Ok(s),
-                Err(e) => Err(Error::new(ErrorKind::Other, e)),
-            }
+            String::from_utf8(raw_str).chain_err(|| "Error converting to UTF8")
         } else {
             let str_len = ((size2 << 8) & 0xFF00) | size1 & 0xFF;
             let position = offset + 2;
@@ -166,14 +174,11 @@ impl<'a> BinaryXmlDecoder<'a> {
                 })
                 .collect();
 
-            match String::from_utf8(raw_str) {
-                Ok(s) => Ok(s),
-                Err(e) => Err(Error::new(ErrorKind::Other, e)),
-            }
+            String::from_utf8(raw_str).chain_err(|| "Error converting to UTF8")
         }
     }
 
-    fn parse_resource_table(&mut self, chunk: u32) -> Result<(), Error> {
+    fn parse_resource_table(&mut self, chunk: u32) -> Result<()> {
         let amount = (chunk / 4) - 2;
         let resource_table = (1..amount)
             .into_iter()
@@ -185,7 +190,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_namespace_start(&mut self) -> Result<(), Error> {
+    fn parse_namespace_start(&mut self) -> Result<()> {
         let _line = self.cursor.read_u32::<LittleEndian>()?;
         let _unknown = self.cursor.read_u32::<LittleEndian>()?;
         let prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -199,7 +204,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_namespace_end(&mut self) -> Result<(), Error> {
+    fn parse_namespace_end(&mut self) -> Result<()> {
         let _line = self.cursor.read_u32::<LittleEndian>()?;
         let _unknown = self.cursor.read_u32::<LittleEndian>()?;
         let _prefix_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -210,7 +215,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_start_tag(&mut self) -> Result<(), Error> {
+    fn parse_start_tag(&mut self) -> Result<()> {
         let _line = self.cursor.read_u32::<LittleEndian>()?;
         let _unknown = self.cursor.read_u32::<LittleEndian>()?;
         let _ns_uri = self.cursor.read_u32::<LittleEndian>()?;
@@ -228,10 +233,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         }
 
         if attributes.len() != attributes_amount {
-            return Err(Error::new(ErrorKind::Other,
-                                  format!("Expected a different amount of elements {} {}",
-                                          attributes.len(),
-                                          attributes_amount)));
+            return Err("Excptected a distinct amount of elements".into());
         }
 
         self.element_container.start_element(Element::new(element_name.clone(), attributes));
@@ -239,7 +241,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_attribute(&mut self) -> Result<Attribute, Error> {
+    fn parse_attribute(&mut self) -> Result<Attribute> {
         let attr_ns_idx = self.cursor.read_u32::<LittleEndian>()?;
         let attr_name_idx = self.cursor.read_u32::<LittleEndian>()?;
         let attr_value_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -278,7 +280,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(Attribute::new(element_name, value, namespace, prefix))
     }
 
-    fn parse_end_tag(&mut self) -> Result<(), Error> {
+    fn parse_end_tag(&mut self) -> Result<()> {
         let _line = self.cursor.read_u32::<LittleEndian>()?;
         let _unknown = self.cursor.read_u32::<LittleEndian>()?;
         let _uri_idx = self.cursor.read_u32::<LittleEndian>()?;
@@ -299,7 +301,7 @@ impl<'a> BinaryXmlDecoder<'a> {
         Ok(())
     }
 
-    fn parse_value(&mut self, value_type: u32, data: u32) -> Result<Value, Error> {
+    fn parse_value(&mut self, value_type: u32, data: u32) -> Result<Value> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
@@ -321,9 +323,7 @@ impl<'a> BinaryXmlDecoder<'a> {
                 match units.get(unit_idx as usize) {
                     Some(unit) => size.push_str(unit),
                     None => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              format!("Expected a valid unit index. Got: {}",
-                                                      unit_idx)));
+                        return Err("Expected a valid unit index".into());
                     }
                 }
 
