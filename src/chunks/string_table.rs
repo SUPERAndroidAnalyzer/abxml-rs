@@ -17,23 +17,15 @@ impl StringTableDecoder {
          header_string_table.string_offset = cursor.read_u32::<LittleEndian>()?;
          header_string_table.style_offset = cursor.read_u32::<LittleEndian>()?;
 
-         println!("Header: {:?}", header_string_table);
-
          let mut string_table = StringTable::default();
          let str_offset = header.get_offset() as u32 + header_string_table.string_offset;
 
          let mut max_offset = 0;
 
          for i in 0..header_string_table.string_amount {
-             // println!("Position: {}", cursor.position());
              let current_offset = cursor.read_u32::<LittleEndian>()?;
-             // println!("Offset: {}", current_offset);
              let position = str_offset + current_offset;
-
              let s = Self::parse_string(cursor.get_ref(), position, true).unwrap_or(String::new());
-
-             // println!("String: {}", s);
-             // println!("i: {} => {}", i, s);
              string_table.strings.push(Rc::new(s));
 
              if current_offset > max_offset {
@@ -42,7 +34,6 @@ impl StringTableDecoder {
 
          }
 
-         println!("Amount of strings");
          Ok(Chunk::StringTable(string_table))
      }
 

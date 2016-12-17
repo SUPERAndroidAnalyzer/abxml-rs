@@ -39,7 +39,7 @@ impl PackageDecoder {
 
         for c in inner_chunks {
             match c {
-                Chunk::TableType(i, _, _) => {
+                Chunk::TableType(i, _, e) => {
                     println!("Table type: {}", i);
                 },
                 Chunk::TableTypeSpec(i, masks) => {
