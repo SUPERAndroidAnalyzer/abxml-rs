@@ -33,6 +33,7 @@ impl TableTypeDecoder {
         let mut offsets = Vec::new();
 
         for i in 0..entry_amount {
+            println!("Entry {}/{}", i, entry_amount - 1);
             let offset = cursor.read_u32::<LittleEndian>()?;
             offsets.push(offset);
             let prev_pos = cursor.position();
@@ -46,7 +47,7 @@ impl TableTypeDecoder {
             match maybe_entry {
                 Some(e) => entries.push(e),
                 None => {
-                    return Err(format!("Could not decode entry {} on offset {:X}", i, offset).into());
+                    println!("Entry with a negative count");
                 }
             }
 
@@ -96,13 +97,12 @@ impl TableTypeDecoder {
         let mut entries = Vec::with_capacity(value_count as usize);
 
         if value_count == 0xFFFFFFFF {
-            println!("-1 value count");
-            // return Ok(None);
-            return Err("Could not parse the file because of negative count".into())
+            return Ok(None);
         }
         println!("Parent entry: {}; count: {}", parent_entry, value_count);
 
         for j in 0..value_count {
+            // println!("Parsing value #{}", j);
             let val_id = cursor.read_u32::<LittleEndian>()?;
             // Resource value
             let size = cursor.read_u16::<LittleEndian>()?;
