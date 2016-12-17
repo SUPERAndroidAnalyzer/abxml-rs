@@ -1,14 +1,14 @@
-use std::io::{Error, ErrorKind};
 use chunks::{Chunk, ChunkLoader, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
+use errors::*;
 
 pub struct PackageDecoder;
 
 impl PackageDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk, Error> {
+    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         let id = cursor.read_u32::<LittleEndian>()?;
         println!("Package name position: {:X}", header.get_offset() + 4);
         // let package_name = self.package_name(raw_data, cursor.position() as u32)?;

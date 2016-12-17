@@ -1,12 +1,12 @@
 use chunks::{Chunk, ChunkLoader};
-use std::io::Error;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
+use errors::*;
 
 pub struct ArscDecoder;
 
 impl ArscDecoder {
-    pub fn decode(&self, raw_data: &[u8]) -> Result<Vec<Chunk>, Error> {
+    pub fn decode(&self, raw_data: &[u8]) -> Result<Vec<Chunk>> {
         let mut cursor = Cursor::new(raw_data);
 
         let token = cursor.read_u16::<LittleEndian>()?;

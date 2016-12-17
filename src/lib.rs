@@ -23,7 +23,6 @@ pub mod errors {
 
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
-// use std::io::{ErrorKind};
 use document::*;
 use std::rc::Rc;
 use errors::*;
