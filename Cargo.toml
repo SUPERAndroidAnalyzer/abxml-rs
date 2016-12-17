@@ -7,3 +7,4 @@ authors = ["Guillem Nieto <gnieto.talo@gmail.com>"]
 byteorder = "0.5"
 quick-xml = "0.4.1"
 error-chain = "0.7.1"
+ansi_term = "0.9"
