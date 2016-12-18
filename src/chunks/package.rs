@@ -38,6 +38,7 @@ impl PackageDecoder {
         let key_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
 
         let inner_chunks = ChunkLoader::read_all(decoder, cursor, cursor_len)?;
+
         let st = decoder.get_string_table();
         let rc_st = match st {
             &Some(ref rc_st) => {println!("Has string table"); rc_st.clone()},

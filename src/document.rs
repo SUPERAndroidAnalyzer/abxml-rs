@@ -191,6 +191,8 @@ impl Value {
                 Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
             }
             TOKEN_TYPE_STRING => {
+                // println!("String {}/{}", data, str_table.strings.len());
+
                 Value::String(str_table
                     .strings
                     .get(data as usize)
@@ -201,7 +203,7 @@ impl Value {
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dp", "sp", "pt", "in", "mm"];
                 let mut size = (data >> 8).to_string();
-                let unit_idx = data & 0xFF;
+                let unit_idx = data & 0xF;
 
                 match units.get(unit_idx as usize) {
                     Some(unit) => size.push_str(unit),
