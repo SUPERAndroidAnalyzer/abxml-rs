@@ -12,7 +12,7 @@ use abxml::BinaryXmlDecoder;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use abxml::parser::{ArscDecoder, XmlDecoder};
+use abxml::parser::Decoder;
 use abxml::chunks::Chunk;
 use abxml::errors::*;
 
@@ -61,11 +61,11 @@ fn run() -> Result<()> {
     let content = file_get_contents(&path);
     let p = Path::new(&path);
     let chunks = if p.extension().unwrap() == "arsc" {
-        let decoder = ArscDecoder;
-        decoder.decode(&content)?
+        let decoder = Decoder::new();
+        decoder.decode_arsc(&content)?
     } else {
-        let decoder = XmlDecoder;
-        decoder.decode(&content)?
+        let decoder = Decoder::new();
+        decoder.decode_xml(&content)?
     };
 
     for c in chunks {
