@@ -34,8 +34,9 @@ impl StringTableDecoder {
                  max_offset = current_offset
              }
          }
+         
          let ref_count_st = Rc::new(string_table);
-         decoder.set_string_table(ref_count_st.clone());
+         println!("String table with {} elements", header_string_table.string_amount);
 
          Ok(Chunk::StringTable(ref_count_st.clone()))
      }
