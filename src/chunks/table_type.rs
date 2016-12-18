@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable};
+use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
 
 pub struct TableTypeDecoder;
@@ -192,6 +192,20 @@ impl Entry {
             key_index: key_index,
             parent_entry_id: parent_entry_id,
             entries: entries,
+        }
+    }
+
+    pub fn to_value(&self, string_table: &StringTable) -> Result<Value> {
+        match self {
+            &Entry::Simple {
+                key_index: ki,
+                size: s,
+                value_type: vt,
+                value_data: vd
+            } => {
+                Value::new(vt, vd, &string_table)
+            },
+            _ => Err("Complex entry can not be converted to value".into()),
         }
     }
 }
