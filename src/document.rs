@@ -57,6 +57,16 @@ pub struct StringTable {
     pub styles: Vec<Rc<String>>,
 }
 
+impl StringTable {
+    pub fn get_string(&self, i: usize) -> Option<Rc<String>> {
+        if i < self.strings.len() {
+            Some(self.strings[i].clone())
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct HeaderResourceTable {
     pub chunk: u32,

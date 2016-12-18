@@ -1,8 +1,9 @@
 use chunks::{Chunk, ChunkLoader, ChunkHeader};
+use chunks::table_type::Entry;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable};
+use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
 
 pub struct PackageDecoder;
@@ -39,11 +40,28 @@ impl PackageDecoder {
 
         for c in inner_chunks {
             match c {
-                Chunk::TableType(i, _, e) => {
+                Chunk::TableType(i, _, entries) => {
+                    for e in entries {
+                        match e {
+                            Entry::Simple{
+                                key_index: ki,
+                                size: s,
+                                value_type: vt,
+                                value_data: vd
+                            } => {
+                                //println!("VT: {}; KI: {}", vt, ki);
+                                let v = Value::new(vt as u32, vd, &type_string_table).chain_err(|| "Error decoding data")?;
+                                //println!("{}", v.to_string());
+                            },
+                            _ => (),
+                        }
+                    }
                     println!("Table type: {}", i);
                 },
                 Chunk::TableTypeSpec(i, masks) => {
-                    println!("Table type spec: {} {:?}", i, masks);
+                    let type_name = type_string_table.get_string((i - 1) as usize);
+                    println!("Table type spec: {:?}", type_name);
+                    // println!("Table type spec: {} {:?}", i, masks);
                 },
                 Chunk::StringTable(_) => {
                     println!("String table!");
