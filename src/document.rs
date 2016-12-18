@@ -191,8 +191,6 @@ impl Value {
                 Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
             }
             TOKEN_TYPE_STRING => {
-                // println!("String {}/{}", data, str_table.strings.len());
-
                 Value::String(str_table
                     .strings
                     .get(data as usize)

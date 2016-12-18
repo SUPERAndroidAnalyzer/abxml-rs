@@ -56,9 +56,6 @@ impl PackageDecoder {
                                 value_type: vt,
                                 value_data: vd
                             } => {
-                                if i == 1 {
-                                    println!("VT: {}; KI: {}; VD: {}", vt, ki, vd);
-                                }
                                 let v = Value::new(vt, vd, &rc_st).chain_err(|| "Error decoding data")?;
                                 //println!("{}", v.to_string());
                             },
@@ -67,15 +64,10 @@ impl PackageDecoder {
                                 parent_entry_id: pei,
                                 entries: entries,
                             } => {
-                                if i == 1 {
-                                    let key = key_string_table.get_string(ki as usize);
-                                    println!("Complex types! {}({:?}) parent: {}", ki, key, pei);
+                                let key = key_string_table.get_string(ki as usize);
 
-                                    for e in entries {
-                                        let v = e.to_value(&type_string_table).chain_err(|| "Could not convert entry to value")?;
-                                        println!("Value: {}", v.to_string());
-                                        println!("{:?}", v);
-                                    }
+                                for e in entries {
+                                    let v = e.to_value(&rc_st).chain_err(|| "Could not convert entry to value")?;
                                 }
                             },
                         }
