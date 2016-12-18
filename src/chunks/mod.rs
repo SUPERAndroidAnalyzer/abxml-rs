@@ -17,6 +17,8 @@ pub use self::table_type_spec::TableTypeSpecDecoder as TableTypeSpecDecoder;
 
 use self::table_type::{Entry, ResourceConfiguration};
 use errors::*;
+use parser::Decoder;
+use std::rc::Rc;
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_PACKAGE: u16 = 0x0200;
@@ -25,7 +27,7 @@ const TOKEN_TABLE_SPEC: u16 = 0x202;
 
 #[derive(Debug)]
 pub enum Chunk {
-    StringTable(StringTable),
+    StringTable(Rc<StringTable>),
     Package,
     TableType(u8, Box<ResourceConfiguration>, Vec<Entry>),
     TableTypeSpec(u32, Vec<u32>),
@@ -35,7 +37,7 @@ pub enum Chunk {
 pub struct ChunkLoader;
 
 impl ChunkLoader {
-    pub fn read_all<'a>(mut cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>> {
+    pub fn read_all<'a>(mut decoder: &mut Decoder, mut cursor: &mut Cursor<&'a [u8]>, ending: u64) -> Result<Vec<Chunk>> {
         let mut chunks = Vec::new();
 
         // Loop trough all of the frames
@@ -44,14 +46,14 @@ impl ChunkLoader {
                  break;
              }
 
-             let chunk = Self::read(&mut cursor)?;
+             let chunk = Self::read(decoder, &mut cursor)?;
              chunks.push(chunk);
         }
 
         Ok(chunks)
     }
 
-    pub fn read<'a>(mut cursor: &mut Cursor<&'a [u8]>) -> Result<Chunk> {
+    pub fn read<'a>(mut decoder: &mut Decoder, mut cursor: &mut Cursor<&'a [u8]>) -> Result<Chunk> {
          let initial_position = cursor.position();
          let token = cursor.read_u16::<LittleEndian>()?;
          let header_size = cursor.read_u16::<LittleEndian>()?;
@@ -59,8 +61,8 @@ impl ChunkLoader {
          let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
 
          let chunk = match token {
-             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
-             TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_STRING_TABLE => StringTableDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+             TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
              TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
              TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
              t => {

@@ -4,11 +4,13 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
 use errors::*;
+use parser::Decoder;
+use std::clone::Clone;
 
 pub struct StringTableDecoder;
 
 impl StringTableDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+    pub fn decode(decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
          let mut header_string_table = HeaderStringTable::default();
 
          header_string_table.string_amount = cursor.read_u32::<LittleEndian>()?;
@@ -31,10 +33,11 @@ impl StringTableDecoder {
              if current_offset > max_offset {
                  max_offset = current_offset
              }
-
          }
+         let ref_count_st = Rc::new(string_table);
+         decoder.set_string_table(ref_count_st.clone());
 
-         Ok(Chunk::StringTable(string_table))
+         Ok(Chunk::StringTable(ref_count_st.clone()))
      }
 
      fn parse_string(raw_data: &[u8], offset: u32, utf8: bool) -> Result<String> {
