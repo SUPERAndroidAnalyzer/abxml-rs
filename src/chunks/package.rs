@@ -5,11 +5,12 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
+use parser::Decoder;
 
 pub struct PackageDecoder;
 
 impl PackageDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+    pub fn decode(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         let id = cursor.read_u32::<LittleEndian>()?;
         let package_name = Self::package_name(cursor)?;
         println!("Package name: {}", package_name);
@@ -33,10 +34,15 @@ impl PackageDecoder {
         cursor.set_position(header.get_data_offset());
 
         let cursor_len = cursor.get_ref().len() as u64;
-        let type_string_table = Self::get_string_table(ChunkLoader::read(cursor).unwrap()).unwrap();
-        let key_string_table = Self::get_string_table(ChunkLoader::read(cursor).unwrap()).unwrap();
+        let type_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
+        let key_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
 
-        let inner_chunks = ChunkLoader::read_all(cursor, cursor_len)?;
+        let inner_chunks = ChunkLoader::read_all(decoder, cursor, cursor_len)?;
+        let st = decoder.get_string_table();
+        let rc_st = match st {
+            &Some(ref rc_st) => {println!("Has string table"); rc_st.clone()},
+            &None => {return Err("No string table found".into());}
+        };
 
         for c in inner_chunks {
             match c {
@@ -52,7 +58,7 @@ impl PackageDecoder {
                                 if i == 1 {
                                     println!("VT: {}; KI: {}; VD: {}", vt, ki, vd);
                                 }
-                                let v = Value::new(vt, vd, &type_string_table).chain_err(|| "Error decoding data")?;
+                                let v = Value::new(vt, vd, &rc_st).chain_err(|| "Error decoding data")?;
                                 //println!("{}", v.to_string());
                             },
                             Entry::Complex{
@@ -91,9 +97,9 @@ impl PackageDecoder {
         Ok(Chunk::Package)
     }
 
-    fn get_string_table(chunk: Chunk) -> Option<StringTable> {
+    fn get_string_table(chunk: Chunk) -> Option<Rc<StringTable>> {
         match chunk {
-            Chunk::StringTable(st) => Some(st),
+            Chunk::StringTable(st) => Some(st.clone()),
             _ => None,
         }
     }
