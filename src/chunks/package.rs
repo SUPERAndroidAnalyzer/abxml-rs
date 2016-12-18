@@ -11,9 +11,9 @@ pub struct PackageDecoder;
 impl PackageDecoder {
     pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         let id = cursor.read_u32::<LittleEndian>()?;
-        println!("Package name position: {:X}", header.get_offset() + 4);
-        // let package_name = self.package_name(raw_data, cursor.position() as u32)?;
-        // TODO: Read package name
+        let package_name = Self::package_name(cursor)?;
+        println!("Package name: {}", package_name);
+
         let pos = cursor.position() + 256;
         cursor.set_position(pos);
 
@@ -49,11 +49,28 @@ impl PackageDecoder {
                                 value_type: vt,
                                 value_data: vd
                             } => {
-                                //println!("VT: {}; KI: {}", vt, ki);
-                                let v = Value::new(vt as u32, vd, &type_string_table).chain_err(|| "Error decoding data")?;
+                                if i == 1 {
+                                    println!("VT: {}; KI: {}; VD: {}", vt, ki, vd);
+                                }
+                                let v = Value::new(vt, vd, &type_string_table).chain_err(|| "Error decoding data")?;
                                 //println!("{}", v.to_string());
                             },
-                            _ => (),
+                            Entry::Complex{
+                                key_index: ki,
+                                parent_entry_id: pei,
+                                entries: entries,
+                            } => {
+                                if i == 1 {
+                                    let key = key_string_table.get_string(ki as usize);
+                                    println!("Complex types! {}({:?}) parent: {}", ki, key, pei);
+
+                                    for e in entries {
+                                        let v = e.to_value(&type_string_table).chain_err(|| "Could not convert entry to value")?;
+                                        println!("Value: {}", v.to_string());
+                                        println!("{:?}", v);
+                                    }
+                                }
+                            },
                         }
                     }
                     println!("Table type: {}", i);
@@ -79,5 +96,11 @@ impl PackageDecoder {
             Chunk::StringTable(st) => Some(st),
             _ => None,
         }
+    }
+
+    fn package_name(cursor: &mut Cursor<&[u8]>) -> Result<String> {
+        let initial_position = cursor.position();
+        let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
+        String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
     }
 }

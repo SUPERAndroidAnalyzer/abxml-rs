@@ -24,6 +24,7 @@ impl StringTableDecoder {
 
          for i in 0..header_string_table.string_amount {
              let current_offset = cursor.read_u32::<LittleEndian>()?;
+             println!("Str offset: {}; current_offset: {}", str_offset, current_offset);
              let position = str_offset + current_offset;
              let s = Self::parse_string(cursor.get_ref(), position, true).unwrap_or(String::new());
              string_table.strings.push(Rc::new(s));

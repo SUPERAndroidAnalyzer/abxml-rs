@@ -152,17 +152,19 @@ pub enum Value {
 
 const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
-const TOKEN_TYPE_REFERENCE_ID: u32 = 0x01000008;
-const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u32 = 0x02000008;
-const TOKEN_TYPE_STRING: u32 = 0x03000008;
-const TOKEN_TYPE_DIMENSION: u32 = 0x05000008;
-const TOKEN_TYPE_FRACTION: u32 = 0x06000008;
-const TOKEN_TYPE_INTEGER: u32 = 0x10000008;
-const TOKEN_TYPE_FLOAT: u32 = 0x04000008;
-const TOKEN_TYPE_FLAGS: u32 = 0x11000008;
-const TOKEN_TYPE_BOOLEAN: u32 = 0x12000008;
-const TOKEN_TYPE_COLOR: u32 = 0x1C000008;
-const TOKEN_TYPE_COLOR2: u32 = 0x1D000008;
+const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
+const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
+const TOKEN_TYPE_STRING: u8 = 0x03;
+const TOKEN_TYPE_FLOAT: u8 = 0x04;
+const TOKEN_TYPE_DIMENSION: u8 = 0x05;
+const TOKEN_TYPE_FRACTION: u8 = 0x06;
+const TOKEN_TYPE_DYN_REFERENCE: u8 = 0x07; // Unimplemented
+const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08; // Unimplemented
+const TOKEN_TYPE_INTEGER: u8 = 0x10;
+const TOKEN_TYPE_FLAGS: u8 = 0x11;
+const TOKEN_TYPE_BOOLEAN: u8 = 0x12;
+const TOKEN_TYPE_COLOR: u8 = 0x1C; // ARGB8
+const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 impl Value {
     pub fn to_string(&self) -> String {
@@ -182,7 +184,7 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u32, data: u32, str_table: &StringTable) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
