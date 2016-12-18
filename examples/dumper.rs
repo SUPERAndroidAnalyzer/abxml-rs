@@ -12,7 +12,7 @@ use abxml::BinaryXmlDecoder;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use abxml::parser::ArscDecoder;
+use abxml::parser::{ArscDecoder, XmlDecoder};
 use abxml::chunks::Chunk;
 use abxml::errors::*;
 
@@ -23,7 +23,7 @@ use log::{LogRecord, LogLevelFilter, LogLevel};
 
 fn main() {
     env_logger::init().unwrap();
-    
+
     if let Err(ref e) = run() {
         let err_str = Red.bold().paint("Error: ").to_string();
         println!("{}{}", err_str, Red.paint(e.description()));
@@ -59,8 +59,14 @@ fn run() -> Result<()> {
     };
 
     let content = file_get_contents(&path);
-    let decoder = ArscDecoder;
-    let chunks = decoder.decode(&content)?;
+    let p = Path::new(&path);
+    let chunks = if p.extension().unwrap() == "arsc" {
+        let decoder = ArscDecoder;
+        decoder.decode(&content)?
+    } else {
+        let decoder = XmlDecoder;
+        decoder.decode(&content)?
+    };
 
     for c in chunks {
         match c {
