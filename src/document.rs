@@ -51,7 +51,7 @@ pub struct HeaderStringTable {
     pub style_offset: u32,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct StringTable {
     pub strings: Vec<Rc<String>>,
     pub styles: Vec<Rc<String>>,

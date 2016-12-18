@@ -61,10 +61,10 @@ fn run() -> Result<()> {
     let content = file_get_contents(&path);
     let p = Path::new(&path);
     let chunks = if p.extension().unwrap() == "arsc" {
-        let decoder = Decoder::new();
+        let mut decoder = Decoder::new();
         decoder.decode_arsc(&content)?
     } else {
-        let decoder = Decoder::new();
+        let mut decoder = Decoder::new();
         decoder.decode_xml(&content)?
     };
 
