@@ -188,7 +188,7 @@ impl<'a> BinaryXmlDecoder<'a> {
             .into_iter()
             .map(|_| self.cursor.read_u32::<LittleEndian>().unwrap())
             .collect::<Vec<u32>>();
-
+        
         self.document.resource_table = ResourceTable { resources: resource_table };
 
         Ok(())

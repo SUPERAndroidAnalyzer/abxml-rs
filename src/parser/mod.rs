@@ -44,7 +44,6 @@ impl Decoder {
         let token = cursor.read_u16::<LittleEndian>()?;
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let chunk_size = cursor.read_u32::<LittleEndian>()?;
-        let package_amount = cursor.read_u32::<LittleEndian>()?;
 
         info!("Parsing resources.arsc. Buffer size: {}", raw_data.len());
 
