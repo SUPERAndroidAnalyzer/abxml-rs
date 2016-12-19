@@ -47,6 +47,15 @@ impl Decoder {
 
         info!("Parsing resources.arsc. Buffer size: {}", raw_data.len());
 
+        let chunk = ChunkLoader::read(self, &mut cursor)?;
+
+        match chunk {
+            Chunk::StringTable(st_rc) => {
+                self.string_table = Some(st_rc.clone());
+            },
+            _ => return Err("First chunk should be a string table".into()),
+        }
+
         ChunkLoader::read_all(self, &mut cursor, chunk_size as u64)
     }
 
