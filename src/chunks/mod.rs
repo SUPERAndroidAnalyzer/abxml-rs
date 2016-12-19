@@ -30,6 +30,7 @@ const TOKEN_PACKAGE: u16 = 0x0200;
 const TOKEN_TABLE_TYPE: u16 = 0x201;
 const TOKEN_TABLE_SPEC: u16 = 0x202;
 const TOKEN_XML_START_NAMESPACE: u16 = 0x100;
+const TOKEN_XML_END_NAMESPACE: u16 = 0x101;
 
 #[derive(Debug)]
 pub enum Chunk {
@@ -39,6 +40,7 @@ pub enum Chunk {
     TableTypeSpec(u32, Vec<u32>),
     ResourceTable(Vec<u32>),
     XmlStartNamespace(Rc<String>, Rc<String>),
+    XmlEndNamespace,
     Unknown,
 }
 
@@ -75,6 +77,7 @@ impl ChunkLoader {
              TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
              TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
              TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(decoder, &mut cursor, &chunk_header)?,
+             TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut cursor, &chunk_header)?,
              t => {
                  println!("{:X}", t);
 

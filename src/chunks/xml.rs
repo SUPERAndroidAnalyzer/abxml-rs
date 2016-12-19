@@ -27,4 +27,8 @@ impl XmlDecoder {
 
         Ok(Chunk::XmlStartNamespace(prefix, uri))
      }
+
+     pub fn decode_xml_namespace_end(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader) -> Result<Chunk> {
+         Ok(Chunk::XmlEndNamespace)
+     }
 }
