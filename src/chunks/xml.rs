@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable, Value, Attribute};
+use document::{HeaderStringTable, StringTable, Value, Attribute, Element};
 use errors::*;
 use parser::Decoder;
 use std::clone::Clone;
@@ -43,28 +43,34 @@ impl XmlDecoder {
          let attributes_amount = cursor.read_u32::<LittleEndian>()? as usize;
          let _unknwon3 = cursor.read_u32::<LittleEndian>()?;
 
-         let st = decoder.get_string_table();
-         let rc_st = match st {
-             &Some(ref rc_st) => {println!("Has string table"); rc_st.clone()},
-             &None => {return Err("No string table found".into());}
+         let (attributes, element_name) = {
+             let st = decoder.get_string_table();
+             let rc_st = match st {
+                 &Some(ref rc_st) => {rc_st.clone()},
+                 &None => {return Err("No string table found".into());}
+             };
+             let element_name = rc_st.get_string(element_name_idx as usize).unwrap().clone();
+             let mut attributes = Vec::new();
+             for _ in 0..attributes_amount {
+                 let attribute = Self::decode_attribute(cursor, &rc_st)?;
+                 attributes.push(attribute);
+             }
+
+             (attributes, element_name)
          };
-         let element_name = rc_st.get_string(element_name_idx as usize).unwrap().clone();
-         let mut attributes = Vec::new();
-         for _ in 0..attributes_amount {
-             let attribute = Self::decode_attribute(cursor, &rc_st);
-             attributes.push(attribute);
-         }
 
          if attributes.len() != attributes_amount {
              return Err("Excptected a distinct amount of elements".into());
          }
 
-         // element_container.start_element(Element::new(element_name.clone(), attributes));
+         decoder.get_element_container().start_element(Element::new(element_name.clone(), attributes));
 
          Ok(Chunk::XmlStartTag)
      }
 
      pub fn decode_xml_tag_end(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+         decoder.get_element_container().end_element();
+
          Ok(Chunk::XmlEndTag)
      }
 
