@@ -2,17 +2,19 @@ use chunks::{Chunk, ChunkLoader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use document::StringTable;
+use document::{StringTable, ElementContainer};
 use std::rc::Rc;
 
 pub struct Decoder {
     string_table: Option<Rc<StringTable>>,
+    element_container: ElementContainer,
 }
 
 impl Decoder {
     pub fn new() -> Self {
         Decoder {
             string_table: None,
+            element_container: ElementContainer::new(),
         }
     }
 
@@ -61,5 +63,9 @@ impl Decoder {
 
     pub fn get_string_table(&self) -> &Option<Rc<StringTable>> {
         &self.string_table
+    }
+
+    pub fn get_element_container(&mut self) -> &mut ElementContainer {
+        &mut self.element_container
     }
 }
