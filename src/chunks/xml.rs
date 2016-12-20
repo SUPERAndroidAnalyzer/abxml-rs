@@ -64,6 +64,10 @@ impl XmlDecoder {
          Ok(Chunk::XmlStartTag)
      }
 
+     pub fn decode_xml_tag_end(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+         Ok(Chunk::XmlEndTag)
+     }
+
      fn decode_attribute(cursor: &mut Cursor<&[u8]>, string_table: &StringTable) -> Result<Attribute> {
          let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
          let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
