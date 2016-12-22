@@ -310,7 +310,7 @@ impl ElementContainer {
         }
     }
 
-    pub fn get_root(self) -> Option<Element> {
-        self.root
+    pub fn get_root(&self) -> &Option<Element> {
+        &self.root
     }
 }
