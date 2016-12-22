@@ -4,11 +4,11 @@ extern crate error_chain;
 
 use std::env;
 use abxml::encoder::Xml;
-use abxml::BinaryXmlDecoder;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 use abxml::errors::*;
+use abxml::parser::Decoder;
 
 fn main() {
     if let Err(ref e) = run() {
@@ -41,10 +41,15 @@ fn run() -> Result<()> {
     };
 
     let content = file_get_contents(&path);
-    let parser = BinaryXmlDecoder::new(&content);
-    let result = parser.decode().unwrap();
-    let xml_content = Xml::encode(&result.resources, &result.root_element).chain_err(|| "Could not decode XML")?;
-    println!("{}", xml_content);
+    let mut parser = Decoder::new();
+    parser.decode_xml(&content).unwrap();
+    match parser.get_element_container().get_root() {
+        &Some(ref root) => {
+            let xml_content = Xml::encode(&parser.get_namespaces(), &root).chain_err(|| "Could not decode XML")?;
+            println!("{}", xml_content);
+        },
+        _ => (),
+    }
 
     Ok(())
 }

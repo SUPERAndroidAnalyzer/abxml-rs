@@ -41,7 +41,7 @@ impl PackageDecoder {
 
         let st = decoder.get_string_table();
         let rc_st = match st {
-            &Some(ref rc_st) => {println!("Has string table"); rc_st.clone()},
+            &Some(ref rc_st) => {rc_st.clone()},
             &None => {return Err("No string table found".into());}
         };
 

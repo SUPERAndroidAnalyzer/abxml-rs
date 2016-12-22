@@ -18,14 +18,20 @@ impl XmlDecoder {
         let prefix_idx = cursor.read_u32::<LittleEndian>()?;
         let uri_idx = cursor.read_u32::<LittleEndian>()?;
 
-        let st = decoder.get_string_table();
-        let rc_st = match st {
-            &Some(ref rc_st) => {println!("Has string table"); rc_st.clone()},
-            &None => {return Err("No string table found".into());}
+        let (prefix, uri) = {
+            let st = decoder.get_string_table();
+            let rc_st = match st {
+                &Some(ref rc_st) => {rc_st.clone()},
+                &None => {return Err("No string table found".into());}
+            };
+
+            let prefix = rc_st.get_string(prefix_idx as usize).unwrap().clone();
+            let uri = rc_st.get_string(uri_idx as usize).unwrap().clone();
+
+            (prefix, uri)
         };
 
-        let prefix = rc_st.get_string(prefix_idx as usize).unwrap().clone();
-        let uri = rc_st.get_string(uri_idx as usize).unwrap().clone();
+        decoder.push_namespace(prefix.clone(), uri.clone());
 
         Ok(Chunk::XmlStartNamespace(prefix, uri))
      }
@@ -63,13 +69,13 @@ impl XmlDecoder {
              return Err("Excptected a distinct amount of elements".into());
          }
 
-         decoder.get_element_container().start_element(Element::new(element_name.clone(), attributes));
+         decoder.get_mut_element_container().start_element(Element::new(element_name.clone(), attributes));
 
          Ok(Chunk::XmlStartTag)
      }
 
      pub fn decode_xml_tag_end(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
-         decoder.get_element_container().end_element();
+         decoder.get_mut_element_container().end_element();
 
          Ok(Chunk::XmlEndTag)
      }
