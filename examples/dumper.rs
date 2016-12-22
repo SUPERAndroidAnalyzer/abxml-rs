@@ -8,7 +8,6 @@ extern crate env_logger;
 
 use std::env;
 use abxml::encoder::Xml;
-use abxml::BinaryXmlDecoder;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;

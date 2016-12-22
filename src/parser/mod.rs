@@ -2,12 +2,13 @@ use chunks::{Chunk, ChunkLoader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use document::{StringTable, ElementContainer};
+use document::{StringTable, ElementContainer, Namespaces};
 use std::rc::Rc;
 
 pub struct Decoder {
     string_table: Option<Rc<StringTable>>,
     element_container: ElementContainer,
+    namespaces: Namespaces,
 }
 
 impl Decoder {
@@ -15,6 +16,7 @@ impl Decoder {
         Decoder {
             string_table: None,
             element_container: ElementContainer::new(),
+            namespaces: Namespaces::new(),
         }
     }
 
@@ -65,7 +67,19 @@ impl Decoder {
         &self.string_table
     }
 
-    pub fn get_element_container(&mut self) -> &mut ElementContainer {
+    pub fn get_mut_element_container(&mut self) -> &mut ElementContainer {
         &mut self.element_container
+    }
+
+    pub fn get_element_container(&self) -> &ElementContainer {
+        &self.element_container
+    }
+
+    pub fn push_namespace(&mut self, prefix: Rc<String>, namespace: Rc<String>) {
+        self.namespaces.insert(prefix, namespace);
+    }
+
+    pub fn get_namespaces(&self) -> &Namespaces {
+        &self.namespaces
     }
 }
