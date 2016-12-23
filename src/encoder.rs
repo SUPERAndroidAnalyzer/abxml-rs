@@ -58,7 +58,7 @@ impl Xml {
         let mut output = Vec::new();
         let xmlns = Rc::new(String::from("xmlns"));
 
-        for (namespace, prefix) in namespaces {
+        for (prefix, namespace) in namespaces {
             let label = Self::attribute_name(prefix.clone(), Some(xmlns.clone()));
 
             output.push(

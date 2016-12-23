@@ -58,7 +58,7 @@ impl XmlDecoder {
              let element_name = rc_st.get_string(element_name_idx as usize).unwrap().clone();
              let mut attributes = Vec::new();
              for _ in 0..attributes_amount {
-                 let attribute = Self::decode_attribute(cursor, &rc_st)?;
+                 let attribute = Self::decode_attribute(decoder, cursor, &rc_st)?;
                  attributes.push(attribute);
              }
 
@@ -80,7 +80,7 @@ impl XmlDecoder {
          Ok(Chunk::XmlEndTag)
      }
 
-     fn decode_attribute(cursor: &mut Cursor<&[u8]>, string_table: &StringTable) -> Result<Attribute> {
+     fn decode_attribute(decoder: &Decoder, cursor: &mut Cursor<&[u8]>, string_table: &StringTable) -> Result<Attribute> {
          let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
          let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
          let attr_value_idx = cursor.read_u32::<LittleEndian>()?;
@@ -94,13 +94,13 @@ impl XmlDecoder {
              let uri = string_table.get_string(attr_ns_idx as usize).unwrap().clone();
 
              // TODO: Load namespace
-             /*match document.resources.get(&uri) {
+             match decoder.get_namespaces().get(&uri) {
                  Some(uri_prefix) => {
                      namespace = Some(uri);
                      prefix = Some(uri_prefix.clone());
                  }
                  None =>(),
-             };*/
+             };
          }
 
          let value = if attr_value_idx == TOKEN_VOID {
