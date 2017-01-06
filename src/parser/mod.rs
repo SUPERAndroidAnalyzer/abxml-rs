@@ -75,7 +75,7 @@ impl Decoder {
         &self.element_container
     }
 
-    pub fn push_namespace(&mut self, prefix: Rc<String>, namespace: Rc<String>) {
+    pub fn push_namespace(&mut self, namespace: Rc<String>, prefix: Rc<String>) {
         self.namespaces.insert(prefix, namespace);
     }
 
