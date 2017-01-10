@@ -42,7 +42,7 @@ impl TableTypeDecoder {
         for i in 0..entry_amount {
             if offsets[i as usize] == 0xFFFFFFFF {
                 let position = cursor.position();
-                cursor.set_position(position + 4);
+                // cursor.set_position(position + 4);
             } else {
                 let maybe_entry = Self::decode_entry(cursor)?;
 
