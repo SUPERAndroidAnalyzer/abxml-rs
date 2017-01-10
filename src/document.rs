@@ -1,3 +1,4 @@
+
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::fmt::Error as FmtError;
@@ -158,8 +159,8 @@ const TOKEN_TYPE_STRING: u8 = 0x03;
 const TOKEN_TYPE_FLOAT: u8 = 0x04;
 const TOKEN_TYPE_DIMENSION: u8 = 0x05;
 const TOKEN_TYPE_FRACTION: u8 = 0x06;
-const TOKEN_TYPE_DYN_REFERENCE: u8 = 0x07; // Unimplemented
-const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08; // Unimplemented
+const TOKEN_TYPE_DYN_REFERENCE: u8 = 0x07;
+const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08;
 const TOKEN_TYPE_INTEGER: u8 = 0x10;
 const TOKEN_TYPE_FLAGS: u8 = 0x11;
 const TOKEN_TYPE_BOOLEAN: u8 = 0x12;
@@ -186,8 +187,8 @@ impl Value {
 
     pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID => Value::ReferenceId(format!("@id/0x{:#8}", data)),
-            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID => {
+            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(format!("@id/0x{:#8}", data)),
+            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
                 Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
             }
             TOKEN_TYPE_STRING => {
