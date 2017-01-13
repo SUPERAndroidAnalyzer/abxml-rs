@@ -136,7 +136,11 @@ impl<'a> ChunkLoaderStream<'a> {
             },
         };
 
-        self.cursor.set_position(chunk_header.get_chunk_end());
+        if let Chunk::Package = chunk {
+            // In case of package, we set the next position of the cursor inside the decoder
+        } else {
+            self.cursor.set_position(chunk_header.get_chunk_end());
+        }
         Ok(chunk)
     }
 }
