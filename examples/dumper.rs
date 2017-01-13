@@ -5,6 +5,7 @@ extern crate ansi_term;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate byteorder;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -13,7 +14,10 @@ use std::fs::File;
 use std::io::prelude::*;
 use abxml::parser::Decoder;
 use abxml::chunks::Chunk;
+use abxml::chunks::ChunkLoaderStream;
 use abxml::errors::*;
+use std::io::Cursor;
+use byteorder::{LittleEndian, ReadBytesExt};
 
 use ansi_term::Colour::{Red, Green, Blue, Yellow};
 use ansi_term::Style;
@@ -58,7 +62,39 @@ fn run() -> Result<()> {
     };
 
     let content = file_get_contents(&path);
-    let p = Path::new(&path);
+    let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
+
+    // resources.arsc head. Move somewhere else
+    let token = cursor.read_u16::<LittleEndian>()?;
+    let header_size = cursor.read_u16::<LittleEndian>()?;
+    let chunk_size = cursor.read_u32::<LittleEndian>()?;
+    let package_amount = cursor.read_u32::<LittleEndian>()?;
+
+    let stream = ChunkLoaderStream::new(cursor);
+
+    for c in stream {
+        match c {
+            Chunk::Unknown => {
+                println!("Unknown chunk!");
+            },
+            Chunk::StringTable(st) => {
+                println!("Strint table chunk");
+                println!("Strings size {}", st.strings.len());
+                println!("Styles size {}", st.styles.len());
+            },
+            Chunk::Package => {
+                println!("Package chunk");
+            },
+            Chunk::TableType(id, rc, entries) => {
+                // println!("Resource config chunk");
+                // println!("Resc config {:?}", rc);
+            },
+            _ => {
+                println!("Unknouwn Chunk!");
+            }
+        }
+    }
+    /*let p = Path::new(&path);
     let chunks = if p.extension().unwrap() == "arsc" {
         let mut decoder = Decoder::new();
         decoder.decode_arsc(&content)?
@@ -88,7 +124,7 @@ fn run() -> Result<()> {
                 println!("Unknouwn Chunk!");
             }
         }
-    }
+    }*/
     Ok(())
 }
 

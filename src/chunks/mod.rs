@@ -35,7 +35,7 @@ const TOKEN_XML_TAG_START: u16 = 0x102;
 const TOKEN_XML_TAG_END: u16 = 0x103;
 
 #[derive(Debug)]
-pub enum Chunk {
+pub enum Chunk   {
     StringTable(Rc<StringTable>),
     Package,
     TableType(u8, Box<ResourceConfiguration>, Vec<Entry>),
@@ -75,8 +75,8 @@ impl ChunkLoader {
          let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
 
          let chunk = match token {
-             TOKEN_STRING_TABLE => StringTableDecoder::decode(decoder, &mut cursor, &chunk_header)?,
-             TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_PACKAGE => PackageDecoder::decode(&mut cursor, &chunk_header)?,
              TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
              TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(decoder, &mut cursor, &chunk_header)?,
              TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
@@ -93,5 +93,71 @@ impl ChunkLoader {
 
          cursor.set_position(chunk_header.get_chunk_end());
          Ok(chunk)
+    }
+}
+
+pub struct ChunkLoaderStream<'a> {
+    cursor: Cursor<&'a [u8]>,
+    iterator: Option<Box<Iterator<Item = Chunk>>>,
+}
+
+impl<'a> ChunkLoaderStream<'a> {
+    pub fn new(cursor: Cursor<&'a [u8]>) -> Self {
+        ChunkLoaderStream {
+            cursor: cursor,
+            iterator: None,
+        }
+    }
+
+    fn read_one(&mut self) -> Result<Chunk> {
+        let initial_position = self.cursor.position();
+        println!("Initial position: {}", initial_position);
+        let token = self.cursor.read_u16::<LittleEndian>()?;
+        let header_size = self.cursor.read_u16::<LittleEndian>()?;
+        let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
+        let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
+        println!("Chunk end: {}", chunk_header.get_chunk_end());
+
+        let chunk = match token {
+            // TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
+            TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
+            /*TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
+            TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut cursor, &chunk_header)?,
+            TOKEN_XML_TAG_START => XmlDecoder::decode_xml_tag_start(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(decoder, &mut cursor, &chunk_header)?,*/
+            t => {
+                println!("{:X}", t);
+
+                Chunk::Unknown
+            },
+        };
+
+        self.cursor.set_position(chunk_header.get_chunk_end());
+        Ok(chunk)
+    }
+}
+
+impl<'a> Iterator for ChunkLoaderStream<'a> {
+    type Item = Chunk;
+
+    fn next(&mut self) -> Option<Chunk> {
+        if self.cursor.position() == self.cursor.get_ref().len() as u64 {
+            return None;
+        }
+
+        match self.read_one() {
+            Ok(c) => {
+                Some(c)
+            },
+            Err(e) => {
+                error!("Error reading one of the chunks");
+                println!("Error: {}", e);
+                None
+            }
+        }
     }
 }
