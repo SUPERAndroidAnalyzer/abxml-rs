@@ -1,16 +1,15 @@
-use chunks::{Chunk, ChunkLoader, ChunkHeader};
+use chunks::{Chunk, ChunkLoader, ChunkLoaderStream, ChunkHeader};
 use chunks::table_type::Entry;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
-use parser::Decoder;
 
 pub struct PackageDecoder;
 
 impl PackageDecoder {
-    pub fn decode(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+    pub fn decode<'a>(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
         let id = cursor.read_u32::<LittleEndian>()?;
         let package_name = Self::package_name(cursor)?;
         println!("Package name: {}", package_name);
@@ -34,7 +33,7 @@ impl PackageDecoder {
         cursor.set_position(header.get_data_offset());
 
         let cursor_len = cursor.get_ref().len() as u64;
-        let type_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
+        /*let type_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
         let key_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
 
         let inner_chunks = ChunkLoader::read_all(decoder, cursor, cursor_len)?;
@@ -84,7 +83,7 @@ impl PackageDecoder {
                 },
                 _ => (),
             }
-        }
+        }*/
         // chunks.extend(inner_chunks);
 
         Ok(Chunk::Package)
