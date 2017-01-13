@@ -1,4 +1,5 @@
 use chunks::{Chunk, ChunkLoader};
+use visitor::ChunkVisitor;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
