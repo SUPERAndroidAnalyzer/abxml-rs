@@ -32,7 +32,7 @@ impl PackageDecoder {
 
         cursor.set_position(header.get_data_offset());
 
-        let cursor_len = cursor.get_ref().len() as u64;
+        //let cursor_len = cursor.get_ref().len() as u64;
         /*let type_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
         let key_string_table = Self::get_string_table(ChunkLoader::read(decoder, cursor).unwrap()).unwrap();
 
