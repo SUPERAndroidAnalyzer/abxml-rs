@@ -77,8 +77,8 @@ impl ChunkLoader {
          let chunk = match token {
              TOKEN_STRING_TABLE => StringTableDecoder::decode(decoder, &mut cursor, &chunk_header)?,
              TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
-             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut cursor, &chunk_header)?,
-             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut cursor, &chunk_header)?,
+             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(decoder, &mut cursor, &chunk_header)?,
              TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
              TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(decoder, &mut cursor, &chunk_header)?,
              TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut cursor, &chunk_header)?,

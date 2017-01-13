@@ -9,6 +9,7 @@ pub struct Decoder {
     string_table: Option<Rc<StringTable>>,
     element_container: ElementContainer,
     namespaces: Namespaces,
+    type_specs: Vec<Chunk>,
 }
 
 impl Decoder {
@@ -17,6 +18,7 @@ impl Decoder {
             string_table: None,
             element_container: ElementContainer::new(),
             namespaces: Namespaces::new(),
+            type_specs: Vec::new(),
         }
     }
 
@@ -77,6 +79,17 @@ impl Decoder {
 
     pub fn push_namespace(&mut self, namespace: Rc<String>, prefix: Rc<String>) {
         self.namespaces.insert(prefix, namespace);
+    }
+
+    pub fn push_type_spec(&mut self, type_spec: Chunk) {
+        self.type_specs.push(type_spec);
+    }
+
+    pub fn get_last_type_spec(&self) -> Option<&Chunk> {
+        match self.type_specs.last() {
+            Some(c) => Some(&c),
+            None => None,
+        }
     }
 
     pub fn get_namespaces(&self) -> &Namespaces {
