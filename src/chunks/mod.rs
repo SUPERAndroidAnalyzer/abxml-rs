@@ -119,8 +119,8 @@ impl<'a> ChunkLoaderStream<'a> {
         println!("Chunk end: {}", chunk_header.get_chunk_end());
 
         let chunk = match token {
-            // TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
+            TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
+            // TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
             /*TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(decoder, &mut cursor, &chunk_header)?,
