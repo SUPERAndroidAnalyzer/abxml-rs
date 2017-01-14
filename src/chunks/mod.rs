@@ -27,9 +27,12 @@ pub use self::package::PackageWrapper as PackageWrapper;
 pub use self::package::Package as Package;
 pub use self::table_type_spec::TypeSpecWrapper as TypeSpecWrapper;
 pub use self::table_type_spec::TypeSpec as TypeSpec;
+pub use self::table_type::TableTypeWrapper as TableTypeWrapper;
+pub use self::table_type::TableType as TableType;
 
 use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;
+use self::table_type::TableTypeDecoder;
 
 
 // use self::table_type::{Entry, ResourceConfiguration};
@@ -51,9 +54,8 @@ pub enum Chunk<'a>   {
     StringTable(StringTableWrapper<'a>),
     Package(PackageWrapper<'a>),
     TableTypeSpec(TypeSpecWrapper<'a>),
-
-    TableType,
-    // TableTypeSpec(u32, Vec<u32>),
+    TableType(TableTypeWrapper<'a>),
+    
     ResourceTable(Vec<u32>),
     XmlStartNamespace(Rc<String>, Rc<String>),
     XmlEndNamespace,
@@ -84,8 +86,8 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut self.cursor, &chunk_header)?,
-            /*TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
-            TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+            TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut self.cursor, &chunk_header)?,
+            /*
 
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
             TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(decoder, &mut cursor, &chunk_header)?,
