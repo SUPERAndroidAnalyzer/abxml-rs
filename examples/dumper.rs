@@ -98,7 +98,13 @@ fn run() -> Result<()> {
 
                 println!("TableTypeSpec chunk");
                 println!("\tId: {}", type_spec.get_id());
-            }
+            },
+            Chunk::TableType(ttw) => {
+                let table_type = TableType::new(ttw);
+
+                println!("TableType chunk");
+                println!("\tId: {}", table_type.get_id());
+            },
             //Chunk::TableType(id, rc, entries) => {
                 // println!("Resource config chunk");
                 // println!("Resc config {:?}", rc);
