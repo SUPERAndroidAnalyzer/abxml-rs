@@ -4,14 +4,14 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
-use parser::Decoder;
+// use parser::Decoder;
 
 pub struct TableTypeDecoder;
 
 const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
-    pub fn decode(decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
         info!("Table type decoding @{}", header.get_offset());
         let id = cursor.read_u8()?;
         cursor.read_u8()?;  // Padding
@@ -25,12 +25,12 @@ impl TableTypeDecoder {
         let a = header.get_offset() + (start as u64) - ((count * 4) as u64);
         cursor.set_position(header.get_data_offset());
 
-        let entries = Self::decode_entries(decoder, cursor, id as u32, count).chain_err(|| "Entry decoding failed")?;
+        let entries = Self::decode_entries(cursor, id as u32, count).chain_err(|| "Entry decoding failed")?;
 
-        Ok(Chunk::TableType(id, Box::new(config), entries))
+        Ok(Chunk::TableType)
     }
 
-    fn decode_entries(decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, type_id: u32, entry_amount: u32) -> Result<Vec<Entry>> {
+    fn decode_entries(cursor: &mut Cursor<&[u8]>, type_id: u32, entry_amount: u32) -> Result<Vec<Entry>> {
         let base_offset = cursor.position();
         let mut entries = Vec::new();
         let mut offsets = Vec::new();
@@ -48,16 +48,10 @@ impl TableTypeDecoder {
                 let maybe_entry = Self::decode_entry(cursor)?;
 
                 match maybe_entry {
-                    Some(e) => {
-                        let current_type_spec = decoder.get_last_type_spec().unwrap();
+                    Some(_) => {
+                        /*let current_type_spec = decoder.get_last_type_spec().unwrap();
                         let id = match current_type_spec {
                             &Chunk::TableTypeSpec(id, ref resources) => {
-                                /*println!("Resources: {:?}", resources);
-                                println!("Type ID: {}", type_id);
-
-                                if resources.iter().find(|x| **x == type_id).is_some() {
-                                    println!("Has type_id");
-                                }*/
                                 if id == type_id {
                                     ;// println!("Has to convert id!");
                                 } else {
@@ -74,6 +68,7 @@ impl TableTypeDecoder {
 
                         // println!("Entry key: {} - {:X}", e.get_key(), e.get_key() << 24);
                         entries.push(e);
+                        */
                     },
                     None => {
                         debug!("Entry with a negative count");
