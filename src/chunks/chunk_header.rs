@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Clone, Copy)]
 pub struct ChunkHeader {
     offset: u64,
     header_size: u16,
