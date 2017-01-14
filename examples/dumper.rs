@@ -17,6 +17,8 @@ use abxml::chunks::ChunkLoaderStream;
 use abxml::chunks::StringTable;*/
 use abxml::chunks::*;
 use abxml::errors::*;
+use abxml::visitor::*;
+
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -65,8 +67,12 @@ fn run() -> Result<()> {
     let content = file_get_contents(&path);
     let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
 
+    let visitor = PrintVisitor;
+    let executor = Executor::arsc(cursor, visitor);
+
+
     // resources.arsc head. Move somewhere else
-    let token = cursor.read_u16::<LittleEndian>()?;
+    /*let token = cursor.read_u16::<LittleEndian>()?;
     let header_size = cursor.read_u16::<LittleEndian>()?;
     let chunk_size = cursor.read_u32::<LittleEndian>()?;
     let package_amount = cursor.read_u32::<LittleEndian>()?;
@@ -113,57 +119,9 @@ fn run() -> Result<()> {
                 println!("Unknouwn Chunk!");
             }
         }
-    }
-    /*let p = Path::new(&path);
-    let chunks = if p.extension().unwrap() == "arsc" {
-        let mut decoder = Decoder::new();
-        decoder.decode_arsc(&content)?
-    } else {
-        let mut decoder = Decoder::new();
-        decoder.decode_xml(&content)?
-    };
-
-    for c in chunks {
-        match c {
-            Chunk::Unknown => {
-                println!("Unknown chunk!");
-            },
-            Chunk::StringTable(st) => {
-                println!("Strint table chunk");
-                println!("Strings size {}", st.strings.len());
-                println!("Styles size {}", st.styles.len());
-            },
-            Chunk::Package => {
-                println!("Package chunk");
-            },
-            Chunk::TableType(id, rc, entries) => {
-                // println!("Resource config chunk");
-                // println!("Resc config {:?}", rc);
-            },
-            _ => {
-                println!("Unknouwn Chunk!");
-            }
-        }
     }*/
     Ok(())
 }
-
-/*fn initialize_logger() {
-    let format = |record: &LogRecord| {
-        match record.level() {
-            _ => format!("{}: {}", record.level(), record.args()),
-        }
-    };
-
-    let mut builder = LogBuilder::new();
-    let builder_state = builder.format(format)
-        .filter(None, log_level)
-        .init();
-
-    if let Err(e) = builder_state {
-        println!("Could not initialize logger: {}", e);
-    }
-}*/
 
 fn file_get_contents(path: &str) -> Vec<u8> {
     let path = Path::new(path);

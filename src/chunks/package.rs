@@ -12,7 +12,7 @@ impl PackageDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
         let id = cursor.read_u32::<LittleEndian>()?;
         let package_name = Self::package_name(cursor)?;
-        println!("Package name: {}", package_name);
+        // println!("Package name: {}", package_name);
 
         let pos = cursor.position() + 256;
         cursor.set_position(pos);
@@ -23,12 +23,12 @@ impl PackageDecoder {
         let key_string_offset = cursor.read_u32::<LittleEndian>()?;
         let last_public_key = cursor.read_u32::<LittleEndian>()?;
         let type_id_offset = cursor.read_u32::<LittleEndian>()?;
-        println!("Id: {}", id);
+        /*println!("Id: {}", id);
         println!("Type String offset: {}", type_string_offset);
         println!("Last public type: {}", last_public_type);
         println!("Key string offset: {}", key_string_offset);
         println!("Last public key: {}", last_public_key);
-        println!("Type ID offset: {}", type_id_offset);
+        println!("Type ID offset: {}", type_id_offset);*/
 
         cursor.set_position(header.get_data_offset());
 
