@@ -12,7 +12,7 @@ const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        info!("Table type decoding @{}", header.get_offset());
+        /*info!("Table type decoding @{}", header.get_offset());
         let id = cursor.read_u8()?;
         cursor.read_u8()?;  // Padding
         cursor.read_u16::<LittleEndian>()?; // Padding
@@ -27,7 +27,10 @@ impl TableTypeDecoder {
 
         let entries = Self::decode_entries(cursor, id as u32, count).chain_err(|| "Entry decoding failed")?;
 
-        Ok(Chunk::TableType)
+        Ok(Chunk::TableType)*/
+
+        let ttw = TableTypeWrapper::new(cursor.get_ref(), (*header).clone());
+        Ok(Chunk::TableType(ttw))
     }
 
     fn decode_entries(cursor: &mut Cursor<&[u8]>, type_id: u32, entry_amount: u32) -> Result<Vec<Entry>> {
@@ -148,6 +151,43 @@ impl TableTypeDecoder {
         let entry = Entry::new_complex(header.get_key_index(), parent_entry, entries);
 
         Ok(Some(entry))
+    }
+}
+
+pub struct TableTypeWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> TableTypeWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        TableTypeWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+
+    pub fn get_id(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+
+        cursor.read_u32::<LittleEndian>().unwrap()
+    }
+}
+
+pub struct TableType<'a> {
+    wrapper: TableTypeWrapper<'a>,
+}
+
+impl<'a> TableType<'a> {
+    pub fn new(wrapper: TableTypeWrapper<'a>) -> Self {
+        TableType {
+            wrapper: wrapper,
+        }
+    }
+
+    pub fn get_id(&self) -> u8 {
+        (self.wrapper.get_id() & 0xF) as u8
     }
 }
 
