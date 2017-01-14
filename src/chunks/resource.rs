@@ -4,13 +4,12 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable};
 use errors::*;
-use parser::Decoder;
 use std::clone::Clone;
 
 pub struct ResourceDecoder;
 
 impl ResourceDecoder {
-    pub fn decode(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
         cursor.set_position(header.get_data_offset());
         let amount = (header.get_chunk_end() - header.get_data_offset()) / 4;
 
@@ -21,4 +20,30 @@ impl ResourceDecoder {
 
         Ok(Chunk::ResourceTable(resource_table))
      }
+}
+
+struct ResourceWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> ResourceWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        ResourceWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+}
+
+struct Resource<'a> {
+    wrapper: ResourceWrapper<'a>,
+}
+
+impl<'a> Resource<'a> {
+    pub fn new(wrapper: ResourceWrapper<'a>) -> Self {
+        Resource {
+            wrapper: wrapper,
+        }
+    }
 }

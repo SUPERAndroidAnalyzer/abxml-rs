@@ -7,10 +7,10 @@ pub mod string_table;
 mod chunk_header;
 mod package;
 mod table_type;
+mod resource;
 /*pub mod package;
 mod table_type;
 mod table_type_spec;
-mod resource;
 mod xml;
 
 pub use self::package::PackageDecoder as PackageDecoder;
