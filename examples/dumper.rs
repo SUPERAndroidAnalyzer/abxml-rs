@@ -12,9 +12,9 @@ use abxml::encoder::Xml;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use abxml::parser::Decoder;
 use abxml::chunks::Chunk;
 use abxml::chunks::ChunkLoaderStream;
+use abxml::chunks::StringTable;
 use abxml::errors::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -77,18 +77,21 @@ fn run() -> Result<()> {
             Chunk::Unknown => {
                 println!("Unknown chunk!");
             },
-            Chunk::StringTable(st) => {
+            Chunk::StringTable(stw) => {
+                let mut st = StringTable::new(stw);
+
                 println!("Strint table chunk");
-                println!("Strings size {}", st.strings.len());
-                println!("Styles size {}", st.styles.len());
+                println!("Strings size {}", st.get_strings_len());
+                println!("Styles size {}", st.get_styles_len());
+                println!("First string: {}", st.get_string(8000).unwrap());
             },
             Chunk::Package => {
                 println!("Package chunk");
             },
-            Chunk::TableType(id, rc, entries) => {
+            //Chunk::TableType(id, rc, entries) => {
                 // println!("Resource config chunk");
                 // println!("Resc config {:?}", rc);
-            },
+            //},
             _ => {
                 println!("Unknouwn Chunk!");
             }
