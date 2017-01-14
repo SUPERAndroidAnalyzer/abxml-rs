@@ -137,7 +137,7 @@ impl<'a> StringTable <'a> {
     }
 
     pub fn get_string(&mut self, idx: u32) -> Result<Rc<String>> {
-        if (idx > self.get_strings_len()) {
+        if idx > self.get_strings_len() {
             return Err("Index out of bounds".into());
         }
 
