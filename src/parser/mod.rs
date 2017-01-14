@@ -1,4 +1,4 @@
-use chunks::{Chunk, ChunkLoader};
+use chunks::{Chunk};
 use visitor::ChunkVisitor;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -6,7 +6,7 @@ use errors::*;
 use document::{StringTable, ElementContainer, Namespaces};
 use std::rc::Rc;
 
-pub struct Decoder {
+/*pub struct Decoder {
     string_table: Option<Rc<StringTable>>,
     element_container: ElementContainer,
     namespaces: Namespaces,
@@ -97,3 +97,4 @@ impl Decoder {
         &self.namespaces
     }
 }
+*/
