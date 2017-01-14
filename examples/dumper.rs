@@ -15,6 +15,7 @@ use std::io::prelude::*;
 use abxml::chunks::Chunk;
 use abxml::chunks::ChunkLoaderStream;
 use abxml::chunks::StringTable;
+use abxml::chunks::Package;
 use abxml::errors::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -83,10 +84,14 @@ fn run() -> Result<()> {
                 println!("Strint table chunk");
                 println!("Strings size {}", st.get_strings_len());
                 println!("Styles size {}", st.get_styles_len());
-                println!("First string: {}", st.get_string(8000).unwrap());
+                println!("First string: {}", st.get_string(0).unwrap());
             },
-            Chunk::Package => {
+            Chunk::Package(pw) => {
+                let package = Package::new(pw);
+
                 println!("Package chunk");
+                println!("\tId: {}", package.get_id());
+                println!("\tName: {}", package.get_name().unwrap());
             },
             //Chunk::TableType(id, rc, entries) => {
                 // println!("Resource config chunk");
