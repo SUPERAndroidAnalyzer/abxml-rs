@@ -8,9 +8,9 @@ mod chunk_header;
 mod package;
 mod table_type;
 mod resource;
+mod table_type_spec;
 /*pub mod package;
 mod table_type;
-mod table_type_spec;
 mod xml;
 
 pub use self::package::PackageDecoder as PackageDecoder;
@@ -25,7 +25,12 @@ pub use self::string_table::StringTable as StringTable;
 pub use self::chunk_header::ChunkHeader as ChunkHeader;
 pub use self::package::PackageWrapper as PackageWrapper;
 pub use self::package::Package as Package;
+pub use self::table_type_spec::TypeSpecWrapper as TypeSpecWrapper;
+pub use self::table_type_spec::TypeSpec as TypeSpec;
+
 use self::package::PackageDecoder;
+use self::table_type_spec::TableTypeSpecDecoder;
+
 
 // use self::table_type::{Entry, ResourceConfiguration};
 use errors::*;
@@ -45,8 +50,10 @@ const TOKEN_XML_TAG_END: u16 = 0x103;
 pub enum Chunk<'a>   {
     StringTable(StringTableWrapper<'a>),
     Package(PackageWrapper<'a>),
+    TableTypeSpec(TypeSpecWrapper<'a>),
+
     TableType,
-    TableTypeSpec(u32, Vec<u32>),
+    // TableTypeSpec(u32, Vec<u32>),
     ResourceTable(Vec<u32>),
     XmlStartNamespace(Rc<String>, Rc<String>),
     XmlEndNamespace,
@@ -76,9 +83,10 @@ impl<'a> ChunkLoaderStream<'a> {
         let chunk = match token {
             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
+            TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut self.cursor, &chunk_header)?,
             /*TOKEN_PACKAGE => PackageDecoder::decode(decoder, &mut cursor, &chunk_header)?,
             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(decoder, &mut cursor, &chunk_header)?,
-            TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(decoder, &mut cursor, &chunk_header)?,
+
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
             TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(decoder, &mut cursor, &chunk_header)?,
             TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut cursor, &chunk_header)?,

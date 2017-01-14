@@ -12,10 +12,10 @@ use abxml::encoder::Xml;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use abxml::chunks::Chunk;
+/*use abxml::chunks::Chunk;
 use abxml::chunks::ChunkLoaderStream;
-use abxml::chunks::StringTable;
-use abxml::chunks::Package;
+use abxml::chunks::StringTable;*/
+use abxml::chunks::*;
 use abxml::errors::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -93,6 +93,12 @@ fn run() -> Result<()> {
                 println!("\tId: {}", package.get_id());
                 println!("\tName: {}", package.get_name().unwrap());
             },
+            Chunk::TableTypeSpec(tsw) => {
+                let type_spec = TypeSpec::new(tsw);
+
+                println!("TableTypeSpec chunk");
+                println!("\tId: {}", type_spec.get_id());
+            }
             //Chunk::TableType(id, rc, entries) => {
                 // println!("Resource config chunk");
                 // println!("Resc config {:?}", rc);
