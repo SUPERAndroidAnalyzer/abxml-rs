@@ -1,6 +1,7 @@
 extern crate abxml;
 #[macro_use]
 extern crate error_chain;
+extern crate byteorder;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -8,7 +9,11 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 use abxml::errors::*;
-use abxml::parser::Decoder;
+use abxml::chunks::*;
+use abxml::visitor::*;
+
+use std::io::Cursor;
+use byteorder::{LittleEndian, ReadBytesExt};
 
 fn main() {
     if let Err(ref e) = run() {
@@ -41,15 +46,11 @@ fn run() -> Result<()> {
     };
 
     let content = file_get_contents(&path);
-    let mut parser = Decoder::new();
-    parser.decode_xml(&content).unwrap();
-    match parser.get_element_container().get_root() {
-        &Some(ref root) => {
-            let xml_content = Xml::encode(&parser.get_namespaces(), &root).chain_err(|| "Could not decode XML")?;
-            println!("{}", xml_content);
-        },
-        _ => (),
-    }
+    let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
+
+    let mut visitor = ModelVisitor::new();
+    let executor = Executor::xml(cursor, &mut visitor);
+
 
     Ok(())
 }
