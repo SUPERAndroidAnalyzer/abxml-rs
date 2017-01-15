@@ -183,7 +183,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
     }
 
-    pub fn get_tag_start(&self, namespaces: &Namespaces, string_table: &mut StringTable, entries: &Entries) -> Result<(Vec<Attribute>, Rc<String>)> {
+    pub fn get_tag_start(&self, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(36));
 
@@ -191,7 +191,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         let mut attributes = Vec::new();
         for _ in 0..self.get_attributes_amount()? {
-            let attribute = self.decode_attribute(&mut cursor, &namespaces, string_table, entries)?;
+            let attribute = self.decode_attribute(&mut cursor, &namespaces, string_table)?;
             attributes.push(attribute);
         }
 
@@ -202,7 +202,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         Ok((attributes, element_name))
     }
 
-    fn decode_attribute(&self, cursor: &mut Cursor<&[u8]>, namespaces: &Namespaces, string_table: &mut StringTable, entries: &Entries) -> Result<Attribute> {
+    fn decode_attribute(&self, cursor: &mut Cursor<&[u8]>, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<Attribute> {
         let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_value_idx = cursor.read_u32::<LittleEndian>()?;
@@ -226,7 +226,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         }
 
         let value = if attr_value_idx == TOKEN_VOID {
-            Value::new(attr_type_idx as u8, attr_data, string_table, entries)?
+            Value::new(attr_type_idx as u8, attr_data, string_table)?
         } else {
             Value::String(string_table.get_string(attr_value_idx).unwrap().clone())
         };
@@ -248,8 +248,8 @@ impl<'a> XmlTagStart<'a> {
         }
     }
 
-    pub fn get_tag(&self, namespaces: &Namespaces, string_table: &mut StringTable, entries: &Entries) -> Result<(Vec<Attribute>, Rc<String>)> {
-        self.wrapper.get_tag_start(namespaces, string_table, entries)
+    pub fn get_tag(&self, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
+        self.wrapper.get_tag_start(namespaces, string_table)
     }
 }
 
