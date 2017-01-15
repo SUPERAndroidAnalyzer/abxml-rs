@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::collections::HashMap;
 use chunks::table_type::Entry;
 use std::rc::Rc;
-use document::Namespaces;
+use document::{Namespaces, Element, ElementContainer};
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {}
@@ -145,6 +145,7 @@ pub struct ModelVisitor<'a> {
     package_mask: u32,
     entries: HashMap<u32, Entry>,
     namespaces: Namespaces,
+    container: ElementContainer,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -156,11 +157,20 @@ impl<'a> ModelVisitor<'a> {
             package_mask: 0,
             entries: HashMap::new(),
             namespaces: Namespaces::new(),
+            container: ElementContainer::new(),
         }
     }
 
     pub fn get_entries(&self) -> &HashMap<u32, Entry> {
         &self.entries
+    }
+
+    pub fn get_namespaces(&self) -> &Namespaces {
+        &self.namespaces
+    }
+
+    pub fn get_root(&self) -> &Option<Element> {
+        &self.container.get_root()
     }
 }
 
@@ -228,11 +238,16 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         match self.main_string_table {
             Some(ref mut string_table) => {
                 let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
+                let element = Element::new(element_name, attributes);
+                self.container.start_element(element);
             },
             None => {
                 println!("No main string table found!");
             }
         }
+    }
 
+    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {
+        self.container.end_element()
     }
 }
