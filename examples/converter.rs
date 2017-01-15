@@ -45,11 +45,25 @@ fn run() -> Result<()> {
         }
     };
 
-    let content = file_get_contents(&path);
+    let xml_path = match env::args().nth(2) {
+        Some(path) => path,
+        None => {
+            println!("Usage: converter <path>");
+            return Ok(())
+        }
+    };
+
+    let resource_content = file_get_contents(&path);
+    let mut resources_cursor: Cursor<&[u8]> = Cursor::new(&resource_content);
+    let mut resources_visitor = ModelVisitor::new();
+    let resource_executor = Executor::arsc(resources_cursor, &mut resources_visitor)?;
+    let entries = resources_visitor.get_entries();
+
+    let content = file_get_contents(&xml_path);
     let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
 
-    let mut visitor = ModelVisitor::new();
-    let executor = Executor::xml(cursor, &mut visitor);
+    let mut visitor = XmlVisitor::new(&entries);
+    let executor = Executor::xml(cursor, &mut visitor, &entries);
 
     match visitor.get_root() {
         &Some(ref root) => {

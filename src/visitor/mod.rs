@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::collections::HashMap;
 use chunks::table_type::Entry;
 use std::rc::Rc;
-use document::{Namespaces, Element, ElementContainer};
+use document::{Namespaces, Element, ElementContainer, Entries};
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {}
@@ -56,7 +56,7 @@ impl Executor {
         Ok(())
     }
 
-    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
+    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, entries: &HashMap<u32, Entry>) -> Result<()> {
         let token = cursor.read_u16::<LittleEndian>()?;
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let chunk_size = cursor.read_u32::<LittleEndian>()?;
@@ -138,14 +138,82 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     }
 }
 
+pub struct XmlVisitor<'a> {
+    main_string_table: Option<StringTable<'a>>,
+    entries: &'a Entries,
+    namespaces: Namespaces,
+    container: ElementContainer,
+}
+
+impl<'a> XmlVisitor<'a> {
+    pub fn new(entries: &'a Entries) -> Self {
+        XmlVisitor {
+            main_string_table: None,
+            entries: entries,
+            namespaces: Namespaces::new(),
+            container: ElementContainer::new(),
+        }
+    }
+
+    pub fn get_namespaces(&self) -> &Namespaces {
+        &self.namespaces
+    }
+
+    pub fn get_root(&self) -> &Option<Element> {
+        &self.container.get_root()
+    }
+}
+
+impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
+    fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {
+        match self.main_string_table {
+            Some(_) => {
+                println!("Secondary table!");
+            },
+            None => {
+                self.main_string_table = Some(string_table);
+            },
+        }
+    }
+
+    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {
+        match self.main_string_table {
+            Some(ref mut string_table) => {
+                self.namespaces.insert(
+                    namespace_start.get_prefix(string_table).unwrap(),
+                    namespace_start.get_namespace(string_table).unwrap()
+                );
+            },
+            None => {
+                println!("No main string table found!");
+            }
+        }
+    }
+
+    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {
+        match self.main_string_table {
+            Some(ref mut string_table) => {
+                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table, &self.entries).unwrap();
+                let element = Element::new(element_name, attributes);
+                self.container.start_element(element);
+            },
+            None => {
+                println!("No main string table found!");
+            }
+        }
+    }
+
+    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {
+        self.container.end_element()
+    }
+}
+
 pub struct ModelVisitor<'a> {
     main_string_table: Option<StringTable<'a>>,
     package: Option<Package<'a>>,
     current_spec: Option<TypeSpec<'a>>,
     package_mask: u32,
     entries: HashMap<u32, Entry>,
-    namespaces: Namespaces,
-    container: ElementContainer,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -155,22 +223,12 @@ impl<'a> ModelVisitor<'a> {
             package: None,
             current_spec: None,
             package_mask: 0,
-            entries: HashMap::new(),
-            namespaces: Namespaces::new(),
-            container: ElementContainer::new(),
+            entries: Entries::new(),
         }
     }
 
     pub fn get_entries(&self) -> &HashMap<u32, Entry> {
         &self.entries
-    }
-
-    pub fn get_namespaces(&self) -> &Namespaces {
-        &self.namespaces
-    }
-
-    pub fn get_root(&self) -> &Option<Element> {
-        &self.container.get_root()
     }
 }
 
@@ -220,34 +278,4 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         self.current_spec = Some(type_spec);
     }
 
-    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {
-        match self.main_string_table {
-            Some(ref mut string_table) => {
-                self.namespaces.insert(
-                    namespace_start.get_prefix(string_table).unwrap(),
-                    namespace_start.get_namespace(string_table).unwrap()
-                );
-            },
-            None => {
-                println!("No main string table found!");
-            }
-        }
-    }
-
-    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {
-        match self.main_string_table {
-            Some(ref mut string_table) => {
-                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
-                let element = Element::new(element_name, attributes);
-                self.container.start_element(element);
-            },
-            None => {
-                println!("No main string table found!");
-            }
-        }
-    }
-
-    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {
-        self.container.end_element()
-    }
 }

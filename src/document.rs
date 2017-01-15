@@ -1,5 +1,5 @@
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
 use std::fmt::Error as FmtError;
 use std::rc::Rc;
@@ -9,6 +9,8 @@ use std::result::Result as StdResult;
 use chunks::*;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
+pub type Entries = HashMap<u32, Entry>;
+
 #[derive(Default, Debug)]
 pub struct Document {
     pub header: Header,
@@ -187,11 +189,24 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable, entries: &Entries) -> Result<Self> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(format!("@id/0x{:#8}", data)),
+            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
+                Value::ReferenceId(format!("@id/0x{:#8}", data))
+            },
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
-                Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
+                let att_value = Value::AttributeReferenceId(format!("?id/0x{:#8}", data));
+
+                match entries.get(&data) {
+                    Some(e) => {
+                        println!("Attribute reference: {:?}", e);
+                    },
+                    None => {
+                        println!("Reference not found!");
+                    }
+                }
+
+                att_value
             }
             TOKEN_TYPE_STRING => {
                 let string = str_table.get_string(data)?;
