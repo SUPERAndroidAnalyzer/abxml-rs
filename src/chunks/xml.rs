@@ -2,7 +2,7 @@ use chunks::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable, Value, Attribute, Element};
+use document::{HeaderStringTable, Value, Attribute, Element};
 use errors::*;
 use std::clone::Clone;
 
@@ -139,6 +139,37 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
             header: header,
         }
     }
+
+    pub fn get_prefix_index(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(16));
+
+        cursor.read_u32::<LittleEndian>().unwrap()
+    }
+
+    pub fn get_namespace_index(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(20));
+
+        cursor.read_u32::<LittleEndian>().unwrap()
+    }
+
+    pub fn get_prefix(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+        let index = self.get_prefix_index();
+        println!("PRefix index: {}", index);
+        let string = string_table.get_string(index).unwrap();
+
+        Ok(string)
+    }
+
+    pub fn get_namespace(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+        let index = self.get_namespace_index();
+        println!("Namespace index: {}", index);
+        let string = string_table.get_string(index).unwrap();
+
+        Ok(string)
+    }
+
 }
 
 pub struct XmlNamespaceStart<'a> {
@@ -151,6 +182,67 @@ impl<'a> XmlNamespaceStart<'a> {
             wrapper: wrapper,
         }
     }
+
+pub fn get_prefix(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    self.wrapper.get_prefix(string_table)
+}
+
+pub fn get_namespace(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    self.wrapper.get_namespace(string_table)
+}
+
+    /*fn decode_namespace_start(&self, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
+        let (attributes, element_name) = {
+            let rc_st = match string_table {
+                &Some(ref rc_st) => {rc_st.clone()},
+                &None => {return Err("No string table found".into());}
+            };
+
+            let element_name = rc_st.get_string(element_name_idx as usize).unwrap().clone();
+            let mut attributes = Vec::new();
+            for _ in 0..attributes_amount {
+                let attribute = self.decode_attribute(decoder, cursor, &rc_st)?;
+                attributes.push(attribute);
+            }
+
+            (attributes, element_name)
+        }
+    }
+    }*/
+
+    /*fn decode_attribute(decoder: &Decoder, cursor: &mut Cursor<&[u8]>, string_table: &StringTable) -> Result<Attribute> {
+        let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
+        let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
+        let attr_value_idx = cursor.read_u32::<LittleEndian>()?;
+        let attr_type_idx = cursor.read_u32::<LittleEndian>()?;
+        let attr_data = cursor.read_u32::<LittleEndian>()?;
+
+        let mut namespace = None;
+        let mut prefix = None;
+
+        if attr_ns_idx != TOKEN_VOID {
+            let uri = string_table.get_string(attr_ns_idx as usize).unwrap().clone();
+
+            // TODO: Load namespace
+            match decoder.get_namespaces().get(&uri) {
+                Some(uri_prefix) => {
+                    namespace = Some(uri);
+                    prefix = Some(uri_prefix.clone());
+                }
+                None =>(),
+            };
+        }
+
+        let value = if attr_value_idx == TOKEN_VOID {
+            Value::new(attr_type_idx as u8, attr_data, string_table)?
+        } else {
+            Value::String(string_table.get_string(attr_value_idx as usize).unwrap().clone())
+        };
+
+        let element_name = string_table.get_string(attr_name_idx as usize).unwrap().clone();
+
+        Ok(Attribute::new(element_name, value, namespace, prefix))
+    }*/
 }
 
 pub struct XmlNamespaceEndWrapper<'a> {
