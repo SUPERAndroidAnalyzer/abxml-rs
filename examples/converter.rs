@@ -51,6 +51,26 @@ fn run() -> Result<()> {
     let mut visitor = ModelVisitor::new();
     let executor = Executor::xml(cursor, &mut visitor);
 
+    match visitor.get_root() {
+        &Some(ref root) => {
+            let xml_content = Xml::encode(&visitor.get_namespaces(), &root).chain_err(|| "Could note encode XML")?;
+            println!("{}", xml_content);
+        },
+        &None => {
+            println!("No root on target XML");
+        }
+    }
+
+
+/*
+        match parser.get_element_container().get_root() {
+-        &Some(ref root) => {
+-            let xml_content = Xml::encode(&parser.get_namespaces(), &root).chain_err(|| "Could not decode XML")?;
+-            println!("{}", xml_content);
+-        },
+-        _ => (),
+-    }
+*/
 
     Ok(())
 }
