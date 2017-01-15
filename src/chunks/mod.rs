@@ -28,6 +28,8 @@ pub use self::table_type_spec::TypeSpec as TypeSpec;
 pub use self::table_type::TableTypeWrapper as TableTypeWrapper;
 pub use self::table_type::TableType as TableType;
 
+pub use self::resource::ResourceWrapper as ResourceWrapper;
+pub use self::resource::Resource as Resource;
 pub use self::xml::XmlNamespaceStart as XmlNamespaceStart;
 pub use self::xml::XmlNamespaceStartWrapper as XmlNamespaceStartWrapper;
 pub use self::xml::XmlNamespaceEnd as XmlNamespaceEnd;
@@ -41,6 +43,7 @@ use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;
 use self::table_type::TableTypeDecoder;
 use self::xml::XmlDecoder;
+use self::resource::ResourceDecoder;
 
 // use self::table_type::{Entry, ResourceConfiguration};
 use errors::*;
@@ -66,8 +69,7 @@ pub enum Chunk<'a>   {
     XmlNamespaceEnd(XmlNamespaceEndWrapper<'a>),
     XmlTagStart(XmlTagStartWrapper<'a>),
     XmlTagEnd(XmlTagEndWrapper<'a>),
-
-    ResourceTable(Vec<u32>),
+    Resource(ResourceWrapper<'a>),
     Unknown,
 }
 
@@ -98,12 +100,7 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TAG_START => XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
-            /*
-
-            TOKEN_RESOURCE => ResourceDecoder::decode(&mut cursor, &chunk_header)?,
-
-
-            */
+            TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,
             t => {
                 println!("{:X}", t);
 
