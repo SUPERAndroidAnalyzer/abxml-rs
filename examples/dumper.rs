@@ -67,59 +67,10 @@ fn run() -> Result<()> {
     let content = file_get_contents(&path);
     let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
 
-    let visitor = PrintVisitor;
-    let executor = Executor::arsc(cursor, visitor);
+    let mut visitor = ModelVisitor::new();
+    let executor = Executor::arsc(cursor, &mut visitor);
+    let entries = visitor.get_entries();
 
-
-    // resources.arsc head. Move somewhere else
-    /*let token = cursor.read_u16::<LittleEndian>()?;
-    let header_size = cursor.read_u16::<LittleEndian>()?;
-    let chunk_size = cursor.read_u32::<LittleEndian>()?;
-    let package_amount = cursor.read_u32::<LittleEndian>()?;
-
-    let stream = ChunkLoaderStream::new(cursor);
-
-    for c in stream {
-        match c {
-            Chunk::Unknown => {
-                println!("Unknown chunk!");
-            },
-            Chunk::StringTable(stw) => {
-                let mut st = StringTable::new(stw);
-
-                println!("Strint table chunk");
-                println!("Strings size {}", st.get_strings_len());
-                println!("Styles size {}", st.get_styles_len());
-                println!("First string: {}", st.get_string(0).unwrap());
-            },
-            Chunk::Package(pw) => {
-                let package = Package::new(pw);
-
-                println!("Package chunk");
-                println!("\tId: {}", package.get_id());
-                println!("\tName: {}", package.get_name().unwrap());
-            },
-            Chunk::TableTypeSpec(tsw) => {
-                let type_spec = TypeSpec::new(tsw);
-
-                println!("TableTypeSpec chunk");
-                println!("\tId: {}", type_spec.get_id());
-            },
-            Chunk::TableType(ttw) => {
-                let table_type = TableType::new(ttw);
-
-                println!("TableType chunk");
-                println!("\tId: {}", table_type.get_id());
-            },
-            //Chunk::TableType(id, rc, entries) => {
-                // println!("Resource config chunk");
-                // println!("Resc config {:?}", rc);
-            //},
-            _ => {
-                println!("Unknouwn Chunk!");
-            }
-        }
-    }*/
     Ok(())
 }
 

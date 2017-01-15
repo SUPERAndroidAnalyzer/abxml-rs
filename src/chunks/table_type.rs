@@ -1,9 +1,10 @@
-use chunks::{Chunk, ChunkHeader};
+use chunks::{Chunk, ChunkHeader, TypeSpec   };
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable, Value};
 use errors::*;
+use std::collections::HashMap;
 // use parser::Decoder;
 
 pub struct TableTypeDecoder;
@@ -32,46 +33,71 @@ impl TableTypeDecoder {
         let ttw = TableTypeWrapper::new(cursor.get_ref(), (*header).clone());
         Ok(Chunk::TableType(ttw))
     }
+}
 
-    fn decode_entries(cursor: &mut Cursor<&[u8]>, type_id: u32, entry_amount: u32) -> Result<Vec<Entry>> {
+pub struct TableTypeWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> TableTypeWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        TableTypeWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+
+    pub fn get_id(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+
+        cursor.read_u32::<LittleEndian>().unwrap()
+    }
+
+    pub fn get_amount(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(12));
+
+        cursor.read_u32::<LittleEndian>().unwrap()
+    }
+
+    pub fn get_configuration(&self) -> Result<ResourceConfiguration> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(16));
+
+        ResourceConfiguration::from_cursor(&mut cursor)
+    }
+
+    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.get_data_offset());
+        // println!("-> {}", self.get_amount());
+
+        self.decode_entries(&mut cursor, type_spec, mask)
+    }
+
+    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
         let base_offset = cursor.position();
-        let mut entries = Vec::new();
         let mut offsets = Vec::new();
+        let mut hentries = HashMap::new();
 
         let mut prev_offset = base_offset;
-        for i in 0..entry_amount {
+        for i in 0..self.get_amount() {
             offsets.push(cursor.read_u32::<LittleEndian>()?);
         }
 
-        for i in 0..entry_amount {
+        for i in 0..self.get_amount() {
             if offsets[i as usize] == 0xFFFFFFFF {
                 let position = cursor.position();
                 // cursor.set_position(position + 4);
             } else {
-                let maybe_entry = Self::decode_entry(cursor)?;
+                let id = mask | (i & 0xFFFF);
+                let maybe_entry = Self::decode_entry(cursor, id)?;
 
                 match maybe_entry {
-                    Some(_) => {
-                        /*let current_type_spec = decoder.get_last_type_spec().unwrap();
-                        let id = match current_type_spec {
-                            &Chunk::TableTypeSpec(id, ref resources) => {
-                                if id == type_id {
-                                    ;// println!("Has to convert id!");
-                                } else {
-                                    println!("NO has to convert id!");
-                                }
-
-                                e.get_key()
-
-                            },
-                            _ => e.get_key(),
-                        };
-
-
-
-                        // println!("Entry key: {} - {:X}", e.get_key(), e.get_key() << 24);
-                        entries.push(e);
-                        */
+                    Some(e) => {
+                        hentries.insert(id, e);
                     },
                     None => {
                         debug!("Entry with a negative count");
@@ -80,10 +106,10 @@ impl TableTypeDecoder {
             }
         }
 
-        Ok(entries)
+        Ok(hentries)
     }
 
-    fn decode_entry(cursor: &mut Cursor<&[u8]>) -> Result<Option<Entry>> {
+    fn decode_entry(cursor: &mut Cursor<&[u8]>, id: u32) -> Result<Option<Entry>> {
         let position = cursor.position();
 
         let header_size = cursor.read_u16::<LittleEndian>()?;
@@ -93,13 +119,13 @@ impl TableTypeDecoder {
         let header_entry = EntryHeader::new(header_size, flags, key_index);
 
         if header_entry.is_complex() {
-            Self::decode_complex_entry(cursor, &header_entry)
+            Self::decode_complex_entry(cursor, &header_entry, id)
         } else {
-            Self::decode_simple_entry(cursor, &header_entry)
+            Self::decode_simple_entry(cursor, &header_entry, id)
         }
     }
 
-    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>> {
+    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
         let size = cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
@@ -107,7 +133,7 @@ impl TableTypeDecoder {
         let data = cursor.read_u32::<LittleEndian>()?;
 
         let entry = Entry::new_simple(
-            header.get_key_index(),
+            id,
             size,
             val_type,
             data,
@@ -116,7 +142,7 @@ impl TableTypeDecoder {
         Ok(Some(entry))
     }
 
-    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader) -> Result<Option<Entry>> {
+    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
@@ -148,30 +174,9 @@ impl TableTypeDecoder {
             entries.push(simple_entry);
         }
 
-        let entry = Entry::new_complex(header.get_key_index(), parent_entry, entries);
+        let entry = Entry::new_complex(id, parent_entry, entries);
 
         Ok(Some(entry))
-    }
-}
-
-pub struct TableTypeWrapper<'a> {
-    raw_data: &'a [u8],
-    header: ChunkHeader,
-}
-
-impl<'a> TableTypeWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        TableTypeWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
-    }
-
-    pub fn get_id(&self) -> u32 {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        cursor.read_u32::<LittleEndian>().unwrap()
     }
 }
 
@@ -188,6 +193,18 @@ impl<'a> TableType<'a> {
 
     pub fn get_id(&self) -> u8 {
         (self.wrapper.get_id() & 0xF) as u8
+    }
+
+    pub fn get_amount(&self) -> u32 {
+        self.wrapper.get_amount()
+    }
+
+    pub fn get_configuration(&self) -> Result<ResourceConfiguration> {
+        self.wrapper.get_configuration()
+    }
+
+    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32,   Entry>> {
+        self.wrapper.get_entries(type_spec, mask)
     }
 }
 
