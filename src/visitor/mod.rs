@@ -160,6 +160,10 @@ impl<'a> XmlVisitor<'a> {
     pub fn get_root(&self) -> &Option<Element> {
         &self.container.get_root()
     }
+
+    pub fn get_string_table(&self) -> &Option<StringTable> {
+        &self.main_string_table
+    }
 }
 
 impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
@@ -227,6 +231,10 @@ impl<'a> ModelVisitor<'a> {
 
     pub fn get_entries(&self) -> &HashMap<u32, Entry> {
         &self.entries
+    }
+
+    pub fn get_string_table(&self) -> &Option<StringTable> {
+        &self.main_string_table
     }
 }
 

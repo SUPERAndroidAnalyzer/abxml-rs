@@ -150,8 +150,8 @@ pub enum Value {
     Boolean(bool),
     Color(String),
     Color2(String),
-    ReferenceId(String),
-    AttributeReferenceId(String),
+    ReferenceId(u32),
+    AttributeReferenceId(u32),
     Unknown,
 }
 
@@ -183,8 +183,12 @@ impl Value {
             &Value::Boolean(b) => b.to_string(),
             &Value::Color(ref s) => s.clone(),
             &Value::Color2(ref s) => s.clone(),
-            &Value::ReferenceId(ref s) => s.clone(),
-            &Value::AttributeReferenceId(ref s) => s.clone(),
+            &Value::ReferenceId(ref s) => {
+                format!("@id/0x{:#8}", s)
+            },
+            &Value::AttributeReferenceId(ref s) => {
+                format!("@id/0x{:#8}", s)
+            },
             _ => "Unknown".to_string(),
         }
     }
@@ -192,11 +196,13 @@ impl Value {
     pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
-                Value::ReferenceId(format!("@id/0x{:#8}", data))
+                //Value::ReferenceId(format!("@id/0x{:#8}", data))
+                Value::ReferenceId(data)
             },
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
-                let att_value = Value::AttributeReferenceId(format!("?id/0x{:#8}", data));
-                att_value
+                /*let att_value = Value::AttributeReferenceId(format!("?id/0x{:#8}", data));
+                att_value*/
+                Value::AttributeReferenceId(data)
             }
             TOKEN_TYPE_STRING => {
                 let string = str_table.get_string(data)?;

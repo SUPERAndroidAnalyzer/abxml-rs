@@ -3,19 +3,20 @@ use quick_xml::Event::*;
 use std::io::Cursor;
 use std::iter;
 use document::Element as AbxmlElement;
-use document::{Namespaces, Value};
+use document::{Namespaces, Value, Entries};
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
 use errors::*;
+use chunks::StringTable;
 
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, entries: &Entries, string_table: &StringTable) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element);
+        Self::encode_element(&mut writer, Some(namespaces), element, entries, string_table);
 
         let result = writer.into_inner().into_inner();
         let str_result = String::from_utf8(result).unwrap();
@@ -24,7 +25,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement) {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, entries: &Entries, string_table: &StringTable) {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -41,10 +42,10 @@ impl Xml {
 
             let val = match a.get_value() {
                 &Value::ReferenceId(ref id) => {
-                    Some(format!("ref: #{}", id))
+                    Some(Self::resolve_reference(*id, string_table, &entries))
                 },
                 &Value::AttributeReferenceId(ref id) => {
-                    Some(format!("attr ref: #{}", id))
+                    Some(Self::resolve_reference(*id, string_table, &entries))
                 },
                 _ => {
                     None
@@ -60,10 +61,32 @@ impl Xml {
         writer.write(Start(elem)).unwrap();
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child)
+            Self::encode_element(&mut writer, None, child, entries, string_table)
         }
 
         writer.write(End(Element::new(tag.deref()))).unwrap();
+    }
+
+    fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries) -> String {
+        match entries.get(&id) {
+            Some(e) => {
+                println!("Attribute ref found: {:?}", e);
+            },
+            None => {
+                println!("None attribute ref found");
+
+                match string_table.get_uncached_string(id) {
+                    Ok(s) => {
+                        println!("Found on st: {}", s);
+                    },
+                    Err(_) => {
+                        println!("Attr not found on st");
+                    }
+                }
+            },
+        };
+
+        format!("attr ref: #{}", id)
     }
 
     pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {
