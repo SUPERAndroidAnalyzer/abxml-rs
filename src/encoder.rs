@@ -3,7 +3,7 @@ use quick_xml::Event::*;
 use std::io::Cursor;
 use std::iter;
 use document::Element as AbxmlElement;
-use document::Namespaces;
+use document::{Namespaces, Value};
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
@@ -39,9 +39,21 @@ impl Xml {
 
             let final_name = Self::attribute_name(rc_name, prefix);
 
+            let val = match a.get_value() {
+                &Value::ReferenceId(ref id) => {
+                    Some(format!("ref: #{}", id))
+                },
+                &Value::AttributeReferenceId(ref id) => {
+                    Some(format!("attr ref: #{}", id))
+                },
+                _ => {
+                    None
+                }
+            };
+
             elem.push_attribute(
                 final_name,
-                a.get_value(),
+                &val.unwrap_or(a.get_value_as_str()),
             );
         }
 

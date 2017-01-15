@@ -140,16 +140,14 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
 
 pub struct XmlVisitor<'a> {
     main_string_table: Option<StringTable<'a>>,
-    entries: &'a Entries,
     namespaces: Namespaces,
     container: ElementContainer,
 }
 
 impl<'a> XmlVisitor<'a> {
-    pub fn new(entries: &'a Entries) -> Self {
+    pub fn new() -> Self {
         XmlVisitor {
             main_string_table: None,
-            entries: entries,
             namespaces: Namespaces::new(),
             container: ElementContainer::new(),
         }
@@ -193,7 +191,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
-                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table, &self.entries).unwrap();
+                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
                 let element = Element::new(element_name, attributes);
                 self.container.start_element(element);
             },

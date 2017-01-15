@@ -62,7 +62,7 @@ fn run() -> Result<()> {
     let content = file_get_contents(&xml_path);
     let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
 
-    let mut visitor = XmlVisitor::new(&entries);
+    let mut visitor = XmlVisitor::new();
     let executor = Executor::xml(cursor, &mut visitor, &entries);
 
     match visitor.get_root() {

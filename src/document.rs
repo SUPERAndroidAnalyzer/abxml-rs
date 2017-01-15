@@ -189,23 +189,13 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable, entries: &Entries) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
                 Value::ReferenceId(format!("@id/0x{:#8}", data))
             },
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
                 let att_value = Value::AttributeReferenceId(format!("?id/0x{:#8}", data));
-
-                match entries.get(&data) {
-                    Some(e) => {
-                        println!("Attribute reference: {:?}", e);
-                    },
-                    None => {
-                        println!("Reference not found!");
-                    }
-                }
-
                 att_value
             }
             TOKEN_TYPE_STRING => {
@@ -286,8 +276,12 @@ impl Attribute {
         self.name.clone()
     }
 
-    pub fn get_value(&self) -> String {
+    pub fn get_value_as_str(&self) -> String {
         self.value.to_string()
+    }
+
+    pub fn get_value(&self) -> &Value {
+        &self.value
     }
 
     pub fn get_prefix(&self) -> Option<Rc<String>> {
