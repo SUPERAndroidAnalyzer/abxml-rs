@@ -27,6 +27,7 @@ pub use self::table_type_spec::TypeSpecWrapper as TypeSpecWrapper;
 pub use self::table_type_spec::TypeSpec as TypeSpec;
 pub use self::table_type::TableTypeWrapper as TableTypeWrapper;
 pub use self::table_type::TableType as TableType;
+pub use self::table_type::Entry as Entry;
 
 pub use self::resource::ResourceWrapper as ResourceWrapper;
 pub use self::resource::Resource as Resource;
@@ -38,6 +39,8 @@ pub use self::xml::XmlTagStart as XmlTagStart;
 pub use self::xml::XmlTagStartWrapper as XmlTagStartWrapper;
 pub use self::xml::XmlTagEnd as XmlTagEnd;
 pub use self::xml::XmlTagEndWrapper as XmlTagEndWrapper;
+
+// pub use self::xml::Entry;
 
 use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;

@@ -285,7 +285,7 @@ impl Entry {
         }
     }
 
-    pub fn to_value(&self, string_table: &mut StringTable) -> Result<Value> {
+    /*pub fn to_value(&self, string_table: &mut StringTable) -> Result<Value> {
         match self {
             &Entry::Simple {
                 key_index: ki,
@@ -297,7 +297,7 @@ impl Entry {
             },
             _ => Err("Complex entry can not be converted to value".into()),
         }
-    }
+    }*/
 }
 
 pub struct Region {
