@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable};
+use document::{HeaderStringTable};
 use errors::*;
 
 pub struct TableTypeSpecDecoder;

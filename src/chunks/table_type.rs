@@ -1,8 +1,8 @@
-use chunks::{Chunk, ChunkHeader, TypeSpec   };
+use chunks::{Chunk, ChunkHeader, TypeSpec, StringTable};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable, Value};
+use document::{HeaderStringTable, Value};
 use errors::*;
 use std::collections::HashMap;
 // use parser::Decoder;
@@ -285,7 +285,7 @@ impl Entry {
         }
     }
 
-    pub fn to_value(&self, string_table: &StringTable) -> Result<Value> {
+    pub fn to_value(&self, string_table: &mut StringTable) -> Result<Value> {
         match self {
             &Entry::Simple {
                 key_index: ki,
@@ -293,7 +293,7 @@ impl Entry {
                 value_type: vt,
                 value_data: vd
             } => {
-                Value::new(vt, vd, &string_table)
+                Value::new(vt, vd, string_table)
             },
             _ => Err("Complex entry can not be converted to value".into()),
         }

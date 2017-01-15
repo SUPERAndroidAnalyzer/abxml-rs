@@ -3,7 +3,7 @@ use chunks::table_type::Entry;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, StringTable, Value};
+use document::{HeaderStringTable, Value};
 use errors::*;
 
 pub struct PackageDecoder;

@@ -5,6 +5,8 @@ use errors::*;
 use std::marker::PhantomData;
 use std::collections::HashMap;
 use chunks::table_type::Entry;
+use std::rc::Rc;
+use document::Namespaces;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {}
@@ -142,6 +144,7 @@ pub struct ModelVisitor<'a> {
     current_spec: Option<TypeSpec<'a>>,
     package_mask: u32,
     entries: HashMap<u32, Entry>,
+    namespaces: Namespaces,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -152,6 +155,7 @@ impl<'a> ModelVisitor<'a> {
             current_spec: None,
             package_mask: 0,
             entries: HashMap::new(),
+            namespaces: Namespaces::new(),
         }
     }
 
@@ -209,7 +213,21 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
-                println!("{} :: {}", namespace_start.get_prefix(string_table).unwrap(), namespace_start.get_namespace(string_table).unwrap());
+                self.namespaces.insert(
+                    namespace_start.get_prefix(string_table).unwrap(),
+                    namespace_start.get_namespace(string_table).unwrap()
+                );
+            },
+            None => {
+                println!("No main string table found!");
+            }
+        }
+    }
+
+    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {
+        match self.main_string_table {
+            Some(ref mut string_table) => {
+                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
             },
             None => {
                 println!("No main string table found!");
