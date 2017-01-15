@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::ops::Deref;
 use errors::*;
 use std::result::Result as StdResult;
+use chunks::*;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 #[derive(Default, Debug)]
@@ -15,7 +16,7 @@ pub struct Document {
     pub header_resource_table: HeaderResourceTable,
     pub header_namespace: HeaderNamespace,
 
-    pub string_table: StringTable,
+    // pub string_table: StringTable,
     pub resource_table: ResourceTable,
     pub resources: Namespaces,
     pub root_element: Element,
@@ -23,16 +24,16 @@ pub struct Document {
 
 pub struct Package {
     pub name: String,
-    pub type_string_table: Option<StringTable>,
-    pub key_string_table: Option<StringTable>,
+//    pub type_string_table: Option<StringTable>,
+//    pub key_string_table: Option<StringTable>,
 }
 
 impl Package {
     pub fn new(name: String) -> Self {
         Package {
             name: name,
-            type_string_table: None,
-            key_string_table: None,
+//            type_string_table: None,
+//            key_string_table: None,
         }
     }
 }
@@ -52,6 +53,7 @@ pub struct HeaderStringTable {
     pub style_offset: u32,
 }
 
+/*
 #[derive(Default, Debug, Clone)]
 pub struct StringTable {
     pub strings: Vec<Rc<String>>,
@@ -67,7 +69,7 @@ impl StringTable {
         }
     }
 }
-
+*/
 #[derive(Default, Debug)]
 pub struct HeaderResourceTable {
     pub chunk: u32,
@@ -185,19 +187,16 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(format!("@id/0x{:#8}", data)),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
                 Value::AttributeReferenceId(format!("?id/0x{:#8}", data))
             }
             TOKEN_TYPE_STRING => {
-                Value::String(str_table
-                    .strings
-                    .get(data as usize)
-                    .unwrap()
-                    .clone()
-                )
+                let string = str_table.get_string(data)?;
+
+                Value::String(string.clone())
             }
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dp", "sp", "pt", "in", "mm"];
