@@ -13,8 +13,9 @@ pub trait ChunkVisitor<'a> {
     fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {}
     fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {}
     fn visit_xml_namespace_end(&mut self, mut namespace_end: XmlNamespaceEnd<'a>) {}
-    fn visit_xml_tag_start(&mut self, mut namespace_start: XmlTagStart<'a>) {}
-    fn visit_xml_tag_end(&mut self, mut namespace_end: XmlTagEnd<'a>) {}
+    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {}
+    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {}
+    fn visit_resource(&mut self, mut resource: Resource<'a>) {}
 }
 
 pub struct Executor;
@@ -94,6 +95,10 @@ impl Executor {
                     let mut ts = XmlTagEnd::new(xnsw);
                     visitor.visit_xml_tag_end(ts);
                 },
+                Chunk::Resource(rw) => {
+                    let mut ts = Resource::new(rw);
+                    visitor.visit_resource(ts);
+                }
                 _ => (),
             }
         }
