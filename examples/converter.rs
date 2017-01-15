@@ -67,8 +67,15 @@ fn run() -> Result<()> {
 
     match visitor.get_root() {
         &Some(ref root) => {
-            let xml_content = Xml::encode(&visitor.get_namespaces(), &root).chain_err(|| "Could note encode XML")?;
-            println!("{}", xml_content);
+            match visitor.get_string_table() {
+                &Some(ref st) => {
+                    let xml_content = Xml::encode(&visitor.get_namespaces(), &root, &entries, st).chain_err(|| "Could note encode XML")?;
+                    println!("{}", xml_content);
+                },
+                &None => {
+                    println!("No string table found");
+                }
+            }
         },
         &None => {
             println!("No root on target XML");
