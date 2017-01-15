@@ -11,6 +11,10 @@ pub trait ChunkVisitor<'a> {
     fn visit_package(&mut self, mut package: Package<'a>) {}
     fn visit_table_type(&mut self, mut table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {}
+    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {}
+    fn visit_xml_namespace_end(&mut self, mut namespace_end: XmlNamespaceEnd<'a>) {}
+    fn visit_xml_tag_start(&mut self, mut namespace_start: XmlTagStart<'a>) {}
+    fn visit_xml_tag_end(&mut self, mut namespace_end: XmlTagEnd<'a>) {}
 }
 
 pub struct Executor;
@@ -41,6 +45,54 @@ impl Executor {
                 Chunk::TableTypeSpec(tsw) => {
                     let mut ts = TypeSpec::new(tsw);
                     visitor.visit_type_spec(ts);
+                },
+                _ => (),
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
+        let token = cursor.read_u16::<LittleEndian>()?;
+        let header_size = cursor.read_u16::<LittleEndian>()?;
+        let chunk_size = cursor.read_u32::<LittleEndian>()?;
+
+        let stream = ChunkLoaderStream::new(cursor);
+
+        for c in stream {
+            match c {
+                Chunk::StringTable(stw) => {
+                    let mut st = StringTable::new(stw);
+                    visitor.visit_string_table(st);
+                },
+                Chunk::Package(pw) => {
+                    let mut package = Package::new(pw);
+                    visitor.visit_package(package);
+                },
+                Chunk::TableType(ttw) => {
+                    let mut tt = TableType::new(ttw);
+                    visitor.visit_table_type(tt);
+                },
+                Chunk::TableTypeSpec(tsw) => {
+                    let mut ts = TypeSpec::new(tsw);
+                    visitor.visit_type_spec(ts);
+                },
+                Chunk::XmlNamespaceStart(xnsw) => {
+                    let mut ts = XmlNamespaceStart::new(xnsw);
+                    visitor.visit_xml_namespace_start(ts);
+                },
+                Chunk::XmlNamespaceEnd(xnsw) => {
+                    let mut ts = XmlNamespaceEnd::new(xnsw);
+                    visitor.visit_xml_namespace_end(ts);
+                },
+                Chunk::XmlTagStart(xnsw) => {
+                    let mut ts = XmlTagStart::new(xnsw);
+                    visitor.visit_xml_tag_start(ts);
+                },
+                Chunk::XmlTagEnd(xnsw) => {
+                    let mut ts = XmlTagEnd::new(xnsw);
+                    visitor.visit_xml_tag_end(ts);
                 },
                 _ => (),
             }

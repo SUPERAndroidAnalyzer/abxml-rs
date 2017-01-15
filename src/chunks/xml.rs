@@ -1,10 +1,9 @@
-use chunks::{Chunk, ChunkHeader};
+use chunks::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use document::{HeaderStringTable, StringTable, Value, Attribute, Element};
 use errors::*;
-use parser::Decoder;
 use std::clone::Clone;
 
 pub struct XmlDecoder;
@@ -12,8 +11,8 @@ pub struct XmlDecoder;
 const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
 impl XmlDecoder {
-    pub fn decode_xml_namespace_start(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
-        let _line = cursor.read_u32::<LittleEndian>()?;
+    pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
+        /*let _line = cursor.read_u32::<LittleEndian>()?;
         let _unknown = cursor.read_u32::<LittleEndian>()?;
         let prefix_idx = cursor.read_u32::<LittleEndian>()?;
         let uri_idx = cursor.read_u32::<LittleEndian>()?;
@@ -29,17 +28,30 @@ impl XmlDecoder {
             let uri = rc_st.get_string(uri_idx as usize).unwrap().clone();
 
             (prefix, uri)
-        };
+        };*/
 
-        decoder.push_namespace(prefix.clone(), uri.clone());
+        // decoder.push_namespace(prefix.clone(), uri.clone());
 
-        Ok(Chunk::XmlStartNamespace(prefix, uri))
+        let xnsw = XmlNamespaceStartWrapper::new(cursor.get_ref(), (*header).clone());
+        Ok(Chunk::XmlNamespaceStart(xnsw))
+        // Ok(Chunk::XmlStartNamespace(prefix, uri))
      }
 
-     pub fn decode_xml_namespace_end(cursor: &mut Cursor<&[u8]>, header: &ChunkHeader) -> Result<Chunk> {
-         Ok(Chunk::XmlEndNamespace)
+     pub fn decode_xml_namespace_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+         let xnsw = XmlNamespaceEndWrapper::new(cursor.get_ref(), (*header).clone());
+         Ok(Chunk::XmlNamespaceEnd(xnsw))
      }
 
+     pub fn decode_xml_tag_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+         let xnsw = XmlTagStartWrapper::new(cursor.get_ref(), (*header).clone());
+         Ok(Chunk::XmlTagStart(xnsw))
+     }
+
+     pub fn decode_xml_tag_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+         let xnsw = XmlTagEndWrapper::new(cursor.get_ref(), (*header).clone());
+         Ok(Chunk::XmlTagEnd(xnsw))
+     }
+/*
      pub fn decode_xml_tag_start(mut decoder: &mut Decoder, cursor: &mut Cursor<&[u8]>, header: &ChunkHeader)  -> Result<Chunk> {
          let _line = cursor.read_u32::<LittleEndian>()?;
          let _unknown = cursor.read_u32::<LittleEndian>()?;
@@ -112,5 +124,109 @@ impl XmlDecoder {
          let element_name = string_table.get_string(attr_name_idx as usize).unwrap().clone();
 
          Ok(Attribute::new(element_name, value, namespace, prefix))
-     }
+     }*/
+}
+
+pub struct XmlNamespaceStartWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> XmlNamespaceStartWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        XmlNamespaceStartWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+}
+
+pub struct XmlNamespaceStart<'a> {
+    wrapper: XmlNamespaceStartWrapper<'a>,
+}
+
+impl<'a> XmlNamespaceStart<'a> {
+    pub fn new(wrapper: XmlNamespaceStartWrapper<'a>) -> Self {
+        XmlNamespaceStart {
+            wrapper: wrapper,
+        }
+    }
+}
+
+pub struct XmlNamespaceEndWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> XmlNamespaceEndWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        XmlNamespaceEndWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+}
+
+pub struct XmlNamespaceEnd<'a> {
+    wrapper: XmlNamespaceEndWrapper<'a>,
+}
+
+impl<'a> XmlNamespaceEnd<'a> {
+    pub fn new(wrapper: XmlNamespaceEndWrapper<'a>) -> Self {
+        XmlNamespaceEnd {
+            wrapper: wrapper,
+        }
+    }
+}
+
+pub struct XmlTagStartWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> XmlTagStartWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        XmlTagStartWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+}
+
+pub struct XmlTagStart<'a> {
+    wrapper: XmlTagStartWrapper<'a>,
+}
+
+impl<'a> XmlTagStart<'a> {
+    pub fn new(wrapper: XmlTagStartWrapper<'a>) -> Self {
+        XmlTagStart {
+            wrapper: wrapper,
+        }
+    }
+}
+
+pub struct XmlTagEndWrapper<'a> {
+    raw_data: &'a [u8],
+    header: ChunkHeader,
+}
+
+impl<'a> XmlTagEndWrapper<'a> {
+    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+        XmlTagEndWrapper {
+            raw_data: raw_data,
+            header: header,
+        }
+    }
+}
+
+pub struct XmlTagEnd<'a> {
+    wrapper: XmlTagEndWrapper<'a>,
+}
+
+impl<'a> XmlTagEnd<'a> {
+    pub fn new(wrapper: XmlTagEndWrapper<'a>) -> Self {
+        XmlTagEnd {
+            wrapper: wrapper,
+        }
+    }
 }
