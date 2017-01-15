@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub mod string_table;
 mod chunk_header;
 mod package;
-mod table_type;
+pub mod table_type;
 mod resource;
 mod table_type_spec;
 /*pub mod package;
@@ -55,7 +55,7 @@ pub enum Chunk<'a>   {
     Package(PackageWrapper<'a>),
     TableTypeSpec(TypeSpecWrapper<'a>),
     TableType(TableTypeWrapper<'a>),
-    
+
     ResourceTable(Vec<u32>),
     XmlStartNamespace(Rc<String>, Rc<String>),
     XmlEndNamespace,
