@@ -205,4 +205,16 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         self.current_spec = Some(type_spec);
     }
+
+    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {
+        match self.main_string_table {
+            Some(ref mut string_table) => {
+                println!("{} :: {}", namespace_start.get_prefix(string_table).unwrap(), namespace_start.get_namespace(string_table).unwrap());
+            },
+            None => {
+                println!("No main string table found!");
+            }
+        }
+
+    }
 }
