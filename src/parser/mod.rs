@@ -3,7 +3,7 @@ use visitor::ChunkVisitor;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use document::{StringTable, ElementContainer, Namespaces};
+use document::{ElementContainer, Namespaces};
 use std::rc::Rc;
 
 /*pub struct Decoder {
