@@ -13,10 +13,10 @@ use chunks::StringTable;
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, entries: &Entries, string_table: &StringTable) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, entries: &Entries, string_table: &StringTable, entries_string_table: &StringTable) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element, entries, string_table);
+        Self::encode_element(&mut writer, Some(namespaces), element, entries, string_table, entries_string_table);
 
         let result = writer.into_inner().into_inner();
         let str_result = String::from_utf8(result).unwrap();
@@ -25,7 +25,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, entries: &Entries, string_table: &StringTable) {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, entries: &Entries, string_table: &StringTable, entries_string_table: &StringTable) {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -42,10 +42,10 @@ impl Xml {
 
             let val = match a.get_value() {
                 &Value::ReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, string_table, &entries))
+                    Some(Self::resolve_reference(*id, string_table, &entries, &entries_string_table))
                 },
                 &Value::AttributeReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, string_table, &entries))
+                    Some(Self::resolve_reference(*id, string_table, &entries, &entries_string_table))
                 },
                 _ => {
                     None
@@ -61,13 +61,13 @@ impl Xml {
         writer.write(Start(elem)).unwrap();
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, entries, string_table)
+            Self::encode_element(&mut writer, None, child, entries, string_table, entries_string_table)
         }
 
         writer.write(End(Element::new(tag.deref()))).unwrap();
     }
 
-    fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries) -> String {
+    fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries, entries_string_table: &StringTable) -> String {
         match entries.get(&id) {
             Some(e) => {
                 println!("Attribute ref found: {:?}", e);

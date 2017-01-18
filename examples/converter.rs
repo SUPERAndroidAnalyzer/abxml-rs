@@ -69,8 +69,19 @@ fn run() -> Result<()> {
         &Some(ref root) => {
             match visitor.get_string_table() {
                 &Some(ref st) => {
-                    let xml_content = Xml::encode(&visitor.get_namespaces(), &root, &entries, st).chain_err(|| "Could note encode XML")?;
-                    println!("{}", xml_content);
+                    match resources_visitor.get_entries_string_table() {
+                        &Some(ref est) => {
+                            let xml_content = Xml::encode(
+                                &visitor.get_namespaces(),
+                                &root,
+                                &entries,
+                                st,
+                                est,
+                            ).chain_err(|| "Could note encode XML")?;
+                            println!("{}", xml_content);
+                        },
+                        &None => (),
+                    }
                 },
                 &None => {
                     println!("No string table found");
