@@ -182,8 +182,8 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         match self.main_string_table {
             Some(ref mut string_table) => {
                 self.namespaces.insert(
+                    namespace_start.get_namespace(string_table).unwrap(),
                     namespace_start.get_prefix(string_table).unwrap(),
-                    namespace_start.get_namespace(string_table).unwrap()
                 );
             },
             None => {
