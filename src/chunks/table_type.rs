@@ -13,23 +13,6 @@ const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        /*info!("Table type decoding @{}", header.get_offset());
-        let id = cursor.read_u8()?;
-        cursor.read_u8()?;  // Padding
-        cursor.read_u16::<LittleEndian>()?; // Padding
-        let count =  cursor.read_u32::<LittleEndian>()?;
-        let start = cursor.read_u32::<LittleEndian>()?;
-
-        info!("Resources count: {} [@{}..@{}]", count, start, header.get_chunk_end());
-
-        let config = ResourceConfiguration::from_cursor(cursor)?;
-        let a = header.get_offset() + (start as u64) - ((count * 4) as u64);
-        cursor.set_position(header.get_data_offset());
-
-        let entries = Self::decode_entries(cursor, id as u32, count).chain_err(|| "Entry decoding failed")?;
-
-        Ok(Chunk::TableType)*/
-
         let ttw = TableTypeWrapper::new(cursor.get_ref(), (*header).clone());
         Ok(Chunk::TableType(ttw))
     }
@@ -90,7 +73,6 @@ impl<'a> TableTypeWrapper<'a> {
         for i in 0..self.get_amount() {
             if offsets[i as usize] == 0xFFFFFFFF {
                 let position = cursor.position();
-                // cursor.set_position(position + 4);
             } else {
                 let id = mask | (i & 0xFFFF);
                 let maybe_entry = Self::decode_entry(cursor, id)?;
