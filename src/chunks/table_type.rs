@@ -98,8 +98,8 @@ impl<'a> TableTypeWrapper<'a> {
         let flags = cursor.read_u16::<LittleEndian>()?;
         let key_index = cursor.read_u32::<LittleEndian>()?;
         if id == 2131361986 {
-            //println!("Key index: {}", key_index);
-            // panic!();
+            println!("Key index: {}", key_index);
+            //panic!();
         }
 
         let header_entry = EntryHeader::new(header_size, flags, key_index);
@@ -120,6 +120,7 @@ impl<'a> TableTypeWrapper<'a> {
 
         let entry = Entry::new_simple(
             id,
+            header.get_key_index(),
             size,
             val_type,
             data,
@@ -151,6 +152,7 @@ impl<'a> TableTypeWrapper<'a> {
             let data = cursor.read_u32::<LittleEndian>()?;
 
             let simple_entry = Entry::new_simple(
+                id,
                 header.get_key_index(),
                 size,
                 val_type,
@@ -160,7 +162,7 @@ impl<'a> TableTypeWrapper<'a> {
             entries.push(simple_entry);
         }
 
-        let entry = Entry::new_complex(id, parent_entry, entries);
+        let entry = Entry::new_complex(id, header.get_key_index(), parent_entry, entries);
 
         Ok(Some(entry))
     }
@@ -221,12 +223,14 @@ impl EntryHeader {
 #[derive(Debug)]
 pub enum Entry {
     Simple {
+        id: u32,
         key_index: u32,
         size: u16,
         value_type: u8,
         value_data: u32,
     },
     Complex {
+        id: u32,
         key_index: u32,
         parent_entry_id: u32,
         entries: Vec<Entry>,   // TODO: split this class, Entry will be Entry::Simple here and it can be enforce by type system
@@ -235,12 +239,14 @@ pub enum Entry {
 
 impl Entry {
     pub fn new_simple(
+        id: u32,
         key_index: u32,
         size: u16,
         value_type: u8,
         value_data: u32,
     ) -> Self {
         Entry::Simple {
+            id: id,
             key_index: key_index,
             size: size,
             value_type: value_type,
@@ -249,41 +255,50 @@ impl Entry {
     }
 
     pub fn new_complex(
+        id: u32,
         key_index: u32,
         parent_entry_id: u32,
         entries: Vec<Entry>,
     ) -> Self {
         Entry::Complex{
+            id: id,
             key_index: key_index,
             parent_entry_id: parent_entry_id,
             entries: entries,
         }
     }
 
+    pub fn get_id(&self) -> u32 {
+        match self {
+            &Entry::Simple{id: id, key_index: ki, size: _, value_type: _, value_data: _} => {
+                id
+            },
+            &Entry::Complex{id: id, key_index: ki, parent_entry_id: _, entries: _} => {
+                id
+            },
+        }
+    }
+
     pub fn get_key(&self) -> u32 {
         match self {
-            &Entry::Simple{key_index: ki, size: _, value_type: _, value_data: _} => {
+            &Entry::Simple{id: id, key_index: ki, size: _, value_type: _, value_data: _} => {
                 ki
             },
-            &Entry::Complex{key_index: ki, parent_entry_id: _, entries: _} => {
+            &Entry::Complex{id: id, key_index: ki, parent_entry_id: _, entries: _} => {
                 ki
             },
         }
     }
 
-    /*pub fn to_value(&self, string_table: &mut StringTable) -> Result<Value> {
-        match self {
-            &Entry::Simple {
-                key_index: ki,
-                size: s,
-                value_type: vt,
-                value_data: vd
-            } => {
-                Value::new(vt, vd, string_table)
-            },
-            _ => Err("Complex entry can not be converted to value".into()),
-        }
-    }*/
+    pub fn destructure_key(&self) -> (u8, u8, u16) {
+        let key = self.get_key();
+
+        (
+            (key >> 24) as u8,
+            (key & 0x00FF0000 >> 16) as u8,
+            (key & 0xFFFF) as u16,
+        )
+    }
 }
 
 pub struct Region {

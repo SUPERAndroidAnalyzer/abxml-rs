@@ -37,6 +37,7 @@ impl Xml {
         for a in element.get_attributes().iter() {
             let rc_name = a.get_name();
             let prefix = a.get_prefix();
+            println!("Prefix: {:?}", prefix);
 
             let final_name = Self::attribute_name(rc_name, prefix);
 
@@ -70,7 +71,14 @@ impl Xml {
     fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries, entries_string_table: &StringTable) -> String {
         match entries.get(&id) {
             Some(e) => {
-                println!("Attribute ref found: {:?}", e);
+                //println!("Attribute ref found: {:?}", e);
+                let id = e.get_id();
+                //println!("KI: {}; PI: {:?}", id, e.destructure_key());
+
+                let string = entries_string_table.get_uncached_string(e.get_key()).unwrap();
+                println!("String: {}", string);
+
+                return format!("@style/{}", string).to_string()
             },
             None => {
                 println!("None attribute ref found");
@@ -93,7 +101,7 @@ impl Xml {
         let mut output = Vec::new();
         let xmlns = Rc::new(String::from("xmlns"));
 
-        for (prefix, namespace) in namespaces {
+        for (namespace, prefix) in namespaces {
             let label = Self::attribute_name(prefix.clone(), Some(xmlns.clone()));
 
             output.push(
