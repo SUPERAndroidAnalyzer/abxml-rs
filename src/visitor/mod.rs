@@ -32,7 +32,7 @@ impl Executor {
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
-            match c {
+            match c? {
                 Chunk::StringTable(stw) => {
                     let mut st = StringTable::new(stw);
                     visitor.visit_string_table(st);
@@ -64,7 +64,7 @@ impl Executor {
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
-            match c {
+            match c? {
                 Chunk::StringTable(stw) => {
                     let mut st = StringTable::new(stw);
                     visitor.visit_string_table(st);

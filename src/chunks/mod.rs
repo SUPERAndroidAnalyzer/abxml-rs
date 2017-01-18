@@ -121,22 +121,13 @@ impl<'a> ChunkLoaderStream<'a> {
 }
 
 impl<'a> Iterator for ChunkLoaderStream<'a> {
-    type Item = Chunk<'a>;
+    type Item = Result<Chunk<'a>>;
 
-    fn next(&mut self) -> Option<Chunk<'a>> {
+    fn next(&mut self) -> Option<Result<Chunk<'a>>> {
         if self.cursor.position() == self.cursor.get_ref().len() as u64 {
             return None;
         }
 
-        match self.read_one() {
-            Ok(c) => {
-                Some(c)
-            },
-            Err(e) => {
-                error!("Error reading one of the chunks");
-                println!("Error: {}", e);
-                None
-            }
-        }
+        Some(self.read_one())
     }
 }
