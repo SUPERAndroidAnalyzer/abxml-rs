@@ -10,14 +10,6 @@ pub struct ResourceDecoder;
 
 impl ResourceDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-/*        cursor.set_position(header.get_data_offset());
-        let amount = (header.get_chunk_end() - header.get_data_offset()) / 4;
-
-        let resource_table = (1..amount)
-            .into_iter()
-            .map(|_| cursor.read_u32::<LittleEndian>().unwrap())
-            .collect::<Vec<u32>>();
-*/
         let ttw = ResourceWrapper::new(cursor.get_ref(), (*header).clone());
         Ok(Chunk::Resource(ttw))
      }

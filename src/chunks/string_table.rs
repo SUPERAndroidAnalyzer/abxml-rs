@@ -49,7 +49,7 @@ impl<'a> StringTableWrapper<'a> {
         if idx > amount {
             return Err("Trying to get index outside StringTable".into());
         }
-        
+
         let position = self.get_string_position(idx);
 
         self.parse_string(position as u32)
@@ -167,6 +167,4 @@ impl<'a> StringTable <'a> {
         let string = self.wrapper.get_string(idx)?;
         Ok(Rc::new(string))
     }
-
-
 }
