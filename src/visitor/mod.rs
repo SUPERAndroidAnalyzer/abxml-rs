@@ -216,6 +216,8 @@ pub struct ModelVisitor<'a> {
     current_spec: Option<TypeSpec<'a>>,
     package_mask: u32,
     entries: HashMap<u32, Entry>,
+    spec_string_table: Option<StringTable<'a>>,
+    entries_string_table: Option<StringTable<'a>>,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -226,6 +228,8 @@ impl<'a> ModelVisitor<'a> {
             current_spec: None,
             package_mask: 0,
             entries: Entries::new(),
+            spec_string_table: None,
+            entries_string_table: None,
         }
     }
 
@@ -236,18 +240,28 @@ impl<'a> ModelVisitor<'a> {
     pub fn get_string_table(&self) -> &Option<StringTable> {
         &self.main_string_table
     }
+
+    pub fn get_spec_string_table(&self) -> &Option<StringTable> {
+        &self.spec_string_table
+    }
+
+    pub fn get_entries_string_table(&self) -> &Option<StringTable> {
+        &self.entries_string_table
+    }
 }
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {
-        match self.main_string_table {
-            Some(_) => {
-                println!("Secondary table!");
-            },
-            None => {
-                self.main_string_table = Some(string_table);
-            },
+        if self.package.is_some () {
+            if self.spec_string_table.is_none() {
+                self.spec_string_table = Some(string_table);
+            } else {
+                self.entries_string_table = Some(string_table);
+            }
+        } else {
+            self.main_string_table = Some(string_table);
         }
+
     }
 
     fn visit_package(&mut self, mut package: Package<'a>) {
