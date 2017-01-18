@@ -1,7 +1,6 @@
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::collections::HashMap;
-// use document::StringTable;
 
 pub mod string_table;
 mod chunk_header;
@@ -10,12 +9,6 @@ pub mod table_type;
 mod resource;
 mod table_type_spec;
 mod xml;
-/*
-pub use self::package::PackageDecoder as PackageDecoder;
-pub use self::table_type::TableTypeDecoder as TableTypeDecoder;
-pub use self::table_type_spec::TableTypeSpecDecoder as TableTypeSpecDecoder;
-pub use self::resource::ResourceDecoder as ResourceDecoder;
-pub use self::xml::XmlDecoder as XmlDecoder;*/
 
 pub use self::string_table::StringTableDecoder as StringTableDecoder;
 pub use self::string_table::StringTableWrapper as StringTableWrapper;
@@ -40,17 +33,13 @@ pub use self::xml::XmlTagStartWrapper as XmlTagStartWrapper;
 pub use self::xml::XmlTagEnd as XmlTagEnd;
 pub use self::xml::XmlTagEndWrapper as XmlTagEndWrapper;
 
-// pub use self::xml::Entry;
-
 use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;
 use self::table_type::TableTypeDecoder;
 use self::xml::XmlDecoder;
 use self::resource::ResourceDecoder;
 
-// use self::table_type::{Entry, ResourceConfiguration};
 use errors::*;
-// use parser::Decoder;
 use std::rc::Rc;
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
@@ -112,7 +101,7 @@ impl<'a> ChunkLoaderStream<'a> {
         };
 
         if let Chunk::Package(_) = chunk {
-            // In case of package, we set the next position of the cursor inside the decoder
+            self.cursor.set_position(chunk_header.get_data_offset());
         } else {
             self.cursor.set_position(chunk_header.get_chunk_end());
         }
