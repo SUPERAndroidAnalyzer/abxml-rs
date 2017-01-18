@@ -63,7 +63,7 @@ impl<'a> TableTypeWrapper<'a> {
     fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
         let base_offset = cursor.position();
         let mut offsets = Vec::new();
-        let mut hentries = HashMap::new();
+        let mut entries = HashMap::new();
 
         let mut prev_offset = base_offset;
         for i in 0..self.get_amount() {
@@ -79,7 +79,7 @@ impl<'a> TableTypeWrapper<'a> {
 
                 match maybe_entry {
                     Some(e) => {
-                        hentries.insert(id, e);
+                        entries.insert(id, e);
                     },
                     None => {
                         debug!("Entry with a negative count");
@@ -88,7 +88,7 @@ impl<'a> TableTypeWrapper<'a> {
             }
         }
 
-        Ok(hentries)
+        Ok(entries)
     }
 
     fn decode_entry(cursor: &mut Cursor<&[u8]>, id: u32) -> Result<Option<Entry>> {
@@ -97,6 +97,10 @@ impl<'a> TableTypeWrapper<'a> {
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let flags = cursor.read_u16::<LittleEndian>()?;
         let key_index = cursor.read_u32::<LittleEndian>()?;
+        if id == 2131361986 {
+            //println!("Key index: {}", key_index);
+            // panic!();
+        }
 
         let header_entry = EntryHeader::new(header_size, flags, key_index);
 

@@ -15,13 +15,6 @@ impl PackageDecoder {
         Ok(Chunk::Package(pw))
     }
 
-    /*fn get_string_table(chunk: Chunk) -> Option<Rc<StringTable>> {
-        match chunk {
-            Chunk::StringTable(st) => Some(st.clone()),
-            _ => None,
-        }
-    }*/
-
     fn package_name(cursor: &mut Cursor<&[u8]>) -> Result<String> {
         let initial_position = cursor.position();
         let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
