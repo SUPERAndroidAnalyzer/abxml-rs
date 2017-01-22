@@ -37,8 +37,6 @@ impl Xml {
         for a in element.get_attributes().iter() {
             let rc_name = a.get_name();
             let prefix = a.get_prefix();
-            println!("Prefix: {:?}", prefix);
-
             let final_name = Self::attribute_name(rc_name, prefix);
 
             let val = match a.get_value() {
@@ -69,14 +67,17 @@ impl Xml {
     }
 
     fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries, entries_string_table: &StringTable) -> String {
-        match entries.get(&id) {
-            Some(e) => {
-                //println!("Attribute ref found: {:?}", e);
-                let id = e.get_id();
-                //println!("KI: {}; PI: {:?}", id, e.destructure_key());
+        let mut res_id = id;
 
+        if id >> 24 == 0 {
+            res_id = ((0xFF & 1) << 24) | id;
+            info!("Resource with package id 0 found. Recreate id with current package id");
+        }
+
+        match entries.get(&res_id) {
+            Some(e) => {
+                let id = e.get_id();
                 let string = entries_string_table.get_uncached_string(e.get_key()).unwrap();
-                println!("String: {}", string);
 
                 return format!("@style/{}", string).to_string()
             },
