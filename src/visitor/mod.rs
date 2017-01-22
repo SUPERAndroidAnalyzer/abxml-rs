@@ -119,6 +119,17 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     fn visit_string_table(&mut self, mut string_table: StringTable) {
         println!("String Table!");
         println!("\tLength: {}", string_table.get_strings_len());
+
+        for i in 0..string_table.get_strings_len()-1 {
+            match string_table.get_uncached_string(i) {
+                Ok(s) => {
+                    println!("\tString #{}: {}", i, string_table.get_uncached_string(i).unwrap());
+                },
+                Err(_) => {
+                    println!("ERROR: String not found");
+                },
+            }
+        }
     }
 
     fn visit_package(&mut self, mut package: Package) {
@@ -266,7 +277,6 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
     fn visit_package(&mut self, mut package: Package<'a>) {
         self.package_mask = package.get_id() << 24;
-        println!("{:X} - {}", self.package_mask, self.package_mask);
         self.package = Some(package);
     }
 
@@ -288,13 +298,6 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 
     fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {
-        match self.current_spec {
-            Some(ref ts) => {
-                println!("Previous type spec: {}", ts.get_id());
-            },
-            None => (),
-        }
-
         self.current_spec = Some(type_spec);
     }
 
