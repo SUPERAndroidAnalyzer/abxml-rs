@@ -196,15 +196,15 @@ impl Value {
     pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
-                //Value::ReferenceId(format!("@id/0x{:#8}", data))
                 Value::ReferenceId(data)
             },
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
-                /*let att_value = Value::AttributeReferenceId(format!("?id/0x{:#8}", data));
-                att_value*/
                 Value::AttributeReferenceId(data)
             }
             TOKEN_TYPE_STRING => {
+                if data == 1545 {
+                    panic!("Getting as string!");
+                }
                 let string = str_table.get_string(data)?;
 
                 Value::String(string.clone())

@@ -71,10 +71,9 @@ impl<'a> TableTypeWrapper<'a> {
         }
 
         for i in 0..self.get_amount() {
-            if offsets[i as usize] == 0xFFFFFFFF {
-                let position = cursor.position();
-            } else {
-                let id = mask | (i & 0xFFFF);
+            let id = mask | (i & 0xFFFF);
+
+            if offsets[i as usize] != 0xFFFFFFFF {
                 let maybe_entry = Self::decode_entry(cursor, id)?;
 
                 match maybe_entry {
@@ -97,11 +96,6 @@ impl<'a> TableTypeWrapper<'a> {
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let flags = cursor.read_u16::<LittleEndian>()?;
         let key_index = cursor.read_u32::<LittleEndian>()?;
-        if id == 2131361986 {
-            println!("Key index: {}", key_index);
-            //panic!();
-        }
-
         let header_entry = EntryHeader::new(header_size, flags, key_index);
 
         if header_entry.is_complex() {
@@ -117,6 +111,10 @@ impl<'a> TableTypeWrapper<'a> {
         cursor.read_u8()?;
         let val_type = cursor.read_u8()?;
         let data = cursor.read_u32::<LittleEndian>()?;
+
+        if id == 2131361986 {
+            println!("Decoding simple entry: {:X}; data: {}", val_type, data);
+        }
 
         let entry = Entry::new_simple(
             id,

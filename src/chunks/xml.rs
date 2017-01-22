@@ -206,7 +206,10 @@ impl<'a> XmlTagStartWrapper<'a> {
         let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_value_idx = cursor.read_u32::<LittleEndian>()?;
-        let attr_type_idx = cursor.read_u32::<LittleEndian>()?;
+
+        let size = cursor.read_u16::<LittleEndian>()?;
+        cursor.read_u8()?;
+        let attr_type_idx = cursor.read_u8()?;
         let attr_data = cursor.read_u32::<LittleEndian>()?;
 
         let mut namespace = None;
