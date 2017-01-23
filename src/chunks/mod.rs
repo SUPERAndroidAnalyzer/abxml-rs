@@ -1,6 +1,5 @@
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::collections::HashMap;
 
 pub mod string_table;
 mod chunk_header;
@@ -40,7 +39,6 @@ use self::xml::XmlDecoder;
 use self::resource::ResourceDecoder;
 
 use errors::*;
-use std::rc::Rc;
 
 const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_RESOURCE: u16 = 0x0180;

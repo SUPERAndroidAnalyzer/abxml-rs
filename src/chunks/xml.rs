@@ -2,7 +2,7 @@ use chunks::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable, Value, Attribute, Element, Namespaces, Entries};
+use document::{Value, Attribute, Namespaces};
 use errors::*;
 use std::clone::Clone;
 
@@ -95,6 +95,7 @@ impl<'a> XmlNamespaceStart<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct XmlNamespaceEndWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
@@ -109,6 +110,7 @@ impl<'a> XmlNamespaceEndWrapper<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct XmlNamespaceEnd<'a> {
     wrapper: XmlNamespaceEndWrapper<'a>,
 }
@@ -207,7 +209,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_value_idx = cursor.read_u32::<LittleEndian>()?;
 
-        let size = cursor.read_u16::<LittleEndian>()?;
+        let _size = cursor.read_u16::<LittleEndian>()?;
         cursor.read_u8()?;
         let attr_type_idx = cursor.read_u8()?;
         let attr_data = cursor.read_u32::<LittleEndian>()?;
@@ -258,6 +260,7 @@ impl<'a> XmlTagStart<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct XmlTagEndWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
@@ -272,6 +275,7 @@ impl<'a> XmlTagEndWrapper<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct XmlTagEnd<'a> {
     wrapper: XmlTagEndWrapper<'a>,
 }

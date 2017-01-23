@@ -1,8 +1,5 @@
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
-use std::rc::Rc;
-use document::{HeaderStringTable};
 use errors::*;
 use std::clone::Clone;
 
@@ -15,6 +12,7 @@ impl ResourceDecoder {
      }
 }
 
+#[allow(dead_code)]
 pub struct ResourceWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
@@ -29,6 +27,7 @@ impl<'a> ResourceWrapper<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct Resource<'a> {
     wrapper: ResourceWrapper<'a>,
 }
