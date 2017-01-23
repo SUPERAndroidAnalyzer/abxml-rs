@@ -1,9 +1,6 @@
-use chunks::{Chunk, ChunkLoaderStream, ChunkHeader};
-use chunks::table_type::Entry;
+use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::rc::Rc;
-use document::{HeaderStringTable, Value};
 use errors::*;
 
 pub struct PackageDecoder;
@@ -13,12 +10,6 @@ impl PackageDecoder {
         let pw = PackageWrapper::new(cursor.get_ref(), (*header).clone());
 
         Ok(Chunk::Package(pw))
-    }
-
-    fn package_name(cursor: &mut Cursor<&[u8]>) -> Result<String> {
-        let initial_position = cursor.position();
-        let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
-        String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
     }
 }
 

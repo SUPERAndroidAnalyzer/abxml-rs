@@ -11,7 +11,6 @@ extern crate log;
 
 mod document;
 pub mod encoder;
-pub mod parser;
 pub mod chunks;
 pub mod visitor;
 
@@ -23,13 +22,6 @@ pub mod errors {
         }
     }
 }
-
-use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
-use document::*;
-use std::rc::Rc;
-use errors::*;
-use log::{LogRecord, LogLevelFilter, LogLevel};
 
 #[cfg(test)]
 mod tests {

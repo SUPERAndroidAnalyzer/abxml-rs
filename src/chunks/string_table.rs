@@ -2,7 +2,6 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{HeaderStringTable};
 use errors::*;
 use std::clone::Clone;
 use std::collections::hash_map::{HashMap, Entry};
@@ -68,7 +67,7 @@ impl<'a> StringTableWrapper<'a> {
         let mut position = str_offset;
         let mut max_offset = 0;
 
-        for i in 0..(idx + 1) {
+        for _ in 0..(idx + 1) {
             let current_offset = cursor.read_u32::<LittleEndian>().unwrap();
             position = str_offset + current_offset;
 
@@ -81,8 +80,6 @@ impl<'a> StringTableWrapper<'a> {
     }
 
     fn parse_string(&self, offset: u32) -> Result<String> {
-        let mut final_offset = offset;
-
         let size1: u32 = self.raw_data[offset as usize] as u32;
         let size2: u32 = self.raw_data[(offset + 1) as usize] as u32;
 
@@ -133,7 +130,7 @@ impl<'a> Display for StringTable<'a> {
         let amount = self.get_strings_len();
 
         for i in 0..amount {
-            write!(formatter, "{} - {}\n", i, self.get_uncached_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())));
+            write!(formatter, "{} - {}\n", i, self.get_uncached_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
         }
 
         Ok(())

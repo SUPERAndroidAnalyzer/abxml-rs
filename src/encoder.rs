@@ -1,14 +1,12 @@
-use quick_xml::{AsStr, Element, Event, XmlReader, XmlWriter};
+use quick_xml::{Element,    XmlWriter};
 use quick_xml::Event::*;
 use std::io::Cursor;
-use std::iter;
 use document::Element as AbxmlElement;
-use document::{Namespaces, Value, Entries};
+use document::{Namespaces, Value};
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
 use errors::*;
-use chunks::StringTable;
 use visitor::Resources;
 
 pub struct Xml;
