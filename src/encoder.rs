@@ -9,14 +9,15 @@ use std::io::Write;
 use std::rc::Rc;
 use errors::*;
 use chunks::StringTable;
+use visitor::Resources;
 
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, entries: &Entries, string_table: &StringTable, entries_string_table: &StringTable) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, resources: &mut Resources) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element, entries, string_table, entries_string_table);
+        Self::encode_element(&mut writer, Some(namespaces), element, resources);
 
         let result = writer.into_inner().into_inner();
         let str_result = String::from_utf8(result).unwrap();
@@ -25,7 +26,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, entries: &Entries, string_table: &StringTable, entries_string_table: &StringTable) {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, resources: &mut Resources) {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -41,10 +42,10 @@ impl Xml {
 
             let val = match a.get_value() {
                 &Value::ReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, string_table, &entries, &entries_string_table))
+                    Some(Self::resolve_reference(*id, resources))
                 },
                 &Value::AttributeReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, string_table, &entries, &entries_string_table))
+                    Some(Self::resolve_reference(*id, resources))
                 },
                 _ => {
                     None
@@ -60,13 +61,13 @@ impl Xml {
         writer.write(Start(elem)).unwrap();
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, entries, string_table, entries_string_table)
+            Self::encode_element(&mut writer, None, child, resources)
         }
 
         writer.write(End(Element::new(tag.deref()))).unwrap();
     }
 
-    fn resolve_reference(id: u32, string_table: &StringTable, entries: &Entries, entries_string_table: &StringTable) -> String {
+    fn resolve_reference(id: u32, resources: &mut Resources) -> String {
         let mut res_id = id;
 
         if id >> 24 == 0 {
@@ -74,7 +75,13 @@ impl Xml {
             info!("Resource with package id 0 found. Recreate id with current package id");
         }
 
-        match entries.get(&res_id) {
+        let entry_key = resources
+            .get_entries()
+            .get(&res_id)
+            .and_then(|e| Some(e.get_key()));
+        println!("Entry {:?}", entry_key);
+
+        /*match resources.get_entries().get(&res_id) {
             Some(e) => {
                 let id = e.get_id();
                 let string = entries_string_table.get_uncached_string(e.get_key()).unwrap();
@@ -93,7 +100,7 @@ impl Xml {
                     }
                 }
             },
-        };
+        };*/
 
         format!("attr ref: #{}", id)
     }

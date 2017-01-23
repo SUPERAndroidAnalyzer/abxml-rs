@@ -56,7 +56,7 @@ impl Executor {
         Ok(())
     }
 
-    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, entries: &HashMap<u32, Entry>) -> Result<()> {
+    pub fn xml<'a, 'b, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, resources: &mut Resources) -> Result<()> {
         let token = cursor.read_u16::<LittleEndian>()?;
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let chunk_size = cursor.read_u32::<LittleEndian>()?;
@@ -222,28 +222,20 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
 }
 
 pub struct ModelVisitor<'a> {
-    main_string_table: Option<StringTable<'a>>,
-    package: Option<Package<'a>>,
-    current_spec: Option<TypeSpec<'a>>,
     package_mask: u32,
-    entries: HashMap<u32, Entry>,
-    spec_string_table: Option<StringTable<'a>>,
-    entries_string_table: Option<StringTable<'a>>,
+    resources: Resources<'a>,
+    current_spec: Option<TypeSpec<'a>>,
 }
 
 impl<'a> ModelVisitor<'a> {
     pub fn new() -> ModelVisitor<'a> {
         ModelVisitor {
-            main_string_table: None,
-            package: None,
-            current_spec: None,
             package_mask: 0,
-            entries: Entries::new(),
-            spec_string_table: None,
-            entries_string_table: None,
+            resources: Resources::new(),
+            current_spec: None,
         }
     }
-
+/*
     pub fn get_entries(&self) -> &HashMap<u32, Entry> {
         &self.entries
     }
@@ -259,46 +251,90 @@ impl<'a> ModelVisitor<'a> {
     pub fn get_entries_string_table(&self) -> &Option<StringTable> {
         &self.entries_string_table
     }
+*/
+    pub fn get_resources(&self) -> &'a Resources {
+        &self.resources
+    }
+
+    pub fn get_mut_resources(&mut self) -> &'a mut Resources {
+        &mut self.resources
+    }
 }
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {
-        if self.package.is_some () {
-            if self.spec_string_table.is_none() {
-                self.spec_string_table = Some(string_table);
-            } else {
-                self.entries_string_table = Some(string_table);
-            }
-        } else {
-            self.main_string_table = Some(string_table);
-        }
-
+        self.resources.set_string_table(string_table);
     }
 
     fn visit_package(&mut self, mut package: Package<'a>) {
         self.package_mask = package.get_id() << 24;
-        self.package = Some(package);
+        self.resources.add_package(package);
     }
 
     fn visit_table_type(&mut self, mut table_type: TableType<'a>) {
-        // println!("Table type!");
-        // println!("\tId: {}", table_type.get_id());
-        // println!("ResourceConfig: {:?}", table_type.get_configuration());
         match self.current_spec {
             Some(ref ts) => {
                 let mask = self.package_mask |
                     ((ts.get_id() as u32) << 16);
-                // println!("Mask: {:X} - {}", mask, mask);
                 let entries = table_type.get_entries(ts, mask).unwrap();
-                self.entries.extend(entries);
-                // println!("Entries: {:?}", entries);
+                self.resources.add_entries(entries);
             },
             None => (),
         }
     }
 
     fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {
-        self.current_spec = Some(type_spec);
+        self.current_spec = Some(type_spec.clone());
+        self.resources.add_type_spec(type_spec);
+    }
+}
+
+pub struct Resources<'a> {
+    packages: Vec<Package<'a>>,
+    specs: Vec<TypeSpec<'a>>,
+    string_table: Option<StringTable<'a>>,
+    spec_string_table: Option<StringTable<'a>>,
+    entries_string_table: Option<StringTable<'a>>,
+    entries: Entries,
+}
+
+impl<'a> Resources<'a> {
+    pub fn new() -> Self {
+        Resources {
+            packages: Vec::new(),
+            specs: Vec::new(),
+            string_table: None,
+            spec_string_table: None,
+            entries_string_table: None,
+            entries: Entries::new(),
+        }
     }
 
+    pub fn set_string_table(&mut self, string_table: StringTable<'a>) {
+        if self.packages.is_empty() {
+            self.string_table = Some(string_table);
+        } else {
+            if self.spec_string_table.is_none() {
+                self.spec_string_table = Some(string_table);
+            } else {
+                self.entries_string_table = Some(string_table);
+            }
+        }
+    }
+
+    pub fn add_package(&mut self, package: Package<'a>) {
+        self.packages.push(package);
+    }
+
+    pub fn add_entries(&mut self, entries: Entries) {
+        self.entries.extend(entries);
+    }
+
+    pub fn add_type_spec(&mut self, type_spec: TypeSpec<'a>) {
+        self.specs.push(type_spec);
+    }
+
+    pub fn get_entries(&self) -> &Entries {
+        &self.entries
+    }
 }

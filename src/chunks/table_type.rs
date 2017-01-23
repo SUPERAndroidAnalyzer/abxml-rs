@@ -189,7 +189,7 @@ impl<'a> TableType<'a> {
         self.wrapper.get_configuration()
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32,   Entry>> {
+    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
         self.wrapper.get_entries(type_spec, mask)
     }
 }
