@@ -55,10 +55,29 @@ fn run() -> Result<()> {
     let mut resources_visitor = ModelVisitor::new();
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
 
-    let cursor: Cursor<&[u8]> = Cursor::new(&manifest_content);
+    let resources = resources_visitor.get_mut_resources();
+    parse_xml(manifest_content, resources)?;
+
+    for i in 0..archive.len() {
+        let mut current_file = archive.by_index(i).unwrap();
+
+        if current_file.name().contains(".xml") {
+            println!("File: {}", current_file.name());
+            let mut xml_content = Vec::new();
+            current_file.read_to_end(&mut xml_content);
+
+            parse_xml(xml_content, resources)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_xml(content: Vec<u8>, resources: &mut Resources) -> Result<String> {
+    let cursor: Cursor<&[u8]> = Cursor::new(&content);
 
     let mut visitor = XmlVisitor::new();
-    let resources = resources_visitor.get_mut_resources();
+    // let resources = resources_visitor.get_mut_resources();
 
     Executor::xml(cursor, &mut visitor, resources)?;
 
@@ -66,12 +85,11 @@ fn run() -> Result<()> {
         Some(ref root) => {
             match *visitor.get_string_table() {
                 Some(_) => {
-                    let xml_content = Xml::encode(
+                    return Xml::encode(
                         visitor.get_namespaces(),
                         root,
                         resources,
-                    ).chain_err(|| "Could note encode XML")?;
-                    println!("{}", xml_content);
+                    ).chain_err(|| "Could note encode XML");
                 },
                 None => {
                     println!("No string table found");
@@ -83,7 +101,7 @@ fn run() -> Result<()> {
         }
     }
 
-    Ok(())
+    Err("Could not decode XML".into())
 }
 
 fn sanitize_filename(filename: &str) -> std::path::PathBuf
