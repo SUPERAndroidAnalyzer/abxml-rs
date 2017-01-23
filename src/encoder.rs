@@ -79,28 +79,11 @@ impl Xml {
             .get_entries()
             .get(&res_id)
             .and_then(|e| Some(e.get_key()));
+
+        if let Some(key) = entry_key {
+            return resources.format_reference(id, key).unwrap();
+        }
         println!("Entry {:?}", entry_key);
-
-        /*match resources.get_entries().get(&res_id) {
-            Some(e) => {
-                let id = e.get_id();
-                let string = entries_string_table.get_uncached_string(e.get_key()).unwrap();
-
-                return format!("@style/{}", string).to_string()
-            },
-            None => {
-                println!("None attribute ref found");
-
-                match string_table.get_uncached_string(id) {
-                    Ok(s) => {
-                        println!("Found on st: {}", s);
-                    },
-                    Err(_) => {
-                        println!("Attr not found on st");
-                    }
-                }
-            },
-        };*/
 
         format!("attr ref: #{}", id)
     }
