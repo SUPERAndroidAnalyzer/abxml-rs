@@ -1,6 +1,7 @@
 extern crate abxml;
 extern crate error_chain;
 extern crate byteorder;
+extern crate zip;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -33,7 +34,7 @@ fn main() {
 // `errors` module. It is a typedef of the standard `Result` type
 // for which the error type is always our own `Error`.
 fn run() -> Result<()> {
-    let path = match env::args().nth(1) {
+    let apk_path = match env::args().nth(1) {
         Some(path) => path,
         None => {
             println!("Usage: converter <path>");
@@ -41,21 +42,20 @@ fn run() -> Result<()> {
         }
     };
 
-    let xml_path = match env::args().nth(2) {
-        Some(path) => path,
-        None => {
-            println!("Usage: converter <path>");
-            return Ok(())
-        }
-    };
+    let file = std::fs::File::open(&apk_path)?;
+    let mut archive = zip::ZipArchive::new(file).unwrap();
 
-    let resource_content = file_get_contents(&path);
-    let resources_cursor: Cursor<&[u8]> = Cursor::new(&resource_content);
+    let mut resources_content = Vec::new();
+    archive.by_name("resources.arsc").unwrap().read_to_end(&mut resources_content)?;
+
+    let mut manifest_content = Vec::new();
+    archive.by_name("AndroidManifest.xml").unwrap().read_to_end(&mut manifest_content)?;
+
+    let resources_cursor: Cursor<&[u8]> = Cursor::new(&resources_content);
     let mut resources_visitor = ModelVisitor::new();
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
 
-    let content = file_get_contents(&xml_path);
-    let cursor: Cursor<&[u8]> = Cursor::new(&content);
+    let cursor: Cursor<&[u8]> = Cursor::new(&manifest_content);
 
     let mut visitor = XmlVisitor::new();
     let resources = resources_visitor.get_mut_resources();
@@ -84,6 +84,22 @@ fn run() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn sanitize_filename(filename: &str) -> std::path::PathBuf
+{
+    let no_null_filename = match filename.find('\0') {
+        Some(index) => &filename[0..index],
+        None => filename,
+    };
+
+    std::path::Path::new(no_null_filename)
+        .components()
+        .filter(|component| *component != std::path::Component::ParentDir)
+        .fold(std::path::PathBuf::new(), |mut path, ref cur| {
+            path.push(cur.as_os_str());
+            path
+        })
 }
 
 fn file_get_contents(path: &str) -> Vec<u8> {
