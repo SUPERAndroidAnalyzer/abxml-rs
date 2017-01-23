@@ -25,29 +25,5 @@ pub mod errors {
 
 #[cfg(test)]
 mod tests {
-/*    use std::error::Error;
-    use std::fs::File;
-    use std::io::prelude::*;
-    use std::path::Path;
-    use super::*;
 
-    use test::Bencher;
-
-    #[test]
-    fn it_works() {
-        let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
-        let parser = BinaryXmlDecoder::new(&original_file);
-        let result = parser.decode();
-        println!("{:?}", result);
-    }
-
-    #[bench]
-    fn bench_manifest_parsing(b: &mut Bencher) {
-        let original_file = file_get_contents("tests/binary_manifests/AndroidManifest-ce.xml");
-
-        b.iter(move || {
-            let parser = BinaryXmlDecoder::new(&original_file);
-            parser.decode().unwrap();
-        });
-    }*/
 }

@@ -227,27 +227,11 @@ impl<'a> ModelVisitor<'a> {
     pub fn new() -> ModelVisitor<'a> {
         ModelVisitor {
             package_mask: 0,
-            resources: Resources::new(),
+            resources: Resources::default(),
             current_spec: None,
         }
     }
-/*
-    pub fn get_entries(&self) -> &HashMap<u32, Entry> {
-        &self.entries
-    }
 
-    pub fn get_string_table(&self) -> &Option<StringTable> {
-        &self.main_string_table
-    }
-
-    pub fn get_spec_string_table(&self) -> &Option<StringTable> {
-        &self.spec_string_table
-    }
-
-    pub fn get_entries_string_table(&self) -> &Option<StringTable> {
-        &self.entries_string_table
-    }
-*/
     pub fn get_resources(&self) -> &'a Resources {
         &self.resources
     }
@@ -285,6 +269,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 }
 
+#[derive(Default)]
 pub struct Resources<'a> {
     packages: Vec<Package<'a>>,
     specs: Vec<TypeSpec<'a>>,
@@ -295,26 +280,13 @@ pub struct Resources<'a> {
 }
 
 impl<'a> Resources<'a> {
-    pub fn new() -> Self {
-        Resources {
-            packages: Vec::new(),
-            specs: Vec::new(),
-            string_table: None,
-            spec_string_table: None,
-            entries_string_table: None,
-            entries: Entries::new(),
-        }
-    }
-
     pub fn set_string_table(&mut self, string_table: StringTable<'a>) {
         if self.packages.is_empty() {
             self.string_table = Some(string_table);
+        } else if self.spec_string_table.is_none() {
+            self.spec_string_table = Some(string_table);
         } else {
-            if self.spec_string_table.is_none() {
-                self.spec_string_table = Some(string_table);
-            } else {
-                self.entries_string_table = Some(string_table);
-            }
+            self.entries_string_table = Some(string_table);
         }
     }
 

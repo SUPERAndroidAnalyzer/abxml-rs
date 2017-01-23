@@ -1,5 +1,4 @@
 extern crate abxml;
-#[macro_use]
 extern crate error_chain;
 extern crate byteorder;
 
@@ -9,11 +8,8 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 use abxml::errors::*;
-use abxml::chunks::*;
 use abxml::visitor::*;
-
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
 
 fn main() {
     if let Err(ref e) = run() {
@@ -54,70 +50,57 @@ fn run() -> Result<()> {
     };
 
     let resource_content = file_get_contents(&path);
-    let mut resources_cursor: Cursor<&[u8]> = Cursor::new(&resource_content);
+    let resources_cursor: Cursor<&[u8]> = Cursor::new(&resource_content);
     let mut resources_visitor = ModelVisitor::new();
-    let resource_executor = Executor::arsc(resources_cursor, &mut resources_visitor)?;
+    Executor::arsc(resources_cursor, &mut resources_visitor)?;
 
     let content = file_get_contents(&xml_path);
-    let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
+    let cursor: Cursor<&[u8]> = Cursor::new(&content);
 
     let mut visitor = XmlVisitor::new();
     let resources = resources_visitor.get_mut_resources();
 
-    let executor = Executor::xml(cursor, &mut visitor, resources);
+    Executor::xml(cursor, &mut visitor, resources)?;
 
-    match visitor.get_root() {
-        &Some(ref root) => {
-            match visitor.get_string_table() {
-                &Some(ref st) => {
+    match *visitor.get_root() {
+        Some(ref root) => {
+            match *visitor.get_string_table() {
+                Some(_) => {
                     let xml_content = Xml::encode(
-                        &visitor.get_namespaces(),
-                        &root,
+                        visitor.get_namespaces(),
+                        root,
                         resources,
                     ).chain_err(|| "Could note encode XML")?;
                     println!("{}", xml_content);
                 },
-                &None => {
+                None => {
                     println!("No string table found");
                 }
             }
         },
-        &None => {
+        None => {
             println!("No root on target XML");
         }
     }
-
-
-/*
-        match parser.get_element_container().get_root() {
--        &Some(ref root) => {
--            let xml_content = Xml::encode(&parser.get_namespaces(), &root).chain_err(|| "Could not decode XML")?;
--            println!("{}", xml_content);
--        },
--        _ => (),
--    }
-*/
 
     Ok(())
 }
 
 fn file_get_contents(path: &str) -> Vec<u8> {
     let path = Path::new(path);
-    let display = path.display();
 
     let mut file = match File::open(&path) {
         // The `description` method of `io::Error` returns a string that
         // describes the error
-        Err(why) => panic!("Could ont open file"),
+        Err(_) => panic!("Could ont open file"),
         Ok(file) => file,
     };
 
     // Read the file contents into a string, returns `io::Result<usize>`
     let mut v: Vec<u8> = Vec::new();
-    match file.read_to_end(&mut v) {
-        Err(why) => panic!("Could not read"),
-        Ok(_) => (),
-    };
+    if file.read_to_end(&mut v).is_err() {
+        panic!("Could not read");
+    }
 
-    return v;
+    v
 }
