@@ -2,51 +2,47 @@ use std::io::Cursor;
 use chunks::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use std::marker::PhantomData;
-use std::collections::HashMap;
-use chunks::table_type::Entry;
-use std::rc::Rc;
 use document::{Namespaces, Element, ElementContainer, Entries};
 
 pub trait ChunkVisitor<'a> {
-    fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {}
-    fn visit_package(&mut self, mut package: Package<'a>) {}
-    fn visit_table_type(&mut self, mut table_type: TableType<'a>) {}
-    fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {}
-    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {}
-    fn visit_xml_namespace_end(&mut self, mut namespace_end: XmlNamespaceEnd<'a>) {}
-    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {}
-    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {}
-    fn visit_resource(&mut self, mut resource: Resource<'a>) {}
+    fn visit_string_table(&mut self, _string_table: StringTable<'a>) {}
+    fn visit_package(&mut self, _package: Package<'a>) {}
+    fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
+    fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
+    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
+    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {}
+    fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
+    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
+    fn visit_resource(&mut self, _resource: Resource<'a>) {}
 }
 
 pub struct Executor;
 
 impl Executor {
     pub fn arsc<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
-        let token = cursor.read_u16::<LittleEndian>()?;
-        let header_size = cursor.read_u16::<LittleEndian>()?;
-        let chunk_size = cursor.read_u32::<LittleEndian>()?;
-        let package_amount = cursor.read_u32::<LittleEndian>()?;
+        let _token = cursor.read_u16::<LittleEndian>()?;
+        let _header_size = cursor.read_u16::<LittleEndian>()?;
+        let _chunk_size = cursor.read_u32::<LittleEndian>()?;
+        let _package_amount = cursor.read_u32::<LittleEndian>()?;
 
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
             match c? {
                 Chunk::StringTable(stw) => {
-                    let mut st = StringTable::new(stw);
+                    let st = StringTable::new(stw);
                     visitor.visit_string_table(st);
                 },
                 Chunk::Package(pw) => {
-                    let mut package = Package::new(pw);
+                    let package = Package::new(pw);
                     visitor.visit_package(package);
                 },
                 Chunk::TableType(ttw) => {
-                    let mut tt = TableType::new(ttw);
+                    let tt = TableType::new(ttw);
                     visitor.visit_table_type(tt);
                 },
                 Chunk::TableTypeSpec(tsw) => {
-                    let mut ts = TypeSpec::new(tsw);
+                    let ts = TypeSpec::new(tsw);
                     visitor.visit_type_spec(ts);
                 },
                 _ => (),
@@ -56,49 +52,49 @@ impl Executor {
         Ok(())
     }
 
-    pub fn xml<'a, 'b, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, resources: &mut Resources) -> Result<()> {
-        let token = cursor.read_u16::<LittleEndian>()?;
-        let header_size = cursor.read_u16::<LittleEndian>()?;
-        let chunk_size = cursor.read_u32::<LittleEndian>()?;
+    pub fn xml<'a, 'b, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, _: &mut Resources) -> Result<()> {
+        let _token = cursor.read_u16::<LittleEndian>()?;
+        let _header_size = cursor.read_u16::<LittleEndian>()?;
+        let _chunk_size = cursor.read_u32::<LittleEndian>()?;
 
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
             match c? {
                 Chunk::StringTable(stw) => {
-                    let mut st = StringTable::new(stw);
+                    let st = StringTable::new(stw);
                     visitor.visit_string_table(st);
                 },
                 Chunk::Package(pw) => {
-                    let mut package = Package::new(pw);
+                    let package = Package::new(pw);
                     visitor.visit_package(package);
                 },
                 Chunk::TableType(ttw) => {
-                    let mut tt = TableType::new(ttw);
+                    let tt = TableType::new(ttw);
                     visitor.visit_table_type(tt);
                 },
                 Chunk::TableTypeSpec(tsw) => {
-                    let mut ts = TypeSpec::new(tsw);
+                    let ts = TypeSpec::new(tsw);
                     visitor.visit_type_spec(ts);
                 },
                 Chunk::XmlNamespaceStart(xnsw) => {
-                    let mut ts = XmlNamespaceStart::new(xnsw);
+                    let ts = XmlNamespaceStart::new(xnsw);
                     visitor.visit_xml_namespace_start(ts);
                 },
                 Chunk::XmlNamespaceEnd(xnsw) => {
-                    let mut ts = XmlNamespaceEnd::new(xnsw);
+                    let ts = XmlNamespaceEnd::new(xnsw);
                     visitor.visit_xml_namespace_end(ts);
                 },
                 Chunk::XmlTagStart(xnsw) => {
-                    let mut ts = XmlTagStart::new(xnsw);
+                    let ts = XmlTagStart::new(xnsw);
                     visitor.visit_xml_tag_start(ts);
                 },
                 Chunk::XmlTagEnd(xnsw) => {
-                    let mut ts = XmlTagEnd::new(xnsw);
+                    let ts = XmlTagEnd::new(xnsw);
                     visitor.visit_xml_tag_end(ts);
                 },
                 Chunk::Resource(rw) => {
-                    let mut ts = Resource::new(rw);
+                    let ts = Resource::new(rw);
                     visitor.visit_resource(ts);
                 }
                 _ => (),
@@ -116,13 +112,13 @@ impl<'a> ChunkVisitor<'a> for DummyVisitor {}
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
-    fn visit_string_table(&mut self, mut string_table: StringTable) {
+    fn visit_string_table(&mut self, string_table: StringTable) {
         println!("String Table!");
         println!("\tLength: {}", string_table.get_strings_len());
 
         for i in 0..string_table.get_strings_len()-1 {
             match string_table.get_uncached_string(i) {
-                Ok(s) => {
+                Ok(_) => {
                     println!("\tString #{}: {}", i, string_table.get_uncached_string(i).unwrap());
                 },
                 Err(_) => {
@@ -132,18 +128,18 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
         }
     }
 
-    fn visit_package(&mut self, mut package: Package) {
+    fn visit_package(&mut self, package: Package) {
         println!("Package!");
         println!("\tId: {}", package.get_id());
         println!("\tName: {}", package.get_name().unwrap());
     }
 
-    fn visit_table_type(&mut self, mut table_type: TableType) {
+    fn visit_table_type(&mut self, table_type: TableType) {
         println!("Table type!");
         println!("\tId: {}", table_type.get_id());
     }
 
-    fn visit_type_spec(&mut self, mut type_spec: TypeSpec) {
+    fn visit_type_spec(&mut self, type_spec: TypeSpec) {
         println!("Type spec!");
         println!("\tId: {}", type_spec.get_id());
     }
@@ -178,7 +174,7 @@ impl<'a> XmlVisitor<'a> {
 }
 
 impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
-    fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {
+    fn visit_string_table(&mut self, string_table: StringTable<'a>) {
         match self.main_string_table {
             Some(_) => {
                 println!("Secondary table!");
@@ -189,7 +185,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_namespace_start(&mut self, mut namespace_start: XmlNamespaceStart<'a>) {
+    fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
                 self.namespaces.insert(
@@ -203,7 +199,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_tag_start(&mut self, mut tag_start: XmlTagStart<'a>) {
+    fn visit_xml_tag_start(&mut self, tag_start: XmlTagStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
                 let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
@@ -216,7 +212,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_tag_end(&mut self, mut tag_end: XmlTagEnd<'a>) {
+    fn visit_xml_tag_end(&mut self, _: XmlTagEnd<'a>) {
         self.container.end_element()
     }
 }
@@ -262,16 +258,16 @@ impl<'a> ModelVisitor<'a> {
 }
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
-    fn visit_string_table(&mut self, mut string_table: StringTable<'a>) {
+    fn visit_string_table(&mut self, string_table: StringTable<'a>) {
         self.resources.set_string_table(string_table);
     }
 
-    fn visit_package(&mut self, mut package: Package<'a>) {
+    fn visit_package(&mut self, package: Package<'a>) {
         self.package_mask = package.get_id() << 24;
         self.resources.add_package(package);
     }
 
-    fn visit_table_type(&mut self, mut table_type: TableType<'a>) {
+    fn visit_table_type(&mut self, table_type: TableType<'a>) {
         match self.current_spec {
             Some(ref ts) => {
                 let mask = self.package_mask |
@@ -283,7 +279,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         }
     }
 
-    fn visit_type_spec(&mut self, mut type_spec: TypeSpec<'a>) {
+    fn visit_type_spec(&mut self, type_spec: TypeSpec<'a>) {
         self.current_spec = Some(type_spec.clone());
         self.resources.add_type_spec(type_spec);
     }

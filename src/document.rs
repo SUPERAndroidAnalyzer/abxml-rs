@@ -24,22 +24,6 @@ pub struct Document {
     pub root_element: Element,
 }
 
-pub struct Package {
-    pub name: String,
-//    pub type_string_table: Option<StringTable>,
-//    pub key_string_table: Option<StringTable>,
-}
-
-impl Package {
-    pub fn new(name: String) -> Self {
-        Package {
-            name: name,
-//            type_string_table: None,
-//            key_string_table: None,
-        }
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct Header {
     pub size: u32,
@@ -154,8 +138,6 @@ pub enum Value {
     AttributeReferenceId(u32),
     Unknown,
 }
-
-const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;

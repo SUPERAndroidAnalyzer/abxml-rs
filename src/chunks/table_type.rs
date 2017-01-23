@@ -1,8 +1,6 @@
-use chunks::{Chunk, ChunkHeader, TypeSpec, StringTable};
+use chunks::{Chunk, ChunkHeader, TypeSpec};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::rc::Rc;
-use document::{HeaderStringTable, Value};
 use errors::*;
 use std::collections::HashMap;
 // use parser::Decoder;
@@ -60,13 +58,11 @@ impl<'a> TableTypeWrapper<'a> {
         self.decode_entries(&mut cursor, type_spec, mask)
     }
 
-    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
-        let base_offset = cursor.position();
+    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>, _: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
         let mut offsets = Vec::new();
         let mut entries = HashMap::new();
 
-        let mut prev_offset = base_offset;
-        for i in 0..self.get_amount() {
+        for _ in 0..self.get_amount() {
             offsets.push(cursor.read_u32::<LittleEndian>()?);
         }
 
@@ -91,8 +87,6 @@ impl<'a> TableTypeWrapper<'a> {
     }
 
     fn decode_entry(cursor: &mut Cursor<&[u8]>, id: u32) -> Result<Option<Entry>> {
-        let position = cursor.position();
-
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let flags = cursor.read_u16::<LittleEndian>()?;
         let key_index = cursor.read_u32::<LittleEndian>()?;
@@ -138,10 +132,8 @@ impl<'a> TableTypeWrapper<'a> {
         }
 
         for j in 0..value_count {
-            //println!("Current: {}", cursor.position());
             debug!("Parsing value: {}/{} (@{})", j, value_count - 1, cursor.position());
-            // println!("Parsing value #{}", j);
-            let val_id = cursor.read_u32::<LittleEndian>()?;
+            let _val_id = cursor.read_u32::<LittleEndian>()?;
             // Resource value
             let size = cursor.read_u16::<LittleEndian>()?;
             // Padding
@@ -194,6 +186,7 @@ impl<'a> TableType<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct EntryHeader {
     header_size: u16,
     flags: u16,
@@ -268,21 +261,21 @@ impl Entry {
 
     pub fn get_id(&self) -> u32 {
         match self {
-            &Entry::Simple{id: id, key_index: ki, size: _, value_type: _, value_data: _} => {
-                id
+            &Entry::Simple{id: index, ..} => {
+                index
             },
-            &Entry::Complex{id: id, key_index: ki, parent_entry_id: _, entries: _} => {
-                id
+            &Entry::Complex{id: index, ..} => {
+                index
             },
         }
     }
 
     pub fn get_key(&self) -> u32 {
         match self {
-            &Entry::Simple{id: id, key_index: ki, size: _, value_type: _, value_data: _} => {
+            &Entry::Simple{key_index: ki, ..} => {
                 ki
             },
-            &Entry::Complex{id: id, key_index: ki, parent_entry_id: _, entries: _} => {
+            &Entry::Complex{key_index: ki, ..} => {
                 ki
             },
         }
@@ -357,7 +350,7 @@ pub struct ResourceConfiguration {
 
 impl ResourceConfiguration {
     pub fn from_cursor(mut cursor: &mut Cursor<&[u8]>) -> Result<Self> {
-        let initial_position = cursor.position();
+        let _initial_position = cursor.position();
         let size = cursor.read_u32::<LittleEndian>()?;
         let mcc = cursor.read_u16::<LittleEndian>()?;
         let mnc = cursor.read_u16::<LittleEndian>()?;
