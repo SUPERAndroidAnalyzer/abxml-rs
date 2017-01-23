@@ -1,31 +1,19 @@
 extern crate abxml;
-#[macro_use]
 extern crate error_chain;
 extern crate ansi_term;
-#[macro_use]
 extern crate log;
 extern crate env_logger;
 extern crate byteorder;
 
 use std::env;
-use abxml::encoder::Xml;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-/*use abxml::chunks::Chunk;
-use abxml::chunks::ChunkLoaderStream;
-use abxml::chunks::StringTable;*/
-use abxml::chunks::*;
 use abxml::errors::*;
 use abxml::visitor::*;
 
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
-
-use ansi_term::Colour::{Red, Green, Blue, Yellow};
-use ansi_term::Style;
-use env_logger::LogBuilder;
-use log::{LogRecord, LogLevelFilter, LogLevel};
+use ansi_term::Colour::{Red, Green, Blue};
 
 fn main() {
     env_logger::init().unwrap();
@@ -65,32 +53,29 @@ fn run() -> Result<()> {
     };
 
     let content = file_get_contents(&path);
-    let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
+    let cursor: Cursor<&[u8]> = Cursor::new(&content);
 
-    let mut visitor = ModelVisitor::new();
-    let executor = Executor::arsc(cursor, &mut visitor);
-    let entries = visitor.get_entries();
+    let mut visitor = PrintVisitor;
+    Executor::arsc(cursor, &mut visitor)?;
 
     Ok(())
 }
 
 fn file_get_contents(path: &str) -> Vec<u8> {
     let path = Path::new(path);
-    let display = path.display();
 
     let mut file = match File::open(&path) {
         // The `description` method of `io::Error` returns a string that
         // describes the error
-        Err(why) => panic!("Could ont open file"),
+        Err(_) => panic!("Could ont open file"),
         Ok(file) => file,
     };
 
     // Read the file contents into a string, returns `io::Result<usize>`
     let mut v: Vec<u8> = Vec::new();
-    match file.read_to_end(&mut v) {
-        Err(why) => panic!("Could not read"),
-        Ok(_) => (),
-    };
+    if file.read_to_end(&mut v).is_err() {
+        panic!("Could not read");
+    }
 
-    return v;
+    v
 }
