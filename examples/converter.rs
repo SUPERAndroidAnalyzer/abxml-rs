@@ -57,31 +57,25 @@ fn run() -> Result<()> {
     let mut resources_cursor: Cursor<&[u8]> = Cursor::new(&resource_content);
     let mut resources_visitor = ModelVisitor::new();
     let resource_executor = Executor::arsc(resources_cursor, &mut resources_visitor)?;
-    let entries = resources_visitor.get_entries();
 
     let content = file_get_contents(&xml_path);
     let mut cursor: Cursor<&[u8]> = Cursor::new(&content);
 
     let mut visitor = XmlVisitor::new();
-    let executor = Executor::xml(cursor, &mut visitor, &entries);
+    let resources = resources_visitor.get_mut_resources();
+
+    let executor = Executor::xml(cursor, &mut visitor, resources);
 
     match visitor.get_root() {
         &Some(ref root) => {
             match visitor.get_string_table() {
                 &Some(ref st) => {
-                    match resources_visitor.get_entries_string_table() {
-                        &Some(ref est) => {
-                            let xml_content = Xml::encode(
-                                &visitor.get_namespaces(),
-                                &root,
-                                &entries,
-                                st,
-                                est,
-                            ).chain_err(|| "Could note encode XML")?;
-                            println!("{}", xml_content);
-                        },
-                        &None => (),
-                    }
+                    let xml_content = Xml::encode(
+                        &visitor.get_namespaces(),
+                        &root,
+                        resources,
+                    ).chain_err(|| "Could note encode XML")?;
+                    println!("{}", xml_content);
                 },
                 &None => {
                     println!("No string table found");
