@@ -14,6 +14,7 @@ impl TableTypeSpecDecoder {
     }
 }
 
+#[derive(Clone)]
 pub struct TypeSpecWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
@@ -35,6 +36,7 @@ impl<'a> TypeSpecWrapper<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct TypeSpec<'a> {
     wrapper: TypeSpecWrapper<'a>,
 }
