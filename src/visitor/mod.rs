@@ -334,7 +334,32 @@ impl<'a> Resources<'a> {
         self.specs.push(type_spec);
     }
 
+    pub fn format_reference(&mut self, id: u32, key: u32) -> Option<String> {
+        let spec_id = (id & 0x00FF0000) >> 16;
+        let spec_str = self.get_spec_as_str(spec_id).unwrap();
+        println!("Spec. FullId: {} Id: {} Str: {}", id, spec_id, spec_str);
+
+        let string = "style";
+
+        Some(format!("@{}/{}", spec_str, string))
+    }
+
     pub fn get_entries(&self) -> &Entries {
         &self.entries
+    }
+
+    fn get_spec_as_str(&mut self, spec_id: u32) -> Option<String>
+    {
+        if let Some(spec) = self.specs.get(spec_id as usize) {
+            if let Some(ref mut spec_string_table) = self.spec_string_table {
+                println!("St {}", spec_string_table);
+
+                if let Ok(spec_str) = spec_string_table.get_string((spec.get_id() - 1) as u32) {
+                    return Some((*spec_str).clone());
+                }
+            }
+        }
+
+        None
     }
 }
