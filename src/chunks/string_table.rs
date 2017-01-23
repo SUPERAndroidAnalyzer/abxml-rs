@@ -6,6 +6,9 @@ use document::{HeaderStringTable};
 use errors::*;
 use std::clone::Clone;
 use std::collections::hash_map::{HashMap, Entry};
+use std::fmt::{Display, Formatter};
+use std::result::Result as StdResult;
+use std::fmt::Error as FmtError;
 
 pub struct StringTableDecoder;
 
@@ -123,6 +126,18 @@ impl<'a> StringTableWrapper<'a> {
 pub struct StringTable<'a> {
     wrapper: StringTableWrapper<'a>,
     cache: HashMap<u32, Rc<String>>,
+}
+
+impl<'a> Display for StringTable<'a> {
+    fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
+        let amount = self.get_strings_len();
+
+        for i in 0..amount {
+            write!(formatter, "{} - {}\n", i, self.get_uncached_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())));
+        }
+
+        Ok(())
+    }
 }
 
 impl<'a> StringTable <'a> {
