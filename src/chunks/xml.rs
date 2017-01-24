@@ -306,6 +306,13 @@ impl<'a> XmlTextWrapper<'a> {
             header: header,
         }
     }
+
+    pub fn get_text_index(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(16));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
 }
 
 #[allow(dead_code)]
@@ -318,5 +325,12 @@ impl<'a> XmlText<'a> {
         XmlText {
             wrapper: wrapper,
         }
+    }
+
+    pub fn get_text(&self, string_table: &StringTable) -> Result<Rc<String>> {
+        let index = self.wrapper.get_text_index()?;
+        println!("{}", string_table);
+        println!("TARGET STR: {} {}", index, string_table.get_uncached_string(index)?);
+        string_table.get_uncached_string(index)
     }
 }
