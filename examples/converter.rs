@@ -65,7 +65,7 @@ fn run() -> Result<()> {
 
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
-        // println!("File: {}", current_file.name());
+        println!("File: {}", current_file.name());
         if current_file.name().contains(".xml") {
             let mut xml_content = Vec::new();
             current_file.read_to_end(&mut xml_content);
