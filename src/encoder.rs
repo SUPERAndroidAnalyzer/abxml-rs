@@ -67,22 +67,29 @@ impl Xml {
 
     fn resolve_reference(id: u32, resources: &mut Resources) -> String {
         let mut res_id = id;
+        let package_id = (id >> 24) as u8;
 
-        if id >> 24 == 0 {
+        if package_id == 0 {
             res_id = ((0xFF & 1) << 24) | id;
             info!("Resource with package id 0 found. Recreate id with current package id");
         }
 
-        let entry_key = resources
+        let package = resources.get_package(package_id);
+        let mut package_borrow = package.borrow_mut();
+
+        let entry_key = package_borrow
             .get_entries()
             .get(&res_id)
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
-            return resources.format_reference(id, key).unwrap();
+            return package_borrow.format_reference(id, key).unwrap();
         }
 
         info!("Reference not found on Resources");
+        println!("Reference: {} {} {}", res_id, id, id >> 24);
+        panic!("We end on a invalid reference");
+
         "UNKNOWN".to_string()
     }
 

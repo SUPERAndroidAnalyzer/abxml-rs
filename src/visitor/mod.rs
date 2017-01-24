@@ -3,6 +3,9 @@ use chunks::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use document::{Namespaces, Element, ElementContainer, Entries};
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTable<'a>) {}
@@ -236,6 +239,7 @@ pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
     current_spec: Option<TypeSpec<'a>>,
+    tmp_string_table: Option<StringTable<'a>>,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -244,6 +248,7 @@ impl<'a> ModelVisitor<'a> {
             package_mask: 0,
             resources: Resources::default(),
             current_spec: None,
+            tmp_string_table: None,
         }
     }
 
@@ -258,12 +263,32 @@ impl<'a> ModelVisitor<'a> {
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTable<'a>) {
-        self.resources.set_string_table(string_table);
+        if self.tmp_string_table.is_none() {
+            self.tmp_string_table = Some(string_table);
+        } else {
+            let package_id = (self.package_mask >> 24) as u8;
+            let package = self.resources.get_package(package_id);
+            let mut package_borrow = package.borrow_mut();
+
+            package_borrow.set_string_table(string_table);
+        }
     }
 
     fn visit_package(&mut self, package: Package<'a>) {
         self.package_mask = package.get_id() << 24;
-        self.resources.add_package(package);
+
+        let package_id = (self.package_mask >> 24) as u8;
+        let mut rp = ResourcesPackage::default();
+        rp.add_package(package);
+        self.resources.push_package(package_id, rp);
+
+        if self.tmp_string_table.is_some() {
+            let tst = self.tmp_string_table.take().unwrap();
+            let package_mut = self.resources.get_package(package_id);
+            let mut package_borrow = package_mut.borrow_mut();
+            package_borrow.set_string_table(tst);
+            self.tmp_string_table = None;
+        }
     }
 
     fn visit_table_type(&mut self, table_type: TableType<'a>) {
@@ -272,7 +297,12 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 let mask = self.package_mask |
                     ((ts.get_id() as u32) << 16);
                 let entries = table_type.get_entries(ts, mask).unwrap();
-                self.resources.add_entries(entries);
+
+                let package_id = (self.package_mask >> 24) as u8;
+                let package = self.resources.get_package(package_id);
+                let mut package_borrow = package.borrow_mut();
+
+                package_borrow.add_entries(entries);
             },
             None => (),
         }
@@ -280,13 +310,34 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
     fn visit_type_spec(&mut self, type_spec: TypeSpec<'a>) {
         self.current_spec = Some(type_spec.clone());
-        self.resources.add_type_spec(type_spec);
+        let package_id = (self.package_mask >> 24) as u8;
+        let package = self.resources.get_package(package_id);
+        let mut package_borrow = package.borrow_mut();
+
+        package_borrow.add_type_spec(type_spec);
+    }
+}
+
+type RefPackage<'a> = Rc<RefCell<ResourcesPackage<'a>>>;
+
+#[derive(Default)]
+pub struct Resources<'a> {
+    packages: HashMap<u8, RefPackage<'a>>,
+}
+
+impl<'a> Resources<'a> {
+    pub fn push_package(&mut self, package_id: u8, package: ResourcesPackage<'a>) {
+        self.packages.insert(package_id, Rc::new(RefCell::new(package)));
+    }
+
+    pub fn get_package(&self, package_id: u8) -> RefPackage<'a> {
+        self.packages.get(&package_id).unwrap().clone()
     }
 }
 
 #[derive(Default)]
-pub struct Resources<'a> {
-    packages: Vec<Package<'a>>,
+pub struct ResourcesPackage<'a> {
+    package: Option<Package<'a>>,
     specs: Vec<TypeSpec<'a>>,
     string_table: Option<StringTable<'a>>,
     spec_string_table: Option<StringTable<'a>>,
@@ -294,9 +345,9 @@ pub struct Resources<'a> {
     entries: Entries,
 }
 
-impl<'a> Resources<'a> {
+impl<'a> ResourcesPackage<'a> {
     pub fn set_string_table(&mut self, string_table: StringTable<'a>) {
-        if self.packages.is_empty() {
+        if self.package.is_none() {
             self.string_table = Some(string_table);
         } else if self.spec_string_table.is_none() {
             self.spec_string_table = Some(string_table);
@@ -306,7 +357,7 @@ impl<'a> Resources<'a> {
     }
 
     pub fn add_package(&mut self, package: Package<'a>) {
-        self.packages.push(package);
+        self.package = Some(package);
     }
 
     pub fn add_entries(&mut self, entries: Entries) {
