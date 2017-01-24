@@ -56,13 +56,13 @@ fn run() -> Result<()> {
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
 
     let resources = resources_visitor.get_mut_resources();
-    parse_xml(manifest_content, resources)?;
+    let manifest = parse_xml(manifest_content, resources)?;
+    println!("{}", manifest);
 
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
 
         if current_file.name().contains(".xml") {
-            println!("File: {}", current_file.name());
             let mut xml_content = Vec::new();
             current_file.read_to_end(&mut xml_content);
 
