@@ -83,7 +83,7 @@ impl Xml {
         }
 
         info!("Reference not found on Resources");
-        "<UNKNOWN>".to_string()
+        "UNKNOWN".to_string()
     }
 
     pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {

@@ -13,6 +13,7 @@ pub trait ChunkVisitor<'a> {
     fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {}
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
     fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
+    fn visit_xml_text(&mut self, _text: XmlText<'a>) {}
     fn visit_resource(&mut self, _resource: Resource<'a>) {}
 }
 
@@ -93,6 +94,10 @@ impl Executor {
                     let ts = XmlTagEnd::new(xnsw);
                     visitor.visit_xml_tag_end(ts);
                 },
+                Chunk::XmlText(xsnw) => {
+                    let ts = XmlText::new(xsnw);
+                    visitor.visit_xml_text(ts);
+                }
                 Chunk::Resource(rw) => {
                     let ts = Resource::new(rw);
                     visitor.visit_resource(ts);
@@ -214,6 +219,16 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
 
     fn visit_xml_tag_end(&mut self, _: XmlTagEnd<'a>) {
         self.container.end_element()
+    }
+
+    fn visit_xml_text(&mut self, text: XmlText<'a>) {
+        if let Some(ref string_table) = self.main_string_table {
+            let txt = text.get_text(&string_table).unwrap();
+            println!("Text: {}", txt);
+            println!("Bytes: {:?}", txt.as_str().as_bytes());
+        }
+        // let string_table = self.main_string_table.unwrap();
+        // error!("XML Text chunk!");
     }
 }
 
