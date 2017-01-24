@@ -92,7 +92,7 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,
             t => {
-                println!("{:X}", t);
+                info!("Unknown chunk: 0x{:X}", t);
 
                 Chunk::Unknown
             },
