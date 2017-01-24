@@ -31,6 +31,8 @@ pub use self::xml::XmlTagStart as XmlTagStart;
 pub use self::xml::XmlTagStartWrapper as XmlTagStartWrapper;
 pub use self::xml::XmlTagEnd as XmlTagEnd;
 pub use self::xml::XmlTagEndWrapper as XmlTagEndWrapper;
+pub use self::xml::XmlText as XmlText;
+pub use self::xml::XmlTextWrapper as XmlTextWrapper;
 
 use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;
@@ -49,6 +51,7 @@ const TOKEN_XML_START_NAMESPACE: u16 = 0x100;
 const TOKEN_XML_END_NAMESPACE: u16 = 0x101;
 const TOKEN_XML_TAG_START: u16 = 0x102;
 const TOKEN_XML_TAG_END: u16 = 0x103;
+const TOKEN_XML_TEXT: u16 = 0x104;
 
 pub enum Chunk<'a>   {
     StringTable(StringTableWrapper<'a>),
@@ -59,6 +62,7 @@ pub enum Chunk<'a>   {
     XmlNamespaceEnd(XmlNamespaceEndWrapper<'a>),
     XmlTagStart(XmlTagStartWrapper<'a>),
     XmlTagEnd(XmlTagEndWrapper<'a>),
+    XmlText(XmlTextWrapper<'a>),
     Resource(ResourceWrapper<'a>),
     Unknown,
 }
@@ -90,9 +94,10 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TAG_START => XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
+            TOKEN_XML_TEXT => XmlDecoder::decode_xml_text(&mut self.cursor, &chunk_header)?,
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,
             t => {
-                info!("Unknown chunk: 0x{:X}", t);
+                error!("Unknown chunk: 0x{:X}", t);
 
                 Chunk::Unknown
             },

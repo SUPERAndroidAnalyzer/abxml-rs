@@ -82,10 +82,8 @@ impl Xml {
             return resources.format_reference(id, key).unwrap();
         }
 
-        error!("Reference not found on Resources");
+        info!("Reference not found on Resources");
         "<UNKNOWN>".to_string()
-//        println!("Entry {:?}", entry_key);
-//        format!("attr ref: #{}", id)
     }
 
     pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {

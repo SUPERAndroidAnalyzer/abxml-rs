@@ -2,6 +2,8 @@ extern crate abxml;
 extern crate error_chain;
 extern crate byteorder;
 extern crate zip;
+extern crate log;
+extern crate env_logger;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -13,6 +15,8 @@ use abxml::visitor::*;
 use std::io::Cursor;
 
 fn main() {
+    env_logger::init().unwrap();
+
     if let Err(ref e) = run() {
         println!("error: {}", e);
 
