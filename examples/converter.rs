@@ -46,6 +46,22 @@ fn run() -> Result<()> {
         }
     };
 
+    let android_apk_path = match env::args().nth(2) {
+        Some(path) => path,
+        None => {
+            println!("Usage: converter <path>");
+            return Ok(())
+        }
+    };
+
+    // Android lib
+    let file = std::fs::File::open(&android_apk_path)?;
+    let mut android_archive = zip::ZipArchive::new(file).unwrap();
+
+    let mut android_resources_content = Vec::new();
+    android_archive.by_name("resources.arsc").unwrap().read_to_end(&mut android_resources_content)?;
+
+    // APK
     let file = std::fs::File::open(&apk_path)?;
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
@@ -56,9 +72,12 @@ fn run() -> Result<()> {
     archive.by_name("AndroidManifest.xml").unwrap().read_to_end(&mut manifest_content)?;
 
     let resources_cursor: Cursor<&[u8]> = Cursor::new(&resources_content);
+    let android_resources_cursor: Cursor<&[u8]> = Cursor::new(&android_resources_content);
     let mut resources_visitor = ModelVisitor::new();
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
+    Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
 
+    println!("Parsing AndroidManifest.xml");
     let resources = resources_visitor.get_mut_resources();
     let manifest = parse_xml(manifest_content, resources)?;
     // println!("{}", manifest);
