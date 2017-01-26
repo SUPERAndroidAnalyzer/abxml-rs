@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 pub trait ChunkVisitor<'a> {
-    fn visit_string_table(&mut self, _string_table: StringTable<'a>) {}
+    fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
     fn visit_package(&mut self, _package: Package<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
@@ -30,12 +30,14 @@ impl Executor {
         let _package_amount = cursor.read_u32::<LittleEndian>()?;
 
         let stream = ChunkLoaderStream::new(cursor);
+        let mut origin = Origin::Global;
 
         for c in stream {
             match c? {
                 Chunk::StringTable(stw) => {
                     let st = StringTable::new(stw);
-                    visitor.visit_string_table(st);
+                    visitor.visit_string_table(st, origin);
+                    origin = Origin::next(origin);
                 },
                 Chunk::Package(pw) => {
                     let package = Package::new(pw);
@@ -62,22 +64,25 @@ impl Executor {
         let _chunk_size = cursor.read_u32::<LittleEndian>()?;
 
         let stream = ChunkLoaderStream::new(cursor);
+        let mut origin = Origin::Global;
 
         for c in stream {
             match c? {
                 Chunk::StringTable(stw) => {
                     let st = StringTable::new(stw);
-                    visitor.visit_string_table(st);
+                    visitor.visit_string_table(st, origin);
                 },
                 Chunk::Package(pw) => {
                     let package = Package::new(pw);
                     visitor.visit_package(package);
                 },
                 Chunk::TableType(ttw) => {
+                    origin = Origin::Entries;
                     let tt = TableType::new(ttw);
                     visitor.visit_table_type(tt);
                 },
                 Chunk::TableTypeSpec(tsw) => {
+                    origin = Origin::Spec;
                     let ts = TypeSpec::new(tsw);
                     visitor.visit_type_spec(ts);
                 },
@@ -120,10 +125,10 @@ impl<'a> ChunkVisitor<'a> for DummyVisitor {}
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
-    fn visit_string_table(&mut self, string_table: StringTable) {
+    fn visit_string_table(&mut self, string_table: StringTable, origin: Origin) {
         println!("String Table!");
-        println!("\tLength: {}", string_table.get_strings_len());
-
+        println!("\tLength ({:?}): {} ", origin, string_table.get_strings_len());
+/*
         for i in 0..string_table.get_strings_len()-1 {
             match string_table.get_uncached_string(i) {
                 Ok(_) => {
@@ -133,7 +138,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
                     println!("ERROR: String not found");
                 },
             }
-        }
+        }*/
     }
 
     fn visit_package(&mut self, package: Package) {
@@ -143,8 +148,8 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     }
 
     fn visit_table_type(&mut self, table_type: TableType) {
-        println!("Table type!");
-        println!("\tId: {}", table_type.get_id());
+        /*println!("Table type!");
+        println!("\tId: {}", table_type.get_id());*/
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpec) {
@@ -182,7 +187,7 @@ impl<'a> XmlVisitor<'a> {
 }
 
 impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
-    fn visit_string_table(&mut self, string_table: StringTable<'a>) {
+    fn visit_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
         match self.main_string_table {
             Some(_) => {
                 println!("Secondary table!");
@@ -227,11 +232,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_text(&mut self, text: XmlText<'a>) {
         if let Some(ref string_table) = self.main_string_table {
             let txt = text.get_text(&string_table).unwrap();
-            println!("Text: {}", txt);
-            println!("Bytes: {:?}", txt.as_str().as_bytes());
         }
-        // let string_table = self.main_string_table.unwrap();
-        // error!("XML Text chunk!");
     }
 }
 
@@ -239,7 +240,7 @@ pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
     current_spec: Option<TypeSpec<'a>>,
-    tmp_string_table: Option<StringTable<'a>>,
+    tables: HashMap<Origin, StringTable<'a>>,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -248,7 +249,7 @@ impl<'a> ModelVisitor<'a> {
             package_mask: 0,
             resources: Resources::default(),
             current_spec: None,
-            tmp_string_table: None,
+            tables: HashMap::new(),
         }
     }
 
@@ -262,16 +263,26 @@ impl<'a> ModelVisitor<'a> {
 }
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
-    fn visit_string_table(&mut self, string_table: StringTable<'a>) {
-        if self.tmp_string_table.is_none() {
-            self.tmp_string_table = Some(string_table);
-        } else {
-            let package_id = (self.package_mask >> 24) as u8;
-            let package = self.resources.get_package(package_id);
-            let mut package_borrow = package.borrow_mut();
+    fn visit_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
+        match origin {
+            Origin::Global => {
+                self.tables.insert(origin, string_table);
+            },
+            _ => {
+                let package_id = (self.package_mask >> 24) as u8;
+                let package = self.resources.get_package(package_id);
+                let mut package_borrow = package.borrow_mut();
 
-            package_borrow.set_string_table(string_table);
+                package_borrow.set_string_table(string_table, origin);
+            },
         }
+
+
+        /*let package_id = (self.package_mask >> 24) as u8;
+        let package = self.resources.get_package(package_id);
+        let mut package_borrow = package.borrow_mut();
+
+        package_borrow.set_string_table(string_table, origin);*/
     }
 
     fn visit_package(&mut self, package: Package<'a>) {
@@ -282,12 +293,11 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         rp.add_package(package);
         self.resources.push_package(package_id, rp);
 
-        if self.tmp_string_table.is_some() {
-            let tst = self.tmp_string_table.take().unwrap();
+        if self.tables.contains_key(&Origin::Global) {
+            let st = self.tables.remove(&Origin::Global).unwrap();
             let package_mut = self.resources.get_package(package_id);
             let mut package_borrow = package_mut.borrow_mut();
-            package_borrow.set_string_table(tst);
-            self.tmp_string_table = None;
+            package_borrow.set_string_table(st, Origin::Global);
         }
     }
 
@@ -345,14 +355,31 @@ pub struct ResourcesPackage<'a> {
     entries: Entries,
 }
 
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub enum Origin {
+    Global,
+    Spec,
+    Entries,
+}
+
+impl Origin {
+    pub fn next(origin: Origin) -> Origin {
+        match origin {
+            Origin::Global => Origin::Spec,
+            Origin::Spec => Origin::Entries,
+            Origin::Entries => Origin::Global,
+        }
+    }
+}
+
 impl<'a> ResourcesPackage<'a> {
-    pub fn set_string_table(&mut self, string_table: StringTable<'a>) {
-        if self.package.is_none() {
-            self.string_table = Some(string_table);
-        } else if self.spec_string_table.is_none() {
-            self.spec_string_table = Some(string_table);
-        } else {
-            self.entries_string_table = Some(string_table);
+    pub fn set_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
+        //println!("ST: {}", string_table);
+        // println!("Setting table: {:?}", origin);
+        match origin {
+            Origin::Global => self.string_table = Some(string_table),
+            Origin::Spec => self.spec_string_table = Some(string_table),
+            Origin::Entries => self.entries_string_table = Some(string_table),
         }
     }
 

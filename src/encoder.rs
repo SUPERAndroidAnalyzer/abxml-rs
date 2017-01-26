@@ -40,10 +40,10 @@ impl Xml {
 
             let val = match a.get_value() {
                 &Value::ReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, resources))
+                    Self::resolve_reference(*id, resources)
                 },
                 &Value::AttributeReferenceId(ref id) => {
-                    Some(Self::resolve_reference(*id, resources))
+                    Self::resolve_reference(*id, resources)
                 },
                 _ => {
                     None
@@ -65,12 +65,13 @@ impl Xml {
         writer.write(End(Element::new(tag.deref()))).unwrap();
     }
 
-    fn resolve_reference(id: u32, resources: &mut Resources) -> String {
+    fn resolve_reference(id: u32, resources: &mut Resources) -> Option<String> {
         let mut res_id = id;
-        let package_id = (id >> 24) as u8;
+        let mut package_id = (id >> 24) as u8;
 
         if package_id == 0 {
             res_id = ((0xFF & 1) << 24) | id;
+            package_id = 1;
             info!("Resource with package id 0 found. Recreate id with current package id");
         }
 
@@ -83,14 +84,16 @@ impl Xml {
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
-            return package_borrow.format_reference(id, key).unwrap();
+            return Some(package_borrow.format_reference(id, key).unwrap());
         }
 
-        info!("Reference not found on Resources");
+        None
+
+/*        info!("Reference not found on Resources");
         println!("Reference: {} {} {}", res_id, id, id >> 24);
         panic!("We end on a invalid reference");
 
-        "UNKNOWN".to_string()
+        "UNKNOWN".to_string()*/
     }
 
     pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {
