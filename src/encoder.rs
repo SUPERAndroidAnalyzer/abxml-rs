@@ -75,6 +75,7 @@ impl Xml {
             info!("Resource with package id 0 found. Recreate id with current package id");
         }
 
+        let is_main = resources.is_main_package(package_id);
         let package = resources.get_package(package_id);
         let mut package_borrow = package.borrow_mut();
 
@@ -84,7 +85,13 @@ impl Xml {
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
-            return Some(package_borrow.format_reference(id, key).unwrap());
+            let namespace = if is_main == false {
+                package_borrow.get_name()
+            } else {
+                None
+            };
+
+            return Some(package_borrow.format_reference(id, key, namespace).unwrap());
         }
 
         None
