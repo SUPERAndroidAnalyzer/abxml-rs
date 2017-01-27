@@ -185,27 +185,25 @@ impl Value {
                 Value::AttributeReferenceId(data)
             }
             TOKEN_TYPE_STRING => {
-                if data == 1545 {
-                    panic!("Getting as string!");
-                }
                 let string = str_table.get_string(data)?;
 
                 Value::String(string.clone())
             }
             TOKEN_TYPE_DIMENSION => {
-                let units: [&str; 6] = ["px", "dp", "sp", "pt", "in", "mm"];
-                let mut size = (data >> 8).to_string();
+                let units: [&str; 6] = ["px", "dip", "sp", "pt", "in", "mm"];
+                let size = (data >> 8) as f32;
                 let unit_idx = data & 0xF;
 
                 match units.get(unit_idx as usize) {
-                    Some(unit) => size.push_str(unit),
+                    Some(unit) => {
+                        let formatted = format!("{:.*}{}", 1, size, unit);
+                        Value::Dimension(formatted)
+                    },
                     None => {
                         return Err(format!("Expected a valid unit index. Got: {}",
                                 unit_idx).into())
                     }
                 }
-
-                Value::Dimension(size)
             }
             TOKEN_TYPE_FRACTION => {
                 let units: [&str; 2] = ["%", "%p"];
