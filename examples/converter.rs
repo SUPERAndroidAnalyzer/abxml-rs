@@ -77,20 +77,20 @@ fn run() -> Result<()> {
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
     Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
 
-    println!("Parsing AndroidManifest.xml");
+
     let resources = resources_visitor.get_mut_resources();
-    let manifest = parse_xml(manifest_content, resources)?;
+    // let manifest = parse_xml(manifest_content, resources)?;
     // println!("{}", manifest);
 
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
-        println!("File: {}", current_file.name());
-        if current_file.name().contains(".xml") {
+
+        if current_file.name().contains("res/anim-v21/design_bottom_sheet_slide_in.xml") {
             let mut xml_content = Vec::new();
             current_file.read_to_end(&mut xml_content);
 
             let out = parse_xml(xml_content, resources)?;
-            // println!("{}", out);
+            println!("{}", out);
         }
     }
 

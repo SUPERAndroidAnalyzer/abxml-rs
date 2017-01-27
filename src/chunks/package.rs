@@ -38,9 +38,35 @@ impl<'a> PackageWrapper<'a> {
         cursor.set_position(self.header.absolute(12));
 
         let initial_position = cursor.position();
-        let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
+        let mut previous = 0;
+        let mut ending_position = cursor.position();
 
-        String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
+        /*loop {
+            let current = cursor.read_u8()?;
+
+            if current == previous && current == 0 {
+                ending_position = cursor.position() - 2;
+                break;
+            }
+
+            previous = current;
+        }*/
+        let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
+        let a: Vec<u8> = raw_str;
+        let mut i = 0;
+        let rw: Vec<u8> = a.iter()
+            .cloned()
+            .filter(|current| {
+                let result = i % 2 == 0;
+                i = i + 1;
+
+                result && current != &0
+            })
+            .collect();
+
+        let s = String::from_utf8(rw).chain_err(|| "Could not convert to UTF-8");
+
+        s
     }
 }
 
