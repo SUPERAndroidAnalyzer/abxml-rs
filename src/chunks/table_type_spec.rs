@@ -7,7 +7,7 @@ pub struct TableTypeSpecDecoder;
 
 impl TableTypeSpecDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        let tsw = TypeSpecWrapper::new(cursor.get_ref(), (*header).clone());
+        let tsw = TypeSpecWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::TableTypeSpec(tsw))
     }
 }

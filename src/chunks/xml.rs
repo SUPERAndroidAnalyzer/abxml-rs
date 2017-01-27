@@ -12,27 +12,27 @@ const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
 impl XmlDecoder {
     pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        let xnsw = XmlNamespaceStartWrapper::new(cursor.get_ref(), (*header).clone());
+        let xnsw = XmlNamespaceStartWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlNamespaceStart(xnsw))
      }
 
      pub fn decode_xml_namespace_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-         let xnsw = XmlNamespaceEndWrapper::new(cursor.get_ref(), (*header).clone());
+         let xnsw = XmlNamespaceEndWrapper::new(cursor.get_ref(), *header);
          Ok(Chunk::XmlNamespaceEnd(xnsw))
      }
 
      pub fn decode_xml_tag_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-         let xnsw = XmlTagStartWrapper::new(cursor.get_ref(), (*header).clone());
+         let xnsw = XmlTagStartWrapper::new(cursor.get_ref(), *header);
          Ok(Chunk::XmlTagStart(xnsw))
      }
 
     pub fn decode_xml_tag_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-        let xnsw = XmlTagEndWrapper::new(cursor.get_ref(), (*header).clone());
+        let xnsw = XmlTagEndWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlTagEnd(xnsw))
     }
 
     pub fn decode_xml_text<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-        let xnsw = XmlTextWrapper::new(cursor.get_ref(), (*header).clone());
+        let xnsw = XmlTextWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlText(xnsw))
     }
 }
@@ -198,7 +198,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         let mut attributes = Vec::new();
         for _ in 0..self.get_attributes_amount()? {
-            let attribute = self.decode_attribute(&mut cursor, &namespaces, string_table)?;
+            let attribute = self.decode_attribute(&mut cursor, namespaces, string_table)?;
             attributes.push(attribute);
         }
 
@@ -228,13 +228,10 @@ impl<'a> XmlTagStartWrapper<'a> {
             //println!("uri: {}, Namespaces: {:?}", uri, namespaces);
             //panic!("");
             // TODO: Load namespace
-            match namespaces.get(&uri) {
-                Some(uri_prefix) => {
-                    namespace = Some(uri);
-                    prefix = Some(uri_prefix.clone());
-                }
-                None =>(),
-            };
+            if let Some(uri_prefix) = namespaces.get(&uri) {
+                namespace = Some(uri);
+                prefix = Some(uri_prefix.clone());
+            }
         }
 
         let value = if attr_value_idx == TOKEN_VOID {

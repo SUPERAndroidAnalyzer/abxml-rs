@@ -7,8 +7,6 @@ extern crate env_logger;
 
 use std::env;
 use abxml::encoder::Xml;
-use std::path::Path;
-use std::fs::File;
 use std::io::prelude::*;
 use abxml::errors::*;
 use abxml::visitor::*;
@@ -73,7 +71,7 @@ fn run() -> Result<()> {
 
     let resources_cursor: Cursor<&[u8]> = Cursor::new(&resources_content);
     let android_resources_cursor: Cursor<&[u8]> = Cursor::new(&android_resources_content);
-    let mut resources_visitor = ModelVisitor::new();
+    let mut resources_visitor = ModelVisitor::default();
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
     Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
 
@@ -87,7 +85,7 @@ fn run() -> Result<()> {
 
         if current_file.name().contains("res/anim-v21/design_bottom_sheet_slide_in.xml") {
             let mut xml_content = Vec::new();
-            current_file.read_to_end(&mut xml_content);
+            current_file.read_to_end(&mut xml_content)?;
 
             let out = parse_xml(xml_content, resources)?;
             println!("{}", out);
@@ -99,9 +97,7 @@ fn run() -> Result<()> {
 
 fn parse_xml(content: Vec<u8>, resources: &mut Resources) -> Result<String> {
     let cursor: Cursor<&[u8]> = Cursor::new(&content);
-
-    let mut visitor = XmlVisitor::new();
-    // let resources = resources_visitor.get_mut_resources();
+    let mut visitor = XmlVisitor::default();
 
     Executor::xml(cursor, &mut visitor, resources)?;
 
@@ -126,39 +122,4 @@ fn parse_xml(content: Vec<u8>, resources: &mut Resources) -> Result<String> {
     }
 
     Err("Could not decode XML".into())
-}
-
-fn sanitize_filename(filename: &str) -> std::path::PathBuf
-{
-    let no_null_filename = match filename.find('\0') {
-        Some(index) => &filename[0..index],
-        None => filename,
-    };
-
-    std::path::Path::new(no_null_filename)
-        .components()
-        .filter(|component| *component != std::path::Component::ParentDir)
-        .fold(std::path::PathBuf::new(), |mut path, ref cur| {
-            path.push(cur.as_os_str());
-            path
-        })
-}
-
-fn file_get_contents(path: &str) -> Vec<u8> {
-    let path = Path::new(path);
-
-    let mut file = match File::open(&path) {
-        // The `description` method of `io::Error` returns a string that
-        // describes the error
-        Err(_) => panic!("Could ont open file"),
-        Ok(file) => file,
-    };
-
-    // Read the file contents into a string, returns `io::Result<usize>`
-    let mut v: Vec<u8> = Vec::new();
-    if file.read_to_end(&mut v).is_err() {
-        panic!("Could not read");
-    }
-
-    v
 }
