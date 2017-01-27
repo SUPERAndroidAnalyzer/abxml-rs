@@ -225,9 +225,6 @@ impl<'a> XmlTagStartWrapper<'a> {
         if attr_ns_idx != TOKEN_VOID {
             let uri = string_table.get_string(attr_ns_idx).unwrap().clone();
 
-            //println!("uri: {}, Namespaces: {:?}", uri, namespaces);
-            //panic!("");
-            // TODO: Load namespace
             if let Some(uri_prefix) = namespaces.get(&uri) {
                 namespace = Some(uri);
                 prefix = Some(uri_prefix.clone());
