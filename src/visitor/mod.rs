@@ -333,15 +333,36 @@ type RefPackage<'a> = Rc<RefCell<ResourcesPackage<'a>>>;
 #[derive(Default)]
 pub struct Resources<'a> {
     packages: HashMap<u8, RefPackage<'a>>,
+    main_package: Option<u8>,
 }
 
 impl<'a> Resources<'a> {
     pub fn push_package(&mut self, package_id: u8, package: ResourcesPackage<'a>) {
+        if self.packages.len() == 0 {
+            self.main_package = Some(package_id);
+        }
+
         self.packages.insert(package_id, Rc::new(RefCell::new(package)));
     }
 
     pub fn get_package(&self, package_id: u8) -> RefPackage<'a> {
         self.packages.get(&package_id).unwrap().clone()
+    }
+
+    pub fn get_main_package(&self) -> Option<RefPackage<'a>> {
+        match self.main_package {
+            Some(package_id) => {
+                Some(self.packages.get(&package_id).unwrap().clone())
+            },
+            _ => None,
+        }
+    }
+
+    pub fn is_main_package(&self, package_id: u8) -> bool {
+        match self.main_package {
+            Some(pid) => pid == package_id,
+            None => false,
+        }
     }
 }
 
@@ -395,12 +416,22 @@ impl<'a> ResourcesPackage<'a> {
         self.specs.push(type_spec);
     }
 
-    pub fn format_reference(&mut self, id: u32, key: u32) -> Option<String> {
+    pub fn get_name(&self) -> Option<String> {
+        match self.package {
+            Some(ref p) => p.get_name().ok(),
+            _ => None,
+        }
+    }
+
+    pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>) -> Option<String> {
         let spec_id = (id & 0x00FF0000) >> 16;
         let spec_str = self.get_spec_as_str(spec_id).unwrap();
         let string = self.get_entries_string(key).unwrap();
 
-        Some(format!("@{}/{}", spec_str, string))
+        match namespace {
+            Some(ns) => Some(format!("@{}:{}/{}", ns, spec_str, string)),
+            None => Some(format!("@{}/{}", spec_str, string)),
+        }
     }
 
     pub fn get_entries(&self) -> &Entries {

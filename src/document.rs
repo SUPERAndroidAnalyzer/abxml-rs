@@ -7,6 +7,7 @@ use std::ops::Deref;
 use errors::*;
 use std::result::Result as StdResult;
 use chunks::*;
+use std::mem;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 pub type Entries = HashMap<u32, Entry>;
@@ -128,7 +129,7 @@ pub enum Value {
     String(Rc<String>),
     Dimension(String),
     Fraction(String),
-    Float(f64),
+    Float(f32),
     Integer(u64),
     Flags(u64),
     Boolean(bool),
@@ -155,11 +156,16 @@ const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 impl Value {
     pub fn to_string(&self) -> String {
+        // println!("Value: {:?}", &self);
         match self {
             &Value::String(ref s) => s.deref().clone(),
             &Value::Dimension(ref s) => s.clone(),
             &Value::Fraction(ref s) => s.clone(),
-            &Value::Float(f) => f.to_string(),
+            &Value::Float(f) => {
+
+                format!("{:.*}", 1, f)
+                //f.to_string()
+            },
             &Value::Integer(i) => i.to_string(),
             &Value::Flags(i) => i.to_string(),
             &Value::Boolean(b) => b.to_string(),
@@ -207,14 +213,26 @@ impl Value {
                 Value::Dimension(size)
             }
             TOKEN_TYPE_FRACTION => {
-                let value = (data as f64) / (0x7FFFFFFF as f64);
-                let formatted_fraction = format!("{:.*}", 2, value);
+                let units: [&str; 2] = ["%", "%p"];
+                let u = units[(data & 0xF) as usize];
+                let value = Self::to_complex(data) * 100.0;
+                // let value = unsafe {mem::transmute::<u32, f32>(data)};
+                // let div = unsafe {mem::transmute::<u32, f32>(0x7FFFFFFF)};
+                // let div = 100.0;
+
+//                println!("Value: {} Div: {}", value, div);
+                // let div: f32 = 1000.0;
+                // let value = value * div;
+                let formatted_fraction = format!("{:.*}{}", 6, value, u);
 
                 Value::Fraction(formatted_fraction)
             }
             TOKEN_TYPE_INTEGER => Value::Integer(data as u64),
             TOKEN_TYPE_FLAGS => Value::Flags(data as u64),
-            TOKEN_TYPE_FLOAT => Value::Float(data as f64),
+            TOKEN_TYPE_FLOAT => {
+                let f = unsafe { mem::transmute::<u32, f32>(data)};
+                Value::Float(f)
+            },
             TOKEN_TYPE_BOOLEAN => {
                 if data > 0 {
                     Value::Boolean(true)
@@ -235,6 +253,23 @@ impl Value {
         };
 
         Ok(value)
+    }
+
+    fn to_complex(data: u32) -> f32 {
+        // TODO: Clean this mess
+        let mantissa = 0xffffff << 8;
+        let m = (data & mantissa) as f32;
+        let mm = 1.0 / ((1 << 8) as f32);
+        let radix = [
+            1.0 * mm,
+            1.0 / ((1 << 7) as f32) * mm,
+            1.0 / ((1 << 15) as f32) * mm,
+            1.0 / ((1 << 23) as f32) * mm,
+        ];
+
+        let idx = (data >> 4) & 0x3;
+        let r = radix[idx as usize];
+        return m * radix[idx as usize];
     }
 }
 
