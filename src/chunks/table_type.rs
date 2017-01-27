@@ -11,7 +11,7 @@ const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        let ttw = TableTypeWrapper::new(cursor.get_ref(), (*header).clone());
+        let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::TableType(ttw))
     }
 }
@@ -260,22 +260,18 @@ impl Entry {
     }
 
     pub fn get_id(&self) -> u32 {
-        match self {
-            &Entry::Simple{id: index, ..} => {
-                index
-            },
-            &Entry::Complex{id: index, ..} => {
+        match *self {
+            Entry::Simple{id: index, ..} |
+            Entry::Complex{id: index, ..} => {
                 index
             },
         }
     }
 
     pub fn get_key(&self) -> u32 {
-        match self {
-            &Entry::Simple{key_index: ki, ..} => {
-                ki
-            },
-            &Entry::Complex{key_index: ki, ..} => {
+        match *self {
+            Entry::Simple{key_index: ki, ..} |
+            Entry::Complex{key_index: ki, ..} => {
                 ki
             },
         }

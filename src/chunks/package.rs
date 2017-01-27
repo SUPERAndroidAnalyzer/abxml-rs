@@ -7,7 +7,7 @@ pub struct PackageDecoder;
 
 impl PackageDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        let pw = PackageWrapper::new(cursor.get_ref(), (*header).clone());
+        let pw = PackageWrapper::new(cursor.get_ref(), *header);
 
         Ok(Chunk::Package(pw))
     }
@@ -36,21 +36,8 @@ impl<'a> PackageWrapper<'a> {
     pub fn get_name(&self) -> Result<String> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(12));
-
         let initial_position = cursor.position();
-        let mut previous = 0;
-        let mut ending_position = cursor.position();
 
-        /*loop {
-            let current = cursor.read_u8()?;
-
-            if current == previous && current == 0 {
-                ending_position = cursor.position() - 2;
-                break;
-            }
-
-            previous = current;
-        }*/
         let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
         let a: Vec<u8> = raw_str;
         let mut i = 0;
@@ -58,15 +45,13 @@ impl<'a> PackageWrapper<'a> {
             .cloned()
             .filter(|current| {
                 let result = i % 2 == 0;
-                i = i + 1;
+                i += 1;
 
                 result && current != &0
             })
             .collect();
 
-        let s = String::from_utf8(rw).chain_err(|| "Could not convert to UTF-8");
-
-        s
+        String::from_utf8(rw).chain_err(|| "Could not convert to UTF-8")
     }
 }
 

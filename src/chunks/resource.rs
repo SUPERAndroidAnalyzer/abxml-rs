@@ -1,13 +1,12 @@
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use errors::*;
-use std::clone::Clone;
 
 pub struct ResourceDecoder;
 
 impl ResourceDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-        let ttw = ResourceWrapper::new(cursor.get_ref(), (*header).clone());
+        let ttw = ResourceWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::Resource(ttw))
      }
 }

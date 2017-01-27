@@ -38,11 +38,9 @@ impl Xml {
             let prefix = a.get_prefix();
             let final_name = Self::attribute_name(rc_name, prefix);
 
-            let val = match a.get_value() {
-                &Value::ReferenceId(ref id) => {
-                    Self::resolve_reference(*id, resources)
-                },
-                &Value::AttributeReferenceId(ref id) => {
+            let val = match *a.get_value() {
+                Value::ReferenceId(ref id) |
+                Value::AttributeReferenceId(ref id)=> {
                     Self::resolve_reference(*id, resources)
                 },
                 _ => {
@@ -52,7 +50,7 @@ impl Xml {
 
             elem.push_attribute(
                 final_name,
-                &val.unwrap_or(a.get_value_as_str()),
+                &val.unwrap_or_else(|| a.get_value_as_str()),
             );
         }
 
@@ -85,7 +83,7 @@ impl Xml {
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
-            let namespace = if is_main == false {
+            let namespace = if !is_main {
                 package_borrow.get_name()
             } else {
                 None

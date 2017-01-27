@@ -58,7 +58,7 @@ impl Executor {
         Ok(())
     }
 
-    pub fn xml<'a, 'b, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, _: &mut Resources) -> Result<()> {
+    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, _: &mut Resources) -> Result<()> {
         let _token = cursor.read_u16::<LittleEndian>()?;
         let _header_size = cursor.read_u16::<LittleEndian>()?;
         let _chunk_size = cursor.read_u32::<LittleEndian>()?;
@@ -128,17 +128,6 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     fn visit_string_table(&mut self, string_table: StringTable, origin: Origin) {
         println!("String Table!");
         println!("\tLength ({:?}): {} ", origin, string_table.get_strings_len());
-/*
-        for i in 0..string_table.get_strings_len()-1 {
-            match string_table.get_uncached_string(i) {
-                Ok(_) => {
-                    println!("\tString #{}: {}", i, string_table.get_uncached_string(i).unwrap());
-                },
-                Err(_) => {
-                    println!("ERROR: String not found");
-                },
-            }
-        }*/
     }
 
     fn visit_package(&mut self, package: Package) {
@@ -148,8 +137,8 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     }
 
     fn visit_table_type(&mut self, table_type: TableType) {
-        /*println!("Table type!");
-        println!("\tId: {}", table_type.get_id());*/
+        println!("Table type!");
+        println!("\tId: {}", table_type.get_id());
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpec) {
@@ -158,6 +147,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     }
 }
 
+#[derive(Default)]
 pub struct XmlVisitor<'a> {
     main_string_table: Option<StringTable<'a>>,
     namespaces: Namespaces,
@@ -165,20 +155,12 @@ pub struct XmlVisitor<'a> {
 }
 
 impl<'a> XmlVisitor<'a> {
-    pub fn new() -> Self {
-        XmlVisitor {
-            main_string_table: None,
-            namespaces: Namespaces::new(),
-            container: ElementContainer::new(),
-        }
-    }
-
     pub fn get_namespaces(&self) -> &Namespaces {
         &self.namespaces
     }
 
     pub fn get_root(&self) -> &Option<Element> {
-        &self.container.get_root()
+        self.container.get_root()
     }
 
     pub fn get_string_table(&self) -> &Option<StringTable> {
@@ -187,7 +169,7 @@ impl<'a> XmlVisitor<'a> {
 }
 
 impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
-    fn visit_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
+    fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
                 println!("Secondary table!");
@@ -228,14 +210,9 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_tag_end(&mut self, _: XmlTagEnd<'a>) {
         self.container.end_element()
     }
-
-    fn visit_xml_text(&mut self, text: XmlText<'a>) {
-        if let Some(ref string_table) = self.main_string_table {
-            let txt = text.get_text(&string_table).unwrap();
-        }
-    }
 }
 
+#[derive(Default)]
 pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
@@ -244,15 +221,6 @@ pub struct ModelVisitor<'a> {
 }
 
 impl<'a> ModelVisitor<'a> {
-    pub fn new() -> ModelVisitor<'a> {
-        ModelVisitor {
-            package_mask: 0,
-            resources: Resources::default(),
-            current_spec: None,
-            tables: HashMap::new(),
-        }
-    }
-
     pub fn get_resources(&self) -> &'a Resources {
         &self.resources
     }
@@ -302,19 +270,16 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 
     fn visit_table_type(&mut self, table_type: TableType<'a>) {
-        match self.current_spec {
-            Some(ref ts) => {
-                let mask = self.package_mask |
-                    ((ts.get_id() as u32) << 16);
-                let entries = table_type.get_entries(ts, mask).unwrap();
+        if let Some(ref ts) = self.current_spec {
+            let mask = self.package_mask |
+                ((ts.get_id() as u32) << 16);
+            let entries = table_type.get_entries(ts, mask).unwrap();
 
-                let package_id = (self.package_mask >> 24) as u8;
-                let package = self.resources.get_package(package_id);
-                let mut package_borrow = package.borrow_mut();
+            let package_id = (self.package_mask >> 24) as u8;
+            let package = self.resources.get_package(package_id);
+            let mut package_borrow = package.borrow_mut();
 
-                package_borrow.add_entries(entries);
-            },
-            None => (),
+            package_borrow.add_entries(entries);
         }
     }
 
@@ -338,7 +303,7 @@ pub struct Resources<'a> {
 
 impl<'a> Resources<'a> {
     pub fn push_package(&mut self, package_id: u8, package: ResourcesPackage<'a>) {
-        if self.packages.len() == 0 {
+        if self.packages.is_empty() {
             self.main_package = Some(package_id);
         }
 
@@ -445,7 +410,7 @@ impl<'a> ResourcesPackage<'a> {
             return Some((*out_string).clone())
         }
 
-        return None;
+        None
     }
 
     fn get_spec_as_str(&mut self, spec_id: u32) -> Option<String>

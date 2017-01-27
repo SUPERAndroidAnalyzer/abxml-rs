@@ -157,24 +157,19 @@ const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 impl Value {
     pub fn to_string(&self) -> String {
         // println!("Value: {:?}", &self);
-        match self {
-            &Value::String(ref s) => s.deref().clone(),
-            &Value::Dimension(ref s) => s.clone(),
-            &Value::Fraction(ref s) => s.clone(),
-            &Value::Float(f) => {
-
+        match *self {
+            Value::String(ref s) => s.deref().clone(),
+            Value::Dimension(ref s) | Value::Fraction(ref s) |
+            Value::Color(ref s) | Value::Color2(ref s) => s.clone(),
+            Value::Float(f) => {
                 format!("{:.*}", 1, f)
-                //f.to_string()
             },
-            &Value::Integer(i) => i.to_string(),
-            &Value::Flags(i) => i.to_string(),
-            &Value::Boolean(b) => b.to_string(),
-            &Value::Color(ref s) => s.clone(),
-            &Value::Color2(ref s) => s.clone(),
-            &Value::ReferenceId(ref s) => {
+            Value::Integer(i) | Value::Flags(i) => i.to_string(),
+            Value::Boolean(b) => b.to_string(),
+            Value::ReferenceId(ref s) => {
                 format!("@id/0x{:#8}", s)
             },
-            &Value::AttributeReferenceId(ref s) => {
+            Value::AttributeReferenceId(ref s) => {
                 format!("@id/0x{:#8}", s)
             },
             _ => "Unknown".to_string(),
@@ -215,7 +210,7 @@ impl Value {
             TOKEN_TYPE_FRACTION => {
                 let units: [&str; 2] = ["%", "%p"];
                 let u = units[(data & 0xF) as usize];
-                let value = Self::to_complex(data) * 100.0;
+                let value = Self::complex(data) * 100.0;
                 // let value = unsafe {mem::transmute::<u32, f32>(data)};
                 // let div = unsafe {mem::transmute::<u32, f32>(0x7FFFFFFF)};
                 // let div = 100.0;
@@ -255,7 +250,7 @@ impl Value {
         Ok(value)
     }
 
-    fn to_complex(data: u32) -> f32 {
+    fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;
         let m = (data & mantissa) as f32;
@@ -268,8 +263,8 @@ impl Value {
         ];
 
         let idx = (data >> 4) & 0x3;
-        let r = radix[idx as usize];
-        return m * radix[idx as usize];
+
+        m * radix[idx as usize]
     }
 }
 
@@ -312,19 +307,13 @@ impl Attribute {
     }
 }
 
+#[derive(Default)]
 pub struct ElementContainer {
     stack: Vec<Element>,
     root: Option<Element>,
 }
 
 impl ElementContainer {
-    pub fn new() -> Self {
-        ElementContainer {
-            stack: Vec::new(),
-            root: None,
-        }
-    }
-
     pub fn start_element(&mut self, mut element: Element) {
         element.set_level(self.stack.len() as u32);
         self.stack.push(element);
@@ -333,7 +322,7 @@ impl ElementContainer {
     pub fn end_element(&mut self) {
         let element = self.stack.pop().unwrap();
 
-        if self.stack.len() == 0 {
+        if self.stack.is_empty() {
             self.root = Some(element);
         } else {
             // Append child to current element
