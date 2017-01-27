@@ -13,7 +13,7 @@ pub struct StringTableDecoder;
 
 impl StringTableDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-         let stw = StringTableWrapper::new(cursor.get_ref(), (*header).clone());
+         let stw = StringTableWrapper::new(cursor.get_ref(), *header);
 
          Ok(Chunk::StringTable(stw))
      }
@@ -109,7 +109,7 @@ impl<'a> StringTableWrapper<'a> {
                 .cloned()
                 .filter(|_| {
                     let result = i % 2 == 0;
-                    i = i + 1;
+                    i += 1;
 
                     result
                 })
