@@ -1,5 +1,6 @@
 use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
+use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 
 pub struct ResourceDecoder;
@@ -24,6 +25,20 @@ impl<'a> ResourceWrapper<'a> {
             header: header,
         }
     }
+
+    pub fn get_resources(&self) -> Vec<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(4));
+
+        let count = cursor.read_u32::<LittleEndian>().unwrap();
+        let mut resources = Vec::with_capacity(count as usize);
+
+        for i in 0..((count / 4) - 2) {
+            resources.push(cursor.read_u32::<LittleEndian>().unwrap());
+        }
+
+        resources
+    }
 }
 
 #[allow(dead_code)]
@@ -36,5 +51,9 @@ impl<'a> Resource<'a> {
         Resource {
             wrapper: wrapper,
         }
+    }
+
+    pub fn get_resources(&self) -> Vec<u32> {
+        self.wrapper.get_resources()
     }
 }
