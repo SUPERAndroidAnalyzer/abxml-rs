@@ -210,6 +210,8 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_tag_end(&mut self, _: XmlTagEnd<'a>) {
         self.container.end_element()
     }
+
+    fn visit_resource(&mut self, resource: Resource<'a>) {}
 }
 
 #[derive(Default)]
