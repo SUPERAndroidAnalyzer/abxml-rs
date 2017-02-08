@@ -38,9 +38,11 @@ impl Xml {
             let prefix = a.get_prefix();
             let final_name = Self::attribute_name(rc_name, prefix);
 
+
             let val = match *a.get_value() {
                 Value::ReferenceId(ref id) |
                 Value::AttributeReferenceId(ref id)=> {
+                    println!("Reference: {}", id);
                     Self::resolve_reference(*id, resources)
                 },
                 _ => {
@@ -135,38 +137,5 @@ impl Xml {
 
             s
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::rc::Rc;
-    // use xml::writer::EmitterConfig;
-    use document::Element;
-    use document::Attribute;
-    use document::Value;
-
-    #[test]
-    fn it_can_encode_an_element() {
-        let mut attrs: Vec<Attribute> = Vec::new();
-        let at = Attribute::new(
-            Rc::new("test".to_string()),
-            Value::Float(64.55),
-            None,
-            None,
-        );
-        attrs.push(at);
-        let e = Element::new(Rc::new("element1".to_string()), attrs);
-        let namespaces: Namespaces = BTreeMap::new();
-        let mut target: Vec<u8> = Vec::new();
-        {
-            // let mut event_writer = EmitterConfig::new().create_writer(&mut target);
-            let result = Xml::encode(namespaces, &e);
-            println!("Result: {}", result.unwrap());
-        }
-        // let result = String::from_utf8(target).unwrap();
-
-        panic!("");
     }
 }
