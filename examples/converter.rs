@@ -76,30 +76,37 @@ fn run() -> Result<()> {
     Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
 
 
-    let resources = resources_visitor.get_mut_resources();
     // let manifest = parse_xml(manifest_content, resources)?;
     // println!("{}", manifest);
+    let mut contents: Vec<Vec<u8>> = Vec::new();
 
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
 
         if current_file.name().contains("res/layout/detail_item_attachment.xml") {
-            let mut xml_content = Vec::new();
-            current_file.read_to_end(&mut xml_content)?;
-
-            let out = parse_xml(xml_content, resources)?;
-            println!("{}", out);
+            {
+                let mut xml_content = Vec::new();
+                current_file.read_to_end(&mut xml_content)?;
+                let new_content = xml_content.clone();
+                contents.push(xml_content.clone());
+            }
+            // println!("{}", out);
         }
+    }
+
+    for c in contents {
+        let resources = resources_visitor.get_resources();
+        /*let out =*/ parse_xml(&c, resources).unwrap();
     }
 
     Ok(())
 }
 
-fn parse_xml(content: Vec<u8>, resources: &mut Resources) -> Result<String> {
+fn parse_xml<'a>(content: &Vec<u8>, resources: &'a Resources<'a>) -> Result<String> {
     let cursor: Cursor<&[u8]> = Cursor::new(&content);
-    let mut visitor = XmlVisitor::default();
+    let mut visitor = XmlVisitor::new(resources);
 
-    Executor::xml(cursor, &mut visitor, resources)?;
+    Executor::xml(cursor, &mut visitor)?;
 
     match *visitor.get_root() {
         Some(ref root) => {
