@@ -12,7 +12,7 @@ use visitor::Resources;
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, resources: &mut Resources) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, resources: &Resources) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
         Self::encode_element(&mut writer, Some(namespaces), element, resources);
@@ -24,7 +24,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, resources: &mut Resources) {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, resources: &Resources) {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -65,7 +65,7 @@ impl Xml {
         writer.write(End(Element::new(tag.deref()))).unwrap();
     }
 
-    fn resolve_reference(id: u32, resources: &mut Resources) -> Option<String> {
+    fn resolve_reference(id: u32, resources: &Resources) -> Option<String> {
         let mut res_id = id;
         let mut package_id = (id >> 24) as u8;
 
