@@ -58,7 +58,7 @@ impl Executor {
         Ok(())
     }
 
-    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V, _: &mut Resources) -> Result<()> {
+    pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
         let _token = cursor.read_u16::<LittleEndian>()?;
         let _header_size = cursor.read_u16::<LittleEndian>()?;
         let _chunk_size = cursor.read_u32::<LittleEndian>()?;
@@ -147,14 +147,23 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
     }
 }
 
-#[derive(Default)]
-pub struct XmlVisitor<'a> {
+pub struct XmlVisitor<'a, 'b> {
     main_string_table: Option<StringTable<'a>>,
     namespaces: Namespaces,
     container: ElementContainer,
+    resources: &'b Resources<'b>,
 }
 
-impl<'a> XmlVisitor<'a> {
+impl<'a, 'b> XmlVisitor<'a, 'b> {
+    pub fn new(resources: &'b Resources<'b>) -> XmlVisitor {
+        XmlVisitor {
+            main_string_table: None,
+            namespaces: Namespaces::default(),
+            container: ElementContainer::default(),
+            resources: resources,
+        }
+    }
+
     pub fn get_namespaces(&self) -> &Namespaces {
         &self.namespaces
     }
@@ -168,7 +177,7 @@ impl<'a> XmlVisitor<'a> {
     }
 }
 
-impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
+impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
     fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
