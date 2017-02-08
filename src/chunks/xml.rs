@@ -183,7 +183,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
     }
 
-    pub fn get_field3(&self) -> Result<u32> {
+    pub fn get_class(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(32));
 
@@ -197,6 +197,8 @@ impl<'a> XmlTagStartWrapper<'a> {
         let element_name = string_table.get_string(self.get_element_name_index()?)?;
 
         let mut attributes = Vec::new();
+        println!("Amount of attributes: {}", self.get_attributes_amount()?);
+
         for _ in 0..self.get_attributes_amount()? {
             let attribute = self.decode_attribute(&mut cursor, namespaces, string_table)?;
             attributes.push(attribute);
@@ -207,6 +209,26 @@ impl<'a> XmlTagStartWrapper<'a> {
         }
 
         Ok((attributes, element_name))
+    }
+
+    pub fn get_attribute_values(&self, index: usize) -> Result<Attributes> {
+        let mut values = Vec::new();
+
+        let mut cursor = Cursor::new(self.raw_data);
+        let initial_position = 36 + (index * (5 * 4));
+        cursor.set_position(self.header.absolute(initial_position as u64));
+
+        for i in 0..5 {
+            if i == 3 {
+                values.push(cursor.read_u32::<LittleEndian>()? >> 24);
+            } else {
+                values.push(cursor.read_u32::<LittleEndian>()?);
+            }
+        }
+
+        let mut out = Attributes::new(values);
+
+        Ok(out)
     }
 
     fn decode_attribute(&self, cursor: &mut Cursor<&[u8]>, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<Attribute> {
@@ -243,6 +265,42 @@ impl<'a> XmlTagStartWrapper<'a> {
     }
 }
 
+pub struct Attributes {
+    values: Vec<u32>,
+}
+
+impl Attributes {
+    pub fn new(values: Vec<u32>) -> Self {
+        Attributes {
+            values: values,
+        }
+    }
+
+    pub fn get_namespace(&self) -> Result<u32> {
+        Ok(self.values.get(0).unwrap().clone())
+    }
+
+    pub fn get_name(&self) -> Result<u32> {
+        Ok(self.values.get(1).unwrap().clone())
+    }
+
+    pub fn get_class(&self) -> Result<()> {
+        Err("unimplemented".into())
+    }
+
+    pub fn get_attr_id(&self) -> Result<()> {
+        Err("unimplemented".into())
+    }
+
+    pub fn get_resource_value(&self) -> Result<u8> {
+        Ok(self.values.get(3).unwrap().clone() as u8)
+    }
+
+    pub fn get_data(&self) -> Result<u32> {
+        Ok(self.values.get(4).unwrap().clone())
+    }
+}
+
 pub struct XmlTagStart<'a> {
     wrapper: XmlTagStartWrapper<'a>,
 }
@@ -254,8 +312,60 @@ impl<'a> XmlTagStart<'a> {
         }
     }
 
+    pub fn get_namespace(&self) -> Result<u32> {
+        self.wrapper.get_ns_uri()
+    }
+
+    pub fn get_name(&self) -> Result<u32> {
+        self.wrapper.get_element_name_index()
+    }
+
+    pub fn get_attribute_id(&self) -> Result<u16> {
+        let count = self.wrapper.get_attributes_amount()?;
+
+        let mut high = (count >> 16);
+
+        if high > 0 {
+            high -= 1;
+        }
+        Ok(high as u16)
+    }
+
+    pub fn get_attributes_amount(&self) -> Result<u32> {
+        self.wrapper.get_attributes_amount()
+    }
+
+    pub fn get_class(&self) -> Result<(u32, u32)> {
+        let class = self.wrapper.get_class()?;
+
+        let high = Self::to_id(class >> 16);
+        let low = Self::to_id(class & 0xFFFF);
+
+        Ok((high, low))
+    }
+
     pub fn get_tag(&self, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
         self.wrapper.get_tag_start(namespaces, string_table)
+    }
+
+    pub fn get_attribute(&self, index: usize) -> Result<Attributes> {
+        let amount = self.wrapper.get_attributes_amount()?;
+
+        if index > amount as usize {
+            return Err("Attribute out of range".into())
+        }
+
+        self.wrapper.get_attribute_values(index)
+    }
+
+    fn to_id(input: u32) -> u32 {
+        let mut id = input;
+
+        if id > 0 {
+            id -= 1;
+        }
+
+        id
     }
 }
 

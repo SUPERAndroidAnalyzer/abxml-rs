@@ -83,7 +83,7 @@ fn run() -> Result<()> {
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
 
-        if current_file.name().contains(".xml") {
+        if current_file.name().contains("res/layout/detail_item_attachment.xml") {
             let mut xml_content = Vec::new();
             current_file.read_to_end(&mut xml_content)?;
 

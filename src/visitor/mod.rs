@@ -197,6 +197,19 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_tag_start(&mut self, tag_start: XmlTagStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
+                let attr = tag_start.get_attribute(0).unwrap();
+                println!(
+                    "Tag start: {:?} {:?} {:?} {:?} Class: {:?} Attr: NS: {:?}; Name: {:?} Type: 0x{:X} D: {:?}",
+                    tag_start.get_attribute_id(),
+                    tag_start.get_name(),
+                    tag_start.get_namespace(),
+                    tag_start.get_attributes_amount(),
+                    tag_start.get_class(),
+                    attr.get_namespace(),
+                    attr.get_name(),
+                    attr.get_resource_value().unwrap(),
+                    attr.get_data(),
+                );
                 let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
                 let element = Element::new(element_name, attributes);
                 self.container.start_element(element);
@@ -211,7 +224,10 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         self.container.end_element()
     }
 
-    fn visit_resource(&mut self, resource: Resource<'a>) {}
+    fn visit_resource(&mut self, resource: Resource<'a>) {
+        let res = resource.get_resources();
+        println!("Resources: {:?}", res);
+    }
 }
 
 #[derive(Default)]
