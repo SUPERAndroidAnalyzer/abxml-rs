@@ -170,14 +170,22 @@ impl<'a> ResourcesPackage<'a> {
         }
     }
 
-    pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>) -> Option<String> {
+    pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Option<String> {
         let spec_id = (id & 0x00FF0000) >> 16;
         let spec_str = self.get_spec_as_str(spec_id).unwrap();
         let string = self.get_entries_string(key).unwrap();
 
+        let ending = if spec_str == "attr" {
+            format!("{}", string)
+        } else {
+            format!("{}/{}", spec_str, string)
+        };
+
         match namespace {
-            Some(ns) => Some(format!("@{}:{}/{}", ns, spec_str, string)),
-            None => Some(format!("@{}/{}", spec_str, string)),
+            Some(ns) => {
+                Some(format!("{}{}:{}", prefix, ns, ending))
+            },
+            None => Some(format!("{}{}", prefix, ending)),
         }
     }
 
