@@ -40,9 +40,11 @@ impl Xml {
 
 
             let val = match *a.get_value() {
-                Value::ReferenceId(ref id) |
+                Value::ReferenceId(ref id) => {
+                    Self::resolve_reference(*id, resources, "@")
+                }
                 Value::AttributeReferenceId(ref id)=> {
-                    Self::resolve_reference(*id, resources)
+                    Self::resolve_reference(*id, resources, "?")
                 },
                 Value::Integer(ref value) |
                 Value::Flags(ref value)=> {
@@ -76,7 +78,7 @@ impl Xml {
         Ok(())
     }
 
-    fn resolve_reference(id: u32, resources: &Resources) -> Option<String> {
+    fn resolve_reference(id: u32, resources: &Resources, prefix: &str) -> Option<String> {
         let mut res_id = id;
         let mut package_id = (id >> 24) as u8;
 
@@ -102,7 +104,7 @@ impl Xml {
                 None
             };
 
-            return Some(package_borrow.format_reference(id, key, namespace).unwrap());
+            return Some(package_borrow.format_reference(id, key, namespace, prefix).unwrap());
         }
 
         None
@@ -124,8 +126,17 @@ impl Xml {
                 let pb = package.borrow();
                 let entry = pb.get_entry(*entry_ref).unwrap();
                 let inner_entries = entry.get_entries().unwrap();
+                let mut sorted = inner_entries.to_vec();
 
-                for ie in inner_entries {
+                sorted.sort_by(|a, b| {
+                    // TODO: Sort by bit-count?
+                    let id_a = a.get_value().unwrap();
+                    let id_b = b.get_value().unwrap();
+
+                    id_b.cmp(&id_a)
+                });
+
+                for ie in sorted {
                     let mask = ie.get_value().unwrap_or(0);
 
                     if mask != 0 && (mask & flags) == mask {
@@ -138,6 +149,7 @@ impl Xml {
                                 for s in masks.iter() {
                                     if mask & s == mask {
                                         has_to_add = false;
+                                        break;
                                     }
                                 }
 
@@ -155,6 +167,8 @@ impl Xml {
 
                 strs
             };
+
+//            println!("Children: {:?}", str_indexes);
 
             let str_strs: Vec<String> = str_indexes
                 .iter()
