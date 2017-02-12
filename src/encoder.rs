@@ -2,7 +2,7 @@ use quick_xml::{Element,    XmlWriter};
 use quick_xml::Event::*;
 use std::io::Cursor;
 use document::Element as AbxmlElement;
-use document::{Namespaces, Value};
+use document::{Namespaces, Value, Attribute};
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
@@ -44,77 +44,16 @@ impl Xml {
                 Value::AttributeReferenceId(ref id)=> {
                     Self::resolve_reference(*id, resources)
                 },
-                Value::Integer(ref value) => {
-                    // Check if it's the special value in which the integer is an Enum
-                    // In that case, we return a crafted string instead of the integer itself
-                    let name_index = a.get_name_index();
-                    if name_index < xml_resources.len() as u32 {
-                        let entry_ref = xml_resources.get(name_index as usize).unwrap();
-                        let package_id = entry_ref >> 24;
+                Value::Integer(ref value) |
+                Value::Flags(ref value)=> {
+                    let flag_resolution = Self::resolve_flags(*value as u32, a, namespaces, element, xml_resources, resources);
 
-                        let package = resources.get_package(package_id as u8);
-                        let key = {
-                            let pb = package.borrow();
-                            let entry = pb.get_entries().get(&entry_ref).unwrap();
-                            let parent_entry_id = entry.get_referent_id(*value as u32).unwrap();
-                            let parent_entry = pb.get_entries().get(&parent_entry_id).unwrap();
-
-                            parent_entry.get_key()
-                        };
-
-                        let mut pb = package.borrow_mut();
-                        let final_value = pb.get_entries_string(key).unwrap();
-
-                        Some(final_value)
+                    if flag_resolution.is_none() {
+                        Some(a.get_value().to_string())
                     } else {
-                        let str = format!("@integer:{}", value);
-
-                        Some(str.to_string())
+                        flag_resolution
                     }
                 },
-                Value::Flags(ref value) => {
-                    // Check if it's the special value in which the integer is an Enum
-                    // In that case, we return a crafted string instead of the integer itself
-                    let name_index = a.get_name_index();
-                    if name_index < xml_resources.len() as u32 {
-                        let entry_ref = xml_resources.get(name_index as usize).unwrap();
-                        let package_id = entry_ref >> 24;
-                        let package = resources.get_package(package_id as u8);
-
-                        let str_indexes = {
-                            let mut strs = Vec::new();
-                            let pb = package.borrow();
-                            let entry = pb.get_entries().get(&entry_ref).unwrap();
-                            let inner_entries = entry.get_entries()?;
-
-                            for ie in inner_entries {
-                                if ie.get_value() == Some(*value as u32) {
-                                    let parent = pb.get_entries().get(&ie.get_id()).unwrap();
-                                    strs.push(parent.get_key());
-                                }
-                            }
-
-                            strs
-                        };
-
-                        let str_strs: Vec<String> = str_indexes
-                            .iter()
-                            .map(|si| {
-                                let mut pb = package.borrow_mut();
-                                let final_value: String = pb.get_entries_string(*si).unwrap();
-
-                                final_value
-                            })
-                            .collect();
-
-                        let final_string = str_strs.join(" | ");
-                        Some(final_string)
-                    } else {
-                        let str = format!("@flags:{}", value);
-
-                        Some(str.to_string())
-                    }
-                }
                 _ => {
                     None
                 }
@@ -167,12 +106,84 @@ impl Xml {
         }
 
         None
+    }
 
-/*        info!("Reference not found on Resources");
-        println!("Reference: {} {} {}", res_id, id, id >> 24);
-        panic!("We end on a invalid reference");
+    fn resolve_flags(flags: u32, attribute: &Attribute, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Option<String> {
+        // Check if it's the special value in which the integer is an Enum
+        // In that case, we return a crafted string instead of the integer itself
+        let name_index = attribute.get_name_index();
+        if name_index < xml_resources.len() as u32 {
+            let entry_ref = xml_resources.get(name_index as usize).unwrap();
+            let package_id = entry_ref >> 24;
+            let package = resources.get_package(package_id as u8);
 
-        "UNKNOWN".to_string()*/
+            let mut str_indexes = {
+                let mut strs = Vec::new();
+                let mut masks = Vec::new();
+
+                let pb = package.borrow();
+                let entry = pb.get_entry(*entry_ref).unwrap();
+                let inner_entries = entry.get_entries().unwrap();
+
+                for ie in inner_entries {
+                    let mask = ie.get_value().unwrap_or(0);
+
+                    if mask != 0 && (mask & flags) == mask {
+                        let maybe_entry = pb.get_entry(ie.get_id());
+
+                        match maybe_entry {
+                            Ok(entry) => {
+                                let mut has_to_add = true;
+
+                                for s in masks.iter() {
+                                    if mask & s == mask {
+                                        has_to_add = false;
+                                    }
+                                }
+
+                                if has_to_add {
+                                    strs.push(entry.get_key());
+                                    masks.push(mask);
+                                }
+                            },
+                            Err(_) => {
+                                info!("Some entry matched but could not found on entries");
+                            }
+                        }
+                    }
+                }
+
+                strs
+            };
+
+            let str_strs: Vec<String> = str_indexes
+                .iter()
+                .map(|si| {
+                    let mut pb = package.borrow_mut();
+
+                    match pb.get_entries_string(*si) {
+                        Some(str) => str,
+                        None => {
+                            println!("Key not found on the string table: {}", *si);
+
+                            "".to_string()
+                        },
+                    }
+                })
+                .collect();
+
+            let final_string = str_strs.join("|");
+
+            if str_strs.is_empty() {
+                None
+            } else {
+                Some(final_string)
+            }
+        } else {
+            let str = format!("@flags:{}", flags);
+
+            Some(str.to_string())
+        }
     }
 
     pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {
