@@ -237,7 +237,7 @@ impl EntryHeader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Entry {
     Simple {
         id: u32,
