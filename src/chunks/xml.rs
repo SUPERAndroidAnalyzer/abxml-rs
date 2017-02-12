@@ -197,7 +197,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         let element_name = string_table.get_string(self.get_element_name_index()?)?;
 
         let mut attributes = Vec::new();
-        println!("Amount of attributes: {}", self.get_attributes_amount()?);
+        //println!("Amount of attributes: {}", self.get_attributes_amount()?);
 
         for _ in 0..self.get_attributes_amount()? {
             let attribute = self.decode_attribute(&mut cursor, namespaces, string_table)?;
@@ -261,7 +261,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         let element_name = string_table.get_string(attr_name_idx).unwrap().clone();
 
-        Ok(Attribute::new(element_name, value, namespace, prefix))
+        Ok(Attribute::new(element_name, value, namespace, prefix, attr_name_idx))
     }
 }
 

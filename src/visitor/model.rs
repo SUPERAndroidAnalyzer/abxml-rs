@@ -195,6 +195,16 @@ impl<'a> ResourcesPackage<'a> {
         None
     }
 
+    pub fn get_spec_string(&mut self, str_id: u32) -> Option<String> {
+        if let Some(ref mut string_table) = self.spec_string_table {
+            let out_string = string_table.get_string(str_id).unwrap();
+
+            return Some((*out_string).clone())
+        }
+
+        None
+    }
+
     fn get_spec_as_str(&mut self, spec_id: u32) -> Option<String>
     {
         if let Some(spec) = self.specs.get((spec_id - 1) as usize) {

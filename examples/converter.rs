@@ -115,6 +115,7 @@ fn parse_xml<'a>(content: &Vec<u8>, resources: &'a Resources<'a>) -> Result<Stri
                     return Xml::encode(
                         visitor.get_namespaces(),
                         root,
+                        visitor.get_resources(),
                         resources,
                     ).chain_err(|| "Could note encode XML");
                 },

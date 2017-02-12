@@ -303,6 +303,17 @@ impl Entry {
         }
     }
 
+    pub fn get_entries(&self) -> Result<&Vec<Self>> {
+        match *self {
+            Entry::Simple{key_index: ki, ..} => {
+                Err("Can not retrieve entries on simple entry".into())
+            },
+            Entry::Complex{entries: ref entries, ..} => {
+                Ok(entries)
+            },
+        }
+    }
+
     pub fn get_value(&self) -> Option<u32> {
         match *self {
             Entry::Simple {value_data: value_data, ..} => {
