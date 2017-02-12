@@ -241,9 +241,9 @@ impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
                                 let parent_entry_id = entry.get_referent_id(attr.get_data().unwrap()).unwrap();
                                 let parent_entry = pb.entries.get(&parent_entry_id).unwrap();
 
-                                println!("Entry: {:?}", entry);
-                                println!("Referent: {:?}", parent_entry_id);
-                                println!("Final entry: {:?}", parent_entry);
+                                // println!("Entry: {:?}", entry);
+                                // println!("Referent: {:?}", parent_entry_id);
+                                // println!("Final entry: {:?}", parent_entry);
 
                                 parent_entry.get_key()
                             };
@@ -251,16 +251,16 @@ impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
                             let mut pb = package.borrow_mut();
                             let test = pb.get_entries_string(key);
 
-                            println!("String: {:?}", test);
+                            // println!("String: {:?}", test);
                         }
 
-                        println!(
+                        /*println!(
                             "Attribute: NS-{:?} N-{:?} RV-{:?} {:?}",
                             attr.get_namespace(),
                             attr.get_name(),
                             attr.get_resource_value(),
                             attr.get_data(),
-                        );
+                        );*/
                     }
                 }
 

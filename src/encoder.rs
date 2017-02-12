@@ -45,6 +45,10 @@ impl Xml {
                     println!("Reference: {}", id);
                     Self::resolve_reference(*id, resources)
                 },
+                Value::Integer(ref id) => {
+                    // Check if it's the special value in which the integer is an Enum
+                    // In that case, we return a crafted string instead of the integer itself
+                },
                 _ => {
                     None
                 }
