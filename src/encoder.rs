@@ -48,6 +48,7 @@ impl Xml {
                 Value::Integer(ref id) => {
                     // Check if it's the special value in which the integer is an Enum
                     // In that case, we return a crafted string instead of the integer itself
+                    Some("Integer".to_string())
                 },
                 _ => {
                     None
