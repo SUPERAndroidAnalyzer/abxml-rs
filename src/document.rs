@@ -156,7 +156,6 @@ const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 impl Value {
     pub fn to_string(&self) -> String {
-        println!("Value: {:?}", &self);
         match *self {
             Value::String(ref s) => s.deref().clone(),
             Value::Dimension(ref s) | Value::Fraction(ref s) |
@@ -272,6 +271,7 @@ pub struct Attribute {
     namespace: Option<Rc<String>>,
     prefix: Option<Rc<String>>,
     value: Value,
+    name_index: u32,
     //resource_id: Option<u32>,
 }
 
@@ -279,13 +279,15 @@ impl Attribute {
     pub fn new(name: Rc<String>,
                value: Value,
                namespace: Option<Rc<String>>,
-               prefix: Option<Rc<String>>)
-               -> Self {
+               prefix: Option<Rc<String>>,
+                name_index: u32,
+    ) -> Self {
         Attribute {
             name: name,
             namespace: namespace,
             prefix: prefix,
             value: value,
+            name_index: name_index,
             //resource_id: None,
         }
     }
@@ -304,6 +306,10 @@ impl Attribute {
 
     pub fn get_prefix(&self) -> Option<Rc<String>> {
         self.prefix.clone()
+    }
+
+    pub fn get_name_index(&self) -> u32 {
+        self.name_index
     }
 }
 

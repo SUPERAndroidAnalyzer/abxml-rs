@@ -12,10 +12,10 @@ use visitor::Resources;
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, resources: &Resources) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element, resources);
+        Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources)?;
 
         let result = writer.into_inner().into_inner();
         let str_result = String::from_utf8(result).unwrap();
@@ -24,7 +24,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, resources: &Resources) {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Result<()> {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -42,14 +42,79 @@ impl Xml {
             let val = match *a.get_value() {
                 Value::ReferenceId(ref id) |
                 Value::AttributeReferenceId(ref id)=> {
-                    println!("Reference: {}", id);
                     Self::resolve_reference(*id, resources)
                 },
-                Value::Integer(ref id) => {
+                Value::Integer(ref value) => {
                     // Check if it's the special value in which the integer is an Enum
                     // In that case, we return a crafted string instead of the integer itself
-                    Some("Integer".to_string())
+                    let name_index = a.get_name_index();
+                    if name_index < xml_resources.len() as u32 {
+                        let entry_ref = xml_resources.get(name_index as usize).unwrap();
+                        let package_id = entry_ref >> 24;
+
+                        let package = resources.get_package(package_id as u8);
+                        let key = {
+                            let pb = package.borrow();
+                            let entry = pb.get_entries().get(&entry_ref).unwrap();
+                            let parent_entry_id = entry.get_referent_id(*value as u32).unwrap();
+                            let parent_entry = pb.get_entries().get(&parent_entry_id).unwrap();
+
+                            parent_entry.get_key()
+                        };
+
+                        let mut pb = package.borrow_mut();
+                        let final_value = pb.get_entries_string(key).unwrap();
+
+                        Some(final_value)
+                    } else {
+                        let str = format!("@integer:{}", value);
+
+                        Some(str.to_string())
+                    }
                 },
+                Value::Flags(ref value) => {
+                    // Check if it's the special value in which the integer is an Enum
+                    // In that case, we return a crafted string instead of the integer itself
+                    let name_index = a.get_name_index();
+                    if name_index < xml_resources.len() as u32 {
+                        let entry_ref = xml_resources.get(name_index as usize).unwrap();
+                        let package_id = entry_ref >> 24;
+                        let package = resources.get_package(package_id as u8);
+
+                        let str_indexes = {
+                            let mut strs = Vec::new();
+                            let pb = package.borrow();
+                            let entry = pb.get_entries().get(&entry_ref).unwrap();
+                            let inner_entries = entry.get_entries()?;
+
+                            for ie in inner_entries {
+                                if ie.get_value() == Some(*value as u32) {
+                                    let parent = pb.get_entries().get(&ie.get_id()).unwrap();
+                                    strs.push(parent.get_key());
+                                }
+                            }
+
+                            strs
+                        };
+
+                        let str_strs: Vec<String> = str_indexes
+                            .iter()
+                            .map(|si| {
+                                let mut pb = package.borrow_mut();
+                                let final_value: String = pb.get_entries_string(*si).unwrap();
+
+                                final_value
+                            })
+                            .collect();
+
+                        let final_string = str_strs.join(" | ");
+                        Some(final_string)
+                    } else {
+                        let str = format!("@flags:{}", value);
+
+                        Some(str.to_string())
+                    }
+                }
                 _ => {
                     None
                 }
@@ -64,10 +129,12 @@ impl Xml {
         writer.write(Start(elem)).unwrap();
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, resources)
+            Self::encode_element(&mut writer, None, child, xml_resources, resources)?
         }
 
-        writer.write(End(Element::new(tag.deref()))).unwrap();
+        writer.write(End(Element::new(tag.deref())))?;
+
+        Ok(())
     }
 
     fn resolve_reference(id: u32, resources: &Resources) -> Option<String> {

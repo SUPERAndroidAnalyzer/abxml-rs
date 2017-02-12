@@ -41,6 +41,10 @@ impl<'a, 'b> XmlVisitor<'a, 'b> {
     pub fn get_string_table(&self) -> &Option<StringTable> {
         &self.main_string_table
     }
+
+    pub fn get_resources(&self) -> &Vec<u32> {
+        &self.res
+    }
 }
 
 impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
@@ -74,14 +78,14 @@ impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
             Some(ref mut string_table) => {
                 let amount = tag_start.get_attributes_amount().unwrap();
 
-                println!(
+                /*println!(
                     "TagStart! {:?} {:?} {:?} {:?} {:?}",
                     tag_start.get_attribute_id(),
                     tag_start.get_name(),
                     tag_start.get_namespace(),
                     tag_start.get_attributes_amount(),
                     tag_start.get_class(),
-                );
+                );*/
 
                 if tag_start.get_name().unwrap() == 14 {
                     for i in 0..amount {
