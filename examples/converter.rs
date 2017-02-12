@@ -90,13 +90,13 @@ fn run() -> Result<()> {
                 let new_content = xml_content.clone();
                 contents.push(xml_content.clone());
             }
-            // println!("{}", out);
         }
     }
 
     for c in contents {
         let resources = resources_visitor.get_resources();
-        /*let out =*/ parse_xml(&c, resources).unwrap();
+        let out = parse_xml(&c, resources).unwrap();
+        println!("{}", out);
     }
 
     Ok(())

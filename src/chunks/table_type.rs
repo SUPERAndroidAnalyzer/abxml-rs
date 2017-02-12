@@ -303,6 +303,34 @@ impl Entry {
         }
     }
 
+    pub fn get_value(&self) -> Option<u32> {
+        match *self {
+            Entry::Simple {value_data: value_data, ..} => {
+                Some(value_data)
+            },
+            Entry::Complex {..} => {
+                None
+            }
+        }
+    }
+
+    pub fn get_referent_id(&self, value: u32) -> Option<u32> {
+        match *self {
+            Entry::Simple {..} => {
+                return None;
+            },
+            Entry::Complex {entries: ref entries, ..} => {
+                for e in entries {
+                    if e.get_value() == Some(value) {
+                        return Some(e.get_id());
+                    }
+                }
+
+                return None;
+            }
+        }
+    }
+
     pub fn destructure_key(&self) -> (u8, u8, u16) {
         let key = self.get_key();
 
