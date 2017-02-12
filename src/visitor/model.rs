@@ -185,6 +185,10 @@ impl<'a> ResourcesPackage<'a> {
         &self.entries
     }
 
+    pub fn get_entry(&self, id: u32) -> Result<&Entry> {
+        self.entries.get(&id).ok_or("Could not find entry".into())
+    }
+
     pub fn get_entries_string(&mut self, str_id: u32) -> Option<String> {
         if let Some(ref mut string_table) = self.entries_string_table {
             let out_string = string_table.get_string(str_id).unwrap();
