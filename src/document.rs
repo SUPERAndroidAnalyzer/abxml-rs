@@ -159,7 +159,9 @@ impl Value {
         match *self {
             Value::String(ref s) => s.deref().clone(),
             Value::Dimension(ref s) | Value::Fraction(ref s) |
-            Value::Color(ref s) | Value::Color2(ref s) => s.clone(),
+            Value::Color(ref s) | Value::Color2(ref s) => {
+                s.clone()
+            },
             Value::Float(f) => {
                 format!("{:.*}", 1, f)
             },
@@ -233,11 +235,11 @@ impl Value {
                 }
             }
             TOKEN_TYPE_COLOR => {
-                let formatted_color = format!("#{:#8}", data);
+                let formatted_color = format!("#{:#X}", data);
                 Value::Color(formatted_color)
             }
             TOKEN_TYPE_COLOR2 => {
-                let formatted_color = format!("#{:#8}", data);
+                let formatted_color = format!("#{:#X}", data);
                 Value::Color2(formatted_color)
             }
             _ => Value::Unknown,
