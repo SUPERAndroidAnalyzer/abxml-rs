@@ -217,7 +217,14 @@ impl Value {
 //                println!("Value: {} Div: {}", value, div);
                 // let div: f32 = 1000.0;
                 // let value = value * div;
-                let formatted_fraction = format!("{:.*}{}", 6, value, u);
+                // let formatted_fraction = format!("{:.*}{}", 6, value, u);
+                let integer = value.round() as f32;
+                let diff = value - integer;
+                let formatted_fraction = if diff > 0.0000001 {
+                    format!("{:.*}{}", 6, value, u)
+                } else {
+                    format!("{:.*}{}", 1, value, u)
+                };
 
                 Value::Fraction(formatted_fraction)
             }
@@ -235,11 +242,11 @@ impl Value {
                 }
             }
             TOKEN_TYPE_COLOR => {
-                let formatted_color = format!("#{:#X}", data);
+                let formatted_color = format!("#{:x}", data);
                 Value::Color(formatted_color)
             }
             TOKEN_TYPE_COLOR2 => {
-                let formatted_color = format!("#{:#X}", data);
+                let formatted_color = format!("#{:x}", data);
                 Value::Color2(formatted_color)
             }
             _ => Value::Unknown,
