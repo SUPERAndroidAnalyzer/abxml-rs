@@ -197,7 +197,6 @@ impl<'a> XmlTagStartWrapper<'a> {
         let element_name = string_table.get_string(self.get_element_name_index()?)?;
 
         let mut attributes = Vec::new();
-        //println!("Amount of attributes: {}", self.get_attributes_amount()?);
 
         for _ in 0..self.get_attributes_amount()? {
             let attribute = self.decode_attribute(&mut cursor, namespaces, string_table)?;
@@ -226,7 +225,7 @@ impl<'a> XmlTagStartWrapper<'a> {
             }
         }
 
-        let mut out = Attributes::new(values);
+        let out = Attributes::new(values);
 
         Ok(out)
     }
@@ -277,11 +276,11 @@ impl Attributes {
     }
 
     pub fn get_namespace(&self) -> Result<u32> {
-        Ok(self.values.get(0).unwrap().clone())
+        Ok(*self.values.get(0).unwrap())
     }
 
     pub fn get_name(&self) -> Result<u32> {
-        Ok(self.values.get(1).unwrap().clone())
+        Ok(*self.values.get(1).unwrap())
     }
 
     pub fn get_class(&self) -> Result<()> {
@@ -293,11 +292,11 @@ impl Attributes {
     }
 
     pub fn get_resource_value(&self) -> Result<u8> {
-        Ok(self.values.get(3).unwrap().clone() as u8)
+        Ok(*self.values.get(3).unwrap() as u8)
     }
 
     pub fn get_data(&self) -> Result<u32> {
-        Ok(self.values.get(4).unwrap().clone())
+        Ok(*self.values.get(4).unwrap())
     }
 }
 
@@ -323,7 +322,7 @@ impl<'a> XmlTagStart<'a> {
     pub fn get_attribute_id(&self) -> Result<u16> {
         let count = self.wrapper.get_attributes_amount()?;
 
-        let mut high = (count >> 16);
+        let mut high = count >> 16;
 
         if high > 0 {
             high -= 1;
@@ -338,8 +337,8 @@ impl<'a> XmlTagStart<'a> {
     pub fn get_class(&self) -> Result<(u32, u32)> {
         let class = self.wrapper.get_class()?;
 
-        let high = Self::to_id(class >> 16);
-        let low = Self::to_id(class & 0xFFFF);
+        let high = Self::convert_id(class >> 16);
+        let low = Self::convert_id(class & 0xFFFF);
 
         Ok((high, low))
     }
@@ -358,7 +357,7 @@ impl<'a> XmlTagStart<'a> {
         self.wrapper.get_attribute_values(index)
     }
 
-    fn to_id(input: u32) -> u32 {
+    fn convert_id(input: u32) -> u32 {
         let mut id = input;
 
         if id > 0 {

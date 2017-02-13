@@ -152,35 +152,9 @@ impl<'a> TableTypeWrapper<'a> {
             entries.push(simple_entry);
         }
 
-        Self::analyze_entries(&entries);
-
         let entry = Entry::new_complex(id, header.get_key_index(), parent_entry, entries);
 
         Ok(Some(entry))
-    }
-
-    fn analyze_entries(entries: &Vec<Entry>) {
-        if entries.len() > 0 && false {
-            let entry = entries.get(0).unwrap();
-            if entry.get_id() == 0x01000000 {
-                match *entry {
-                    Entry::Simple {value_data: value_data, value_type: value_type, ..} => {
-                        let scalar = value_data & 0xFFFF;
-
-                        if value_data & 0xFF0000 == 0x00010000 {
-                            println!("Enum:: Found element 0 with 0x01000000; {} -> {} ({}) - {}", value_data, value_type, value_data & 0xFF0000, scalar);
-                        } else if value_data & 0xFF0000 == 0x00020000 {
-                            println!("Flags:: Found element 0 with 0x01000000; {} -> {} ({}) - {}", value_data, value_type, value_data & 0xFF0000, scalar);
-                        } else {
-                            println!("Found element 0 with 0x01000000; {} -> {} ({})", value_data, value_type, value_data & 0xFF0000);
-                        }
-                    },
-                    _ => (),
-                }
-
-                println!("Entry {:?}", entry);
-            }
-        }
     }
 }
 
@@ -305,7 +279,7 @@ impl Entry {
 
     pub fn get_entries(&self) -> Result<&Vec<Self>> {
         match *self {
-            Entry::Simple{key_index: ki, ..} => {
+            Entry::Simple{..} => {
                 Err("Can not retrieve entries on simple entry".into())
             },
             Entry::Complex{entries: ref entries, ..} => {
@@ -328,7 +302,7 @@ impl Entry {
     pub fn get_referent_id(&self, value: u32) -> Option<u32> {
         match *self {
             Entry::Simple {..} => {
-                return None;
+                None
             },
             Entry::Complex {entries: ref entries, ..} => {
                 for e in entries {
@@ -337,7 +311,7 @@ impl Entry {
                     }
                 }
 
-                return None;
+                None
             }
         }
     }

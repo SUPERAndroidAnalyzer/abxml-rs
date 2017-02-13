@@ -12,7 +12,7 @@ use visitor::Resources;
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
         Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources)?;
@@ -24,7 +24,7 @@ impl Xml {
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Result<()> {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<()> {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -48,7 +48,7 @@ impl Xml {
                 },
                 Value::Integer(ref value) |
                 Value::Flags(ref value)=> {
-                    let flag_resolution = Self::resolve_flags(*value as u32, a, namespaces, element, xml_resources, resources);
+                    let flag_resolution = Self::resolve_flags(*value as u32, a, xml_resources, resources);
 
                     if flag_resolution.is_none() {
                         Some(a.get_value().to_string())
@@ -110,7 +110,7 @@ impl Xml {
         None
     }
 
-    fn resolve_flags(flags: u32, attribute: &Attribute, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &Vec<u32>, resources: &Resources) -> Option<String> {
+    fn resolve_flags(flags: u32, attribute: &Attribute, xml_resources: &[u32], resources: &Resources) -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
         let name_index = attribute.get_name_index();
@@ -119,7 +119,7 @@ impl Xml {
             let package_id = entry_ref >> 24;
             let package = resources.get_package(package_id as u8);
 
-            let mut str_indexes = {
+            let str_indexes = {
                 let mut strs = Vec::new();
                 let mut masks = Vec::new();
 

@@ -1,15 +1,9 @@
-use std::io::Cursor;
 use chunks::*;
-use byteorder::{LittleEndian, ReadBytesExt};
-use errors::*;
-use document::{Namespaces, Element, ElementContainer, Entries};
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::collections::HashMap;
 
 use super::ChunkVisitor;
 use super::Origin;
 
+#[allow(dead_code)]
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
