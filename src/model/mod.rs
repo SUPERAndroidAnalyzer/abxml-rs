@@ -9,7 +9,6 @@ impl Identifier for u32 {
         let mut package_id = (self >> 24) as u8;
 
         if package_id == 0 {
-            // res_id = ((0xFF & 1) << 24) | id;
             package_id = 1;
             info!("Resource with package id 0 found. Recreate id with current package id");
         }
