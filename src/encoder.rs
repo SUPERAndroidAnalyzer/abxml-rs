@@ -83,12 +83,9 @@ impl Xml {
         let res_id = id;
         let package_id = id.get_package();
 
-        // TODO: Check if this is necessary
-        /*if package_id == 1 {
-            res_id = ((0xFF & 1) << 24) | id;
-            package_id = 1;
-            info!("Resource with package id 0 found. Recreate id with current package id");
-        }*/
+        if id == 0 {
+            return Some("@null".to_string());
+        }
 
         let is_main = resources.is_main_package(package_id);
         let package = resources.get_package(package_id);
