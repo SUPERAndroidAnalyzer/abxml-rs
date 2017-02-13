@@ -13,6 +13,7 @@ mod document;
 pub mod encoder;
 pub mod chunks;
 pub mod visitor;
+pub mod model;
 
 pub mod errors {
     // Create the Error, ErrorKind, ResultExt, and Result types
