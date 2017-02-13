@@ -52,6 +52,14 @@ fn run() -> Result<()> {
         }
     };
 
+    let target_file = match env::args().nth(3) {
+        Some(path) => path,
+        None => {
+            println!("Usage: converter <path>");
+            return Ok(())
+        }
+    };
+
     // Android lib
     let file = std::fs::File::open(&android_apk_path)?;
     let mut android_archive = zip::ZipArchive::new(file).unwrap();
@@ -66,37 +74,27 @@ fn run() -> Result<()> {
     let mut resources_content = Vec::new();
     archive.by_name("resources.arsc").unwrap().read_to_end(&mut resources_content)?;
 
-    let mut manifest_content = Vec::new();
-    archive.by_name("AndroidManifest.xml").unwrap().read_to_end(&mut manifest_content)?;
-
     let resources_cursor: Cursor<&[u8]> = Cursor::new(&resources_content);
     let android_resources_cursor: Cursor<&[u8]> = Cursor::new(&android_resources_content);
     let mut resources_visitor = ModelVisitor::default();
     Executor::arsc(resources_cursor, &mut resources_visitor)?;
     Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
 
-
-    // let manifest = parse_xml(manifest_content, resources)?;
-    // println!("{}", manifest);
-    let mut contents: Vec<Vec<u8>> = Vec::new();
-
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();
 
-        if current_file.name().contains("res/layout-v21/abc_screen_toolbar.xml") {
+        if current_file.name().contains(&target_file) {
             {
+                // println!("Current file: {}", current_file.name());
                 let mut xml_content = Vec::new();
                 current_file.read_to_end(&mut xml_content)?;
                 let new_content = xml_content.clone();
-                contents.push(xml_content.clone());
+
+                let resources = resources_visitor.get_resources();
+                let out = parse_xml(&new_content, resources).unwrap();
+                println!("{}", out);
             }
         }
-    }
-
-    for c in contents {
-        let resources = resources_visitor.get_resources();
-        let out = parse_xml(&c, resources).unwrap();
-        println!("{}", out);
     }
 
     Ok(())
