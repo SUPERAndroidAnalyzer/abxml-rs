@@ -2,10 +2,6 @@ use std::io::Cursor;
 use chunks::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use document::{Namespaces, Element, ElementContainer, Entries};
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::collections::HashMap;
 
 mod xml;
 mod model;

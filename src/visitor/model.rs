@@ -1,8 +1,6 @@
-use std::io::Cursor;
 use chunks::*;
-use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use document::{Namespaces, Element, ElementContainer, Entries};
+use document::Entries;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -137,13 +135,10 @@ pub struct ResourcesPackage<'a> {
     spec_string_table: Option<StringTable<'a>>,
     entries_string_table: Option<StringTable<'a>>,
     entries: Entries,
-    resources: Vec<u32>,
 }
 
 impl<'a> ResourcesPackage<'a> {
     pub fn set_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
-        //println!("ST: {}", string_table);
-        // println!("Setting table: {:?}", origin);
         match origin {
             Origin::Global => self.string_table = Some(string_table),
             Origin::Spec => self.spec_string_table = Some(string_table),
@@ -176,7 +171,7 @@ impl<'a> ResourcesPackage<'a> {
         let string = self.get_entries_string(key).unwrap();
 
         let ending = if spec_str == "attr" {
-            format!("{}", string)
+            string
         } else {
             format!("{}/{}", spec_str, string)
         };
@@ -194,7 +189,7 @@ impl<'a> ResourcesPackage<'a> {
     }
 
     pub fn get_entry(&self, id: u32) -> Result<&Entry> {
-        self.entries.get(&id).ok_or("Could not find entry".into())
+        self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
     }
 
     pub fn get_entries_string(&mut self, str_id: u32) -> Option<String> {

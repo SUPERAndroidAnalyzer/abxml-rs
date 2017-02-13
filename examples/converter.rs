@@ -102,7 +102,7 @@ fn run() -> Result<()> {
 
 fn parse_xml<'a>(content: &Vec<u8>, resources: &'a Resources<'a>) -> Result<String> {
     let cursor: Cursor<&[u8]> = Cursor::new(&content);
-    let mut visitor = XmlVisitor::new(resources);
+    let mut visitor = XmlVisitor::default();
 
     Executor::xml(cursor, &mut visitor)?;
 
