@@ -33,7 +33,7 @@ impl<'a> ResourceWrapper<'a> {
         let count = cursor.read_u32::<LittleEndian>().unwrap();
         let mut resources = Vec::with_capacity(count as usize);
 
-        for i in 0..((count / 4) - 2) {
+        for _ in 0..((count / 4) - 2) {
             resources.push(cursor.read_u32::<LittleEndian>().unwrap());
         }
 

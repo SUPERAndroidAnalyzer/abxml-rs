@@ -1,35 +1,18 @@
-use std::io::Cursor;
 use chunks::*;
-use byteorder::{LittleEndian, ReadBytesExt};
-use errors::*;
-use document::{Namespaces, Element, ElementContainer, Entries};
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::collections::HashMap;
+use document::{Namespaces, Element, ElementContainer};
 
-use super::Resources;
 use super::ChunkVisitor;
 use super::Origin;
 
-pub struct XmlVisitor<'a, 'b> {
+#[derive(Default)]
+pub struct XmlVisitor<'a> {
     main_string_table: Option<StringTable<'a>>,
     namespaces: Namespaces,
     container: ElementContainer,
     res: Vec<u32>,
-    resources: &'b Resources<'b>,
 }
 
-impl<'a, 'b> XmlVisitor<'a, 'b> {
-    pub fn new(resources: &'b Resources<'b>) -> XmlVisitor {
-        XmlVisitor {
-            main_string_table: None,
-            namespaces: Namespaces::default(),
-            container: ElementContainer::default(),
-            res: Vec::new(),
-            resources: resources,
-        }
-    }
-
+impl<'a> XmlVisitor<'a> {
     pub fn get_namespaces(&self) -> &Namespaces {
         &self.namespaces
     }
@@ -47,7 +30,7 @@ impl<'a, 'b> XmlVisitor<'a, 'b> {
     }
 }
 
-impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
+impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
@@ -76,7 +59,6 @@ impl <'a, 'b> ChunkVisitor<'a> for XmlVisitor<'a, 'b> {
     fn visit_xml_tag_start(&mut self, tag_start: XmlTagStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
-                let amount = tag_start.get_attributes_amount().unwrap();
                 let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
                 let element = Element::new(element_name, attributes);
                 self.container.start_element(element);
