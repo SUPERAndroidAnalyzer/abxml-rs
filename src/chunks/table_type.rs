@@ -315,16 +315,6 @@ impl Entry {
             }
         }
     }
-
-    pub fn destructure_key(&self) -> (u8, u8, u16) {
-        let key = self.get_key();
-
-        (
-            (key >> 24) as u8,
-            (key & 0x00FF0000 >> 16) as u8,
-            (key & 0xFFFF) as u16,
-        )
-    }
 }
 
 pub struct Region {
