@@ -192,12 +192,12 @@ impl Value {
             }
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dip", "sp", "pt", "in", "mm"];
-                let size = (data >> 8) as f32;
+                let value = Self::complex(data);
                 let unit_idx = data & 0xF;
 
                 match units.get(unit_idx as usize) {
                     Some(unit) => {
-                        let formatted = format!("{:.*}{}", 1, size, unit);
+                        let formatted = format!("{:.*}{}", 1, value, unit);
                         Value::Dimension(formatted)
                     },
                     None => {
@@ -209,21 +209,14 @@ impl Value {
             TOKEN_TYPE_FRACTION => {
                 let units: [&str; 2] = ["%", "%p"];
                 let u = units[(data & 0xF) as usize];
-                let value = Self::complex(data) * 100.0;
-                // let value = unsafe {mem::transmute::<u32, f32>(data)};
-                // let div = unsafe {mem::transmute::<u32, f32>(0x7FFFFFFF)};
-                // let div = 100.0;
+                let final_value = Self::complex(data) * 100.0;
 
-//                println!("Value: {} Div: {}", value, div);
-                // let div: f32 = 1000.0;
-                // let value = value * div;
-                // let formatted_fraction = format!("{:.*}{}", 6, value, u);
-                let integer = value.round() as f32;
-                let diff = value - integer;
+                let integer = final_value.round() as f32;
+                let diff = final_value - integer;
                 let formatted_fraction = if diff > 0.0000001 {
-                    format!("{:.*}{}", 6, value, u)
+                    format!("{:.*}{}", 6, final_value, u)
                 } else {
-                    format!("{:.*}{}", 1, value, u)
+                    format!("{:.*}{}", 1, final_value, u)
                 };
 
                 Value::Fraction(formatted_fraction)
@@ -259,8 +252,11 @@ impl Value {
     fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;
-        let m = (data & mantissa) as f32;
+        let uvalue = (data & mantissa);
+        let ivalue: i32 = unsafe {mem::transmute(uvalue)};
+        let m = ivalue as f32;
         let mm = 1.0 / ((1 << 8) as f32);
+
         let radix = [
             1.0 * mm,
             1.0 / ((1 << 7) as f32) * mm,
