@@ -132,7 +132,24 @@ impl Xml {
                     let id_a = a.get_value().unwrap();
                     let id_b = b.get_value().unwrap();
 
-                    id_b.cmp(&id_a)
+                    // TODO: This code is to create an exact match with Apktool. A simple descending ordering seems to be also ok.
+                    let mut i = id_a;
+                    i = i - ((i >> 1) & 0x55555555);
+                    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+                    i = (i + (i >> 4)) & 0x0f0f0f0f;
+                    i = i + (i >> 8);
+                    i = i + (i >> 16);
+                    i = i & 0x3f;
+
+                    let mut j = id_b;
+                    j = j - ((j >> 1) & 0x55555555);
+                    j = (j & 0x33333333) + ((j >> 2) & 0x33333333);
+                    j = (j + (j >> 4)) & 0x0f0f0f0f;
+                    j = j + (j >> 8);
+                    j = j + (j >> 16);
+                    j = j & 0x3f;
+
+                    j.cmp(&i)
                 });
 
                 for ie in sorted {
