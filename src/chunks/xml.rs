@@ -5,6 +5,7 @@ use std::rc::Rc;
 use document::{Value, Attribute, Namespaces};
 use errors::*;
 use std::clone::Clone;
+use model::Identifier;
 
 pub struct XmlDecoder;
 
@@ -219,7 +220,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         for i in 0..5 {
             if i == 3 {
-                values.push(cursor.read_u32::<LittleEndian>()? >> 24);
+                values.push(cursor.read_u32::<LittleEndian>()?.get_package() as u32);
             } else {
                 values.push(cursor.read_u32::<LittleEndian>()?);
             }

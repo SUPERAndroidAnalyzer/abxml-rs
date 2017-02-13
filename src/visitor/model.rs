@@ -4,6 +4,7 @@ use document::Entries;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use model::Identifier;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -33,7 +34,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 self.tables.insert(origin, string_table);
             },
             _ => {
-                let package_id = (self.package_mask >> 24) as u8;
+                let package_id = self.package_mask.get_package();
                 let package = self.resources.get_package(package_id);
                 let mut package_borrow = package.borrow_mut();
 
@@ -52,7 +53,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_package(&mut self, package: Package<'a>) {
         self.package_mask = package.get_id() << 24;
 
-        let package_id = (self.package_mask >> 24) as u8;
+        let package_id = self.package_mask.get_package();
         let mut rp = ResourcesPackage::default();
         rp.add_package(package);
         self.resources.push_package(package_id, rp);
@@ -71,7 +72,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 ((ts.get_id() as u32) << 16);
             let entries = table_type.get_entries(ts, mask).unwrap();
 
-            let package_id = (self.package_mask >> 24) as u8;
+            let package_id = self.package_mask.get_package();
             let package = self.resources.get_package(package_id);
             let mut package_borrow = package.borrow_mut();
 
@@ -166,7 +167,7 @@ impl<'a> ResourcesPackage<'a> {
     }
 
     pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Option<String> {
-        let spec_id = (id & 0x00FF0000) >> 16;
+        let spec_id = id.get_spec() as u32;
         let spec_str = self.get_spec_as_str(spec_id).unwrap();
         let string = self.get_entries_string(key).unwrap();
 

@@ -8,6 +8,7 @@ use std::io::Write;
 use std::rc::Rc;
 use errors::*;
 use visitor::Resources;
+use model::Identifier;
 
 pub struct Xml;
 
@@ -79,14 +80,15 @@ impl Xml {
     }
 
     fn resolve_reference(id: u32, resources: &Resources, prefix: &str) -> Option<String> {
-        let mut res_id = id;
-        let mut package_id = (id >> 24) as u8;
+        let res_id = id;
+        let package_id = id.get_package();
 
-        if package_id == 0 {
+        // TODO: Check if this is necessary
+        /*if package_id == 1 {
             res_id = ((0xFF & 1) << 24) | id;
             package_id = 1;
             info!("Resource with package id 0 found. Recreate id with current package id");
-        }
+        }*/
 
         let is_main = resources.is_main_package(package_id);
         let package = resources.get_package(package_id);
@@ -116,7 +118,7 @@ impl Xml {
         let name_index = attribute.get_name_index();
         if name_index < xml_resources.len() as u32 {
             let entry_ref = xml_resources.get(name_index as usize).unwrap();
-            let package_id = entry_ref >> 24;
+            let package_id = entry_ref.get_package();
             let package = resources.get_package(package_id as u8);
 
             let str_indexes = {
