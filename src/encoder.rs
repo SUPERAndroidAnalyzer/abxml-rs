@@ -141,7 +141,7 @@ impl Xml {
                 for ie in sorted {
                     let mask = ie.get_value().unwrap_or(0);
 
-                    if mask != 0 && (mask & flags) == mask {
+                    if (mask & flags) == mask {
                         let maybe_entry = pb.get_entry(ie.get_id());
 
                         match maybe_entry {
