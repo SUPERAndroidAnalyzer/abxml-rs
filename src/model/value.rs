@@ -1,15 +1,22 @@
-
-use std::collections::{BTreeMap, HashMap};
-use std::fmt::{Display, Formatter};
-use std::fmt::Error as FmtError;
 use std::rc::Rc;
-use std::ops::Deref;
-use errors::*;
-use std::result::Result as StdResult;
-use chunks::*;
+use chunks::StringTable;
 use std::mem;
+use errors::*;
+use std::ops::Deref;
 
-
+const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
+const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
+const TOKEN_TYPE_STRING: u8 = 0x03;
+const TOKEN_TYPE_FLOAT: u8 = 0x04;
+const TOKEN_TYPE_DIMENSION: u8 = 0x05;
+const TOKEN_TYPE_FRACTION: u8 = 0x06;
+const TOKEN_TYPE_DYN_REFERENCE: u8 = 0x07;
+const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08;
+const TOKEN_TYPE_INTEGER: u8 = 0x10;
+const TOKEN_TYPE_FLAGS: u8 = 0x11;
+const TOKEN_TYPE_BOOLEAN: u8 = 0x12;
+const TOKEN_TYPE_COLOR: u8 = 0x1C; // ARGB8
+const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 #[derive(Debug)]
 pub enum Value {
@@ -26,20 +33,6 @@ pub enum Value {
     AttributeReferenceId(u32),
     Unknown,
 }
-
-const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
-const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
-const TOKEN_TYPE_STRING: u8 = 0x03;
-const TOKEN_TYPE_FLOAT: u8 = 0x04;
-const TOKEN_TYPE_DIMENSION: u8 = 0x05;
-const TOKEN_TYPE_FRACTION: u8 = 0x06;
-const TOKEN_TYPE_DYN_REFERENCE: u8 = 0x07;
-const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08;
-const TOKEN_TYPE_INTEGER: u8 = 0x10;
-const TOKEN_TYPE_FLAGS: u8 = 0x11;
-const TOKEN_TYPE_BOOLEAN: u8 = 0x12;
-const TOKEN_TYPE_COLOR: u8 = 0x1C; // ARGB8
-const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 impl Value {
     pub fn to_string(&self) -> String {
@@ -89,7 +82,7 @@ impl Value {
                     },
                     None => {
                         return Err(format!("Expected a valid unit index. Got: {}",
-                                unit_idx).into())
+                                           unit_idx).into())
                     }
                 }
             }
@@ -154,53 +147,5 @@ impl Value {
         let idx = (data >> 4) & 0x3;
 
         m * radix[idx as usize]
-    }
-}
-
-#[derive(Debug)]
-pub struct Attribute {
-    name: Rc<String>,
-    namespace: Option<Rc<String>>,
-    prefix: Option<Rc<String>>,
-    value: Value,
-    name_index: u32,
-    //resource_id: Option<u32>,
-}
-
-impl Attribute {
-    pub fn new(name: Rc<String>,
-               value: Value,
-               namespace: Option<Rc<String>>,
-               prefix: Option<Rc<String>>,
-                name_index: u32,
-    ) -> Self {
-        Attribute {
-            name: name,
-            namespace: namespace,
-            prefix: prefix,
-            value: value,
-            name_index: name_index,
-            //resource_id: None,
-        }
-    }
-
-    pub fn get_name(&self) -> Rc<String> {
-        self.name.clone()
-    }
-
-    pub fn get_value_as_str(&self) -> String {
-        self.value.to_string()
-    }
-
-    pub fn get_value(&self) -> &Value {
-        &self.value
-    }
-
-    pub fn get_prefix(&self) -> Option<Rc<String>> {
-        self.prefix.clone()
-    }
-
-    pub fn get_name_index(&self) -> u32 {
-        self.name_index
     }
 }

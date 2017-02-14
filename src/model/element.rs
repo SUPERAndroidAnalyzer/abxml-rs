@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use document::Attribute;
+use model::Attribute;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
