@@ -2,10 +2,10 @@ use chunks::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
-use document::{Value, Attribute, Namespaces};
+use document::{Value, Attribute};
 use errors::*;
 use std::clone::Clone;
-use model::Identifier;
+use model::{Identifier, Namespaces};
 
 pub struct XmlDecoder;
 

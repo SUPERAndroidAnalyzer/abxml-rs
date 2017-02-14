@@ -1,5 +1,5 @@
 use chunks::*;
-use document::{Namespaces, Element, ElementContainer};
+use model::{Element, ElementContainer, Namespaces};
 
 use super::ChunkVisitor;
 use super::Origin;

@@ -1,3 +1,15 @@
+use std::collections::{BTreeMap, HashMap};
+use std::rc::Rc;
+use chunks::table_type::Entry;
+
+mod element;
+
+pub use self::element::Element as Element;
+pub use self::element::ElementContainer as ElementContainer;
+
+pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
+pub type Entries = HashMap<u32, Entry>;
+
 pub trait Identifier {
     fn get_package(&self) -> u8;
     fn get_spec(&self) -> u8;
