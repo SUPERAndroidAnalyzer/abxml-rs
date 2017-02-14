@@ -1,4 +1,5 @@
 use chunks::*;
+use model::StringTable as StringTableTrait;
 
 use super::ChunkVisitor;
 use super::Origin;
