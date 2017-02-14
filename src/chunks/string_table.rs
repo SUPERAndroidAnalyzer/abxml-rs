@@ -8,6 +8,7 @@ use std::collections::hash_map::{HashMap, Entry};
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
+use model::StringTable as StringTableTrait;
 
 pub struct StringTableDecoder;
 
@@ -137,6 +138,25 @@ impl<'a> Display for StringTable<'a> {
     }
 }
 
+impl<'a> StringTableTrait for StringTable<'a> {
+    fn get_strings_len(&self) -> u32 {
+        self.wrapper.get_strings_len()
+    }
+
+    fn get_styles_len(&self) -> u32 {
+        self.wrapper.get_styles_len()
+    }
+
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+        if idx > self.get_strings_len() {
+            return Err("Index out of bounds".into());
+        }
+
+        let string = self.wrapper.get_string(idx)?;
+        Ok(Rc::new(string))
+    }
+}
+
 impl<'a> StringTable <'a> {
     pub fn new(wrapper: StringTableWrapper<'a>) -> Self {
         StringTable {
@@ -145,15 +165,8 @@ impl<'a> StringTable <'a> {
         }
     }
 
-    pub fn get_strings_len(&self) -> u32 {
-        self.wrapper.get_strings_len()
-    }
-
-    pub fn get_styles_len(&self) -> u32 {
-        self.wrapper.get_styles_len()
-    }
-
     pub fn get_string(&mut self, idx: u32) -> Result<Rc<String>> {
+        // TODO: THinkf about how to be able to cache this. Check serde or serde_json to check how they did it
         if idx > self.get_strings_len() {
             return Err("Index out of bounds".into());
         }

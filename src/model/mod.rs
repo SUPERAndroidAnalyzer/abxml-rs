@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use chunks::table_type::Entry;
+use errors::*;
 
 mod element;
 mod value;
@@ -39,6 +40,13 @@ impl Identifier for u32 {
     fn get_id(&self) -> u16 {
         (self & 0xFFFF) as u16
     }
+}
+
+// Traits
+pub trait StringTable {
+    fn get_strings_len(&self) -> u32;
+    fn get_styles_len(&self) ->  u32;
+    fn get_string(&self, idx: u32) -> Result<Rc<String>>;
 }
 
 #[cfg(test)]
