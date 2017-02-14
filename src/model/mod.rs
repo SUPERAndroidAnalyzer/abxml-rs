@@ -3,9 +3,13 @@ use std::rc::Rc;
 use chunks::table_type::Entry;
 
 mod element;
+mod value;
+mod attribute;
 
 pub use self::element::Element as Element;
 pub use self::element::ElementContainer as ElementContainer;
+pub use self::value::Value as Value;
+pub use self::attribute::Attribute as Attribute;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 pub type Entries = HashMap<u32, Entry>;
