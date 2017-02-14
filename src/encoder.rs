@@ -1,14 +1,14 @@
 use quick_xml::{Element,    XmlWriter};
 use quick_xml::Event::*;
 use std::io::Cursor;
-use document::Element as AbxmlElement;
-use document::{Namespaces, Value, Attribute};
+use model::Element as AbxmlElement;
+use document::{Value, Attribute};
 use std::ops::Deref;
 use std::io::Write;
 use std::rc::Rc;
 use errors::*;
 use visitor::Resources;
-use model::Identifier;
+use model::{Identifier, Namespaces};
 
 pub struct Xml;
 

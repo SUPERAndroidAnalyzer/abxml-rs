@@ -1,10 +1,9 @@
 use chunks::*;
 use errors::*;
-use document::Entries;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use model::Identifier;
+use model::{Identifier, Entries};
 
 use super::ChunkVisitor;
 use super::Origin;
