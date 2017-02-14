@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use chunks::StringTable;
+use model::StringTable;
 use std::mem;
 use errors::*;
 use std::ops::Deref;
