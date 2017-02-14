@@ -9,7 +9,6 @@ extern crate error_chain;
 #[macro_use]
 extern crate log;
 
-mod document;
 pub mod encoder;
 pub mod chunks;
 pub mod visitor;
