@@ -289,6 +289,13 @@ impl Entry {
             Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into())
         }
     }
+
+    pub fn get_key(&self) -> u32 {
+        match *self {
+            Entry::Complex(ref complex) => complex.get_key(),
+            Entry::Simple(ref simple) => simple.get_key(),
+        }
+    }
 }
 
 pub struct Region {
