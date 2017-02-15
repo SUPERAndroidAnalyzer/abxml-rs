@@ -93,12 +93,6 @@ impl Xml {
         let entry_key = package_borrow
             .get_entries()
             .get(&res_id)
-            .and_then(|e| {
-                match e.simple() {
-                    Ok(simple) => Some(simple),
-                    Err(_) => None
-                }
-            })
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
