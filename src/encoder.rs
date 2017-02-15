@@ -93,6 +93,12 @@ impl Xml {
         let entry_key = package_borrow
             .get_entries()
             .get(&res_id)
+            .and_then(|e| {
+                match e.simple() {
+                    Ok(simple) => Some(simple),
+                    Err(_) => None
+                }
+            })
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
@@ -122,14 +128,13 @@ impl Xml {
                 let mut masks = Vec::new();
 
                 let pb = package.borrow();
-                let entry = pb.get_entry(*entry_ref).unwrap();
-                let inner_entries = entry.get_entries().unwrap();
+                let entry = pb.get_entry(*entry_ref).unwrap().complex().unwrap();
+                let inner_entries = entry.get_entries();
                 let mut sorted = inner_entries.to_vec();
 
                 sorted.sort_by(|a, b| {
-                    // TODO: Sort by bit-count?
-                    let id_a = a.get_value().unwrap();
-                    let id_b = b.get_value().unwrap();
+                    let id_a = a.get_value();
+                    let id_b = b.get_value();
 
                     // TODO: This code is to create an exact match with Apktool. A simple descending ordering seems to be also ok.
                     let mut i = id_a;
@@ -152,7 +157,7 @@ impl Xml {
                 });
 
                 for ie in sorted {
-                    let mask = ie.get_value().unwrap_or(0);
+                    let mask = ie.get_value();
 
                     if (mask & flags) == mask {
                         let maybe_entry = pb.get_entry(ie.get_id());
@@ -169,7 +174,7 @@ impl Xml {
                                 }
 
                                 if has_to_add {
-                                    strs.push(entry.get_key());
+                                    strs.push(entry.simple().unwrap().get_key());
                                     masks.push(mask);
                                 }
                             },
@@ -182,8 +187,6 @@ impl Xml {
 
                 strs
             };
-
-//            println!("Children: {:?}", str_indexes);
 
             let str_strs: Vec<String> = str_indexes
                 .iter()
