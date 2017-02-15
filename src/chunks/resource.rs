@@ -26,18 +26,18 @@ impl<'a> ResourceWrapper<'a> {
         }
     }
 
-    pub fn get_resources(&self) -> Vec<u32> {
+    pub fn get_resources(&self) -> Result<Vec<u32>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(4));
 
-        let count = cursor.read_u32::<LittleEndian>().unwrap();
+        let count = cursor.read_u32::<LittleEndian>()?;
         let mut resources = Vec::with_capacity(count as usize);
 
-        for _ in 0..((count / 4) - 2) {
-            resources.push(cursor.read_u32::<LittleEndian>().unwrap());
+        for _ in 0..(count / 4) {
+            resources.push(cursor.read_u32::<LittleEndian>()?);
         }
 
-        resources
+        Ok(resources)
     }
 }
 
@@ -53,7 +53,7 @@ impl<'a> Resource<'a> {
         }
     }
 
-    pub fn get_resources(&self) -> Vec<u32> {
+    pub fn get_resources(&self) -> Result<Vec<u32>> {
         self.wrapper.get_resources()
     }
 }
