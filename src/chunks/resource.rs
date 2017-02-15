@@ -57,3 +57,45 @@ impl<'a> Resource<'a> {
         self.wrapper.get_resources()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use model::owned::ResourceBuf;
+    use chunks::*;
+    use byteorder::{LittleEndian, WriteBytesExt};
+    use model::owned::OwnedBuf;
+    use errors::ErrorKind::Io;
+
+    #[test]
+    fn it_can_not_decode_a_buffer_with_an_invalid_size() {
+        let mut resources = ResourceBuf::new();
+        resources.push_resource(111);
+        resources.push_resource(222);
+        let mut out = resources.to_vec().unwrap();
+
+        out[4] = 255;
+
+        let chunk_header = ChunkHeader::new(0, 8, 255, 0x0180);
+        let wrapper = ResourceWrapper::new(&out, chunk_header);
+
+        let result = wrapper.get_resources();
+        assert!(result.is_err());
+        assert_eq!("failed to fill whole buffer", result.err().unwrap().to_string());
+    }
+
+    #[test]
+    fn it_can_not_decode_a_buffer_if_chunk_header_is_not_correct() {
+        let mut resources = ResourceBuf::new();
+        resources.push_resource(111);
+        resources.push_resource(222);
+        let mut out = resources.to_vec().unwrap();
+
+        let chunk_header = ChunkHeader::new(3000, 8, 2*4, 0x0180);
+        let wrapper = ResourceWrapper::new(&out, chunk_header);
+
+        let result = wrapper.get_resources();
+        assert!(result.is_err());
+        assert_eq!("failed to fill whole buffer", result.err().unwrap().to_string());
+    }
+}

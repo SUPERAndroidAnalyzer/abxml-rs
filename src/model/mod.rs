@@ -6,7 +6,7 @@ use errors::*;
 mod element;
 mod value;
 mod attribute;
-mod owned;
+pub mod owned;
 
 pub use self::element::Element as Element;
 pub use self::element::ElementContainer as ElementContainer;
