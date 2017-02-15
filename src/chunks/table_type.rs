@@ -106,17 +106,8 @@ impl<'a> TableTypeWrapper<'a> {
         let val_type = cursor.read_u8()?;
         let data = cursor.read_u32::<LittleEndian>()?;
 
-        if id == 2131361986 {
-            println!("Decoding simple entry: {:X}; data: {}", val_type, data);
-        }
-
-        let entry = Entry::new_simple(
-            id,
-            header.get_key_index(),
-            size,
-            val_type,
-            data,
-        );
+        let simple = SimpleEntry::new(id, header.get_key_index(), val_type, data);
+        let entry = Entry::Simple(simple);
 
         Ok(Some(entry))
     }
@@ -125,7 +116,6 @@ impl<'a> TableTypeWrapper<'a> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
-        //println!("Current: {}/{}; Amount of values: {}; parent: {}", cursor.position(), cursor.get_ref().len(), value_count, parent_entry);
 
         if value_count == 0xFFFFFFFF {
             return Ok(None);
@@ -141,18 +131,13 @@ impl<'a> TableTypeWrapper<'a> {
             let val_type = cursor.read_u8()?;
             let data = cursor.read_u32::<LittleEndian>()?;
 
-            let simple_entry = Entry::new_simple(
-                val_id,
-                header.get_key_index(),
-                size,
-                val_type,
-                data,
-            );
+            let simple_entry = SimpleEntry::new(val_id, header.get_key_index(), val_type, data);
 
             entries.push(simple_entry);
         }
 
-        let entry = Entry::new_complex(id, header.get_key_index(), parent_entry, entries);
+        let complex = ComplexEntry::new(id, header.get_key_index(), parent_entry, entries);
+        let entry = Entry::Complex(complex);
 
         Ok(Some(entry))
     }
@@ -212,46 +197,47 @@ impl EntryHeader {
 }
 
 #[derive(Debug, Clone)]
-pub enum Entry {
-    Simple {
-        id: u32,
-        key_index: u32,
-        size: u16,
-        value_type: u8,
-        value_data: u32,
-    },
-    Complex {
-        id: u32,
-        key_index: u32,
-        parent_entry_id: u32,
-        entries: Vec<Entry>,   // TODO: split this class, Entry will be Entry::Simple here and it can be enforce by type system
-    }
+pub struct SimpleEntry {
+    id: u32,
+    key_index: u32,
+    value_type: u8,
+    value_data: u32,
 }
 
-impl Entry {
-    pub fn new_simple(
-        id: u32,
-        key_index: u32,
-        size: u16,
-        value_type: u8,
-        value_data: u32,
-    ) -> Self {
-        Entry::Simple {
+impl SimpleEntry {
+    pub fn new(id: u32, key_index: u32, value_type: u8, value_data: u32) -> Self {
+        SimpleEntry {
             id: id,
             key_index: key_index,
-            size: size,
             value_type: value_type,
             value_data: value_data,
         }
     }
 
-    pub fn new_complex(
-        id: u32,
-        key_index: u32,
-        parent_entry_id: u32,
-        entries: Vec<Entry>,
-    ) -> Self {
-        Entry::Complex{
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
+
+    pub fn get_key(&self) -> u32 {
+        self.key_index
+    }
+
+    pub fn get_value(&self) -> u32 {
+        self.value_data
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ComplexEntry {
+    id: u32,
+    key_index: u32,
+    parent_entry_id: u32,
+    entries: Vec<SimpleEntry>,
+}
+
+impl ComplexEntry {
+    pub fn new(id: u32, key_index: u32, parent_entry_id: u32, entries: Vec<SimpleEntry>) -> Self {
+        ComplexEntry {
             id: id,
             key_index: key_index,
             parent_entry_id: parent_entry_id,
@@ -260,59 +246,47 @@ impl Entry {
     }
 
     pub fn get_id(&self) -> u32 {
-        match *self {
-            Entry::Simple{id: index, ..} |
-            Entry::Complex{id: index, ..} => {
-                index
-            },
-        }
+        self.id
     }
 
     pub fn get_key(&self) -> u32 {
-        match *self {
-            Entry::Simple{key_index: ki, ..} |
-            Entry::Complex{key_index: ki, ..} => {
-                ki
-            },
-        }
-    }
-
-    pub fn get_entries(&self) -> Result<&Vec<Self>> {
-        match *self {
-            Entry::Simple{..} => {
-                Err("Can not retrieve entries on simple entry".into())
-            },
-            Entry::Complex{entries: ref entries, ..} => {
-                Ok(entries)
-            },
-        }
-    }
-
-    pub fn get_value(&self) -> Option<u32> {
-        match *self {
-            Entry::Simple {value_data: value_data, ..} => {
-                Some(value_data)
-            },
-            Entry::Complex {..} => {
-                None
-            }
-        }
+        self.key_index
     }
 
     pub fn get_referent_id(&self, value: u32) -> Option<u32> {
-        match *self {
-            Entry::Simple {..} => {
-                None
-            },
-            Entry::Complex {entries: ref entries, ..} => {
-                for e in entries {
-                    if e.get_value() == Some(value) {
-                        return Some(e.get_id());
-                    }
-                }
-
-                None
+        for e in self.entries.iter() {
+            if e.get_value() == value {
+                return Some(e.get_id());
             }
+        }
+
+        None
+    }
+
+    pub fn get_entries(&self) -> &Vec<SimpleEntry> {
+        &self.entries
+    }
+
+}
+
+#[derive(Debug, Clone)]
+pub enum Entry {
+    Simple(SimpleEntry),
+    Complex(ComplexEntry)
+}
+
+impl Entry {
+    pub fn simple(&self) -> Result<&SimpleEntry> {
+        match *self {
+            Entry::Simple(ref simple) => Ok(&simple),
+            Entry::Complex(_) => Err("Asked for a complex entry on a simple one".into())
+        }
+    }
+
+    pub fn complex(&self) -> Result<&ComplexEntry> {
+        match *self {
+            Entry::Complex(ref complex) => Ok(&complex),
+            Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into())
         }
     }
 }
