@@ -74,7 +74,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     }
 
     fn visit_resource(&mut self, resource: Resource<'a>) {
-        let res = resource.get_resources();
+        let res = resource.get_resources().unwrap();
         self.res = res;
     }
 }
