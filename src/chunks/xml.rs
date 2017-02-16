@@ -50,30 +50,30 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         }
     }
 
-    pub fn get_prefix_index(&self) -> u32 {
+    pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(16));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_namespace_index(&self) -> u32 {
+    pub fn get_namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(20));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     pub fn get_prefix(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
-        let index = self.get_prefix_index();
-        let string = string_table.get_string(index).unwrap();
+        let index = self.get_prefix_index()?;
+        let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
     pub fn get_namespace(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
-        let index = self.get_namespace_index();
-        let string = string_table.get_string(index).unwrap();
+        let index = self.get_namespace_index()?;
+        let string = string_table.get_string(index)?;
 
         Ok(string)
     }
@@ -244,7 +244,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         let mut prefix = None;
 
         if attr_ns_idx != TOKEN_VOID {
-            let uri = string_table.get_string(attr_ns_idx).unwrap().clone();
+            let uri = string_table.get_string(attr_ns_idx)?.clone();
 
             if let Some(uri_prefix) = namespaces.get(&uri) {
                 namespace = Some(uri);
@@ -255,10 +255,10 @@ impl<'a> XmlTagStartWrapper<'a> {
         let value = if attr_value_idx == TOKEN_VOID {
             Value::new(attr_type_idx as u8, attr_data, string_table)?
         } else {
-            Value::String(string_table.get_string(attr_value_idx).unwrap().clone())
+            Value::String(string_table.get_string(attr_value_idx)?.clone())
         };
 
-        let element_name = string_table.get_string(attr_name_idx).unwrap().clone();
+        let element_name = string_table.get_string(attr_name_idx)?.clone();
 
         Ok(Attribute::new(element_name, value, namespace, prefix, attr_name_idx))
     }
@@ -276,11 +276,15 @@ impl Attributes {
     }
 
     pub fn get_namespace(&self) -> Result<u32> {
-        Ok(*self.values.get(0).unwrap())
+        self.values.get(0)
+            .map(|v| *v)
+            .ok_or("Error reading namespace".into())
     }
 
     pub fn get_name(&self) -> Result<u32> {
-        Ok(*self.values.get(1).unwrap())
+        self.values.get(1)
+            .map(|v| *v)
+            .ok_or("Error reading name".into())
     }
 
     pub fn get_class(&self) -> Result<()> {
@@ -292,11 +296,15 @@ impl Attributes {
     }
 
     pub fn get_resource_value(&self) -> Result<u8> {
-        Ok(*self.values.get(3).unwrap() as u8)
+        self.values.get(3)
+            .map(|v| *v as u8)
+            .ok_or("Error reading value".into())
     }
 
     pub fn get_data(&self) -> Result<u32> {
-        Ok(*self.values.get(4).unwrap())
+        self.values.get(4)
+            .map(|v| *v)
+            .ok_or("Error reading data".into())
     }
 }
 

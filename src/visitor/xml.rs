@@ -43,15 +43,14 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     }
 
     fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStart<'a>) {
-        match self.main_string_table {
-            Some(ref mut string_table) => {
-                self.namespaces.insert(
-                    namespace_start.get_namespace(string_table).unwrap(),
-                    namespace_start.get_prefix(string_table).unwrap(),
-                );
-            },
-            None => {
-                println!("No main string table found!");
+        if let Some(ref mut string_table) = self.main_string_table {
+            match (namespace_start.get_namespace(string_table), namespace_start.get_prefix(string_table)) {
+                (Ok(namespace), Ok(prefix)) => {
+                    self.namespaces.insert(namespace, prefix);
+                },
+                _ => {
+                    error!("Error reading namespace from the string table");
+                }
             }
         }
     }
@@ -59,12 +58,18 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_tag_start(&mut self, tag_start: XmlTagStart<'a>) {
         match self.main_string_table {
             Some(ref mut string_table) => {
-                let (attributes, element_name) = tag_start.get_tag(&self.namespaces, string_table).unwrap();
-                let element = Element::new(element_name, attributes);
-                self.container.start_element(element);
+                match tag_start.get_tag(&self.namespaces, string_table) {
+                    Ok((attributes, element_name)) => {
+                        let element = Element::new(element_name, attributes);
+                        self.container.start_element(element);
+                    },
+                    _ => {
+                        error!("Could not retrieve tag");
+                    }
+                }
             },
             None => {
-                println!("No main string table found!");
+                error!("No main string table found!");
             }
         }
     }
@@ -74,7 +79,8 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     }
 
     fn visit_resource(&mut self, resource: Resource<'a>) {
-        let res = resource.get_resources().unwrap();
-        self.res = res;
+        if let Ok(res) = resource.get_resources() {
+            self.res = res;
+        }
     }
 }
