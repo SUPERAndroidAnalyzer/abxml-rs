@@ -21,11 +21,11 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
 
     fn visit_table_type(&mut self, table_type: TableType) {
         println!("Table type!");
-        println!("\tId: {}", table_type.get_id());
+        println!("\tId: {}", table_type.get_id().unwrap());
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpec) {
         println!("Type spec!");
-        println!("\tId: {}", type_spec.get_id());
+        println!("\tId: {}", type_spec.get_id().unwrap());
     }
 }

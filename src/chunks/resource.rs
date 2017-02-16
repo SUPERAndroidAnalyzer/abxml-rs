@@ -75,9 +75,7 @@ mod tests {
     use super::*;
     use model::owned::ResourceBuf;
     use chunks::*;
-    use byteorder::{LittleEndian, WriteBytesExt};
     use model::owned::OwnedBuf;
-    use errors::ErrorKind::Io;
 
     #[test]
     fn it_can_not_decode_a_buffer_with_an_invalid_size() {
@@ -101,7 +99,7 @@ mod tests {
         let mut resources = ResourceBuf::new();
         resources.push_resource(111);
         resources.push_resource(222);
-        let mut out = resources.to_vec().unwrap();
+        let out = resources.to_vec().unwrap();
 
         let chunk_header = ChunkHeader::new(3000, 8, 2*4, 0x0180);
         let wrapper = ResourceWrapper::new(&out, chunk_header);

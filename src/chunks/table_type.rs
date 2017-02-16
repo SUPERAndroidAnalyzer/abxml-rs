@@ -29,18 +29,18 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
-    pub fn get_id(&self) -> u32 {
+    pub fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_amount(&self) -> u32 {
+    pub fn get_amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(12));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     pub fn get_configuration(&self) -> Result<ResourceConfiguration> {
@@ -62,11 +62,11 @@ impl<'a> TableTypeWrapper<'a> {
         let mut offsets = Vec::new();
         let mut entries = HashMap::new();
 
-        for _ in 0..self.get_amount() {
+        for _ in 0..self.get_amount()? {
             offsets.push(cursor.read_u32::<LittleEndian>()?);
         }
 
-        for i in 0..self.get_amount() {
+        for i in 0..self.get_amount()? {
             let id = mask | (i & 0xFFFF);
 
             if offsets[i as usize] != 0xFFFFFFFF {
@@ -153,11 +153,11 @@ impl<'a> TableType<'a> {
         }
     }
 
-    pub fn get_id(&self) -> u8 {
-        (self.wrapper.get_id() & 0xF) as u8
+    pub fn get_id(&self) -> Result<u8> {
+        Ok((self.wrapper.get_id()? & 0xF) as u8)
     }
 
-    pub fn get_amount(&self) -> u32 {
+    pub fn get_amount(&self) -> Result<u32> {
         self.wrapper.get_amount()
     }
 
