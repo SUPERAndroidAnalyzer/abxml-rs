@@ -80,7 +80,7 @@ mod tests {
     #[should_panic]
     pub fn it_panics_from_relative_out_of_bound() {
         let chunk = ChunkHeader::new(4000, 8, 500, 0);
-        let res = chunk.absolute(510);
+        chunk.absolute(510);
     }
 
     #[test]

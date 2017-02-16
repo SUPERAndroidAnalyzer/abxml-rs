@@ -67,15 +67,23 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
     fn visit_table_type(&mut self, table_type: TableType<'a>) {
         if let Some(ref ts) = self.current_spec {
-            let mask = self.package_mask |
-                ((ts.get_id() as u32) << 16);
-            let entries = table_type.get_entries(ts, mask).unwrap();
+            let result = ts.get_id()
+                .and_then(|id| {
+                    Ok(self.package_mask | ((id as u32) << 16))
+                })
+                .and_then(|mask| table_type.get_entries(ts, mask))
+                .and_then(|entries| {
+                    let package_id = self.package_mask.get_package();
+                    let package = self.resources.get_package(package_id);
+                    let mut package_borrow = package.borrow_mut();
 
-            let package_id = self.package_mask.get_package();
-            let package = self.resources.get_package(package_id);
-            let mut package_borrow = package.borrow_mut();
+                    package_borrow.add_entries(entries);
+                    Ok(())
+                });
 
-            package_borrow.add_entries(entries);
+            if result.is_err() {
+                error!("Error visiting table_type");
+            }
         }
     }
 
@@ -214,9 +222,9 @@ impl<'a> ResourcesPackage<'a> {
 
     fn get_spec_as_str(&mut self, spec_id: u32) -> Option<String>
     {
-        if let Some(spec) = self.specs.get((spec_id - 1) as usize) {
+        if let Some(_) = self.specs.get((spec_id - 1) as usize) {
             if let Some(ref mut spec_string_table) = self.spec_string_table {
-                if let Ok(spec_str) = spec_string_table.get_string((spec.get_id() - 1) as u32) {
+                if let Ok(spec_str) = spec_string_table.get_string((spec_id - 1) as u32) {
                     return Some((*spec_str).clone());
                 }
             }

@@ -26,11 +26,11 @@ impl<'a> TypeSpecWrapper<'a> {
         }
     }
 
-    pub fn get_id(&self) -> u32 {
+    pub fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 }
 
@@ -46,7 +46,7 @@ impl<'a> TypeSpec<'a> {
         }
     }
 
-    pub fn get_id(&self) -> u16 {
-        (self.wrapper.get_id() & 0xFF) as u16
+    pub fn get_id(&self) -> Result<u16> {
+        Ok((self.wrapper.get_id()? & 0xFF) as u16)
     }
 }
