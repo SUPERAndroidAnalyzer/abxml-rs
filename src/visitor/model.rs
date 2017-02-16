@@ -50,7 +50,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 
     fn visit_package(&mut self, package: Package<'a>) {
-        self.package_mask = package.get_id() << 24;
+        self.package_mask = package.get_id().unwrap() << 24;
 
         let package_id = self.package_mask.get_package();
         let mut rp = ResourcesPackage::default();

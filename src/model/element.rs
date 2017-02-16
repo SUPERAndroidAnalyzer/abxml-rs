@@ -69,15 +69,21 @@ impl ElementContainer {
     }
 
     pub fn end_element(&mut self) {
-        let element = self.stack.pop().unwrap();
+        self.stack.pop()
+            .and_then(|element| {
+                if self.stack.is_empty() {
+                    self.root = Some(element);
+                } else {
+                    // Append child to current element
+                    let last_element = self.stack.len();
+                    self.stack[last_element - 1].append(element);
+                }
 
-        if self.stack.is_empty() {
-            self.root = Some(element);
-        } else {
-            // Append child to current element
-            let last_element = self.stack.len();
-            self.stack[last_element - 1].append(element);
-        }
+                Some(())
+            })
+            .unwrap_or_else(|| {
+                error!("Received an end element event with an empty stack");
+            });
     }
 
     pub fn get_root(&self) -> &Option<Element> {
