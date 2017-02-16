@@ -34,34 +34,46 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             },
             _ => {
                 let package_id = self.package_mask.get_package();
-                let package = self.resources.get_package(package_id);
-                let mut package_borrow = package.borrow_mut();
 
-                package_borrow.set_string_table(string_table, origin);
+                let st_res = self.resources.get_package(package_id)
+                    .and_then(|package| {
+                        let mut package_borrow = package.borrow_mut();
+                        package_borrow.set_string_table(string_table, origin);
+
+                        Ok(())
+                    });
+
+                if st_res.is_err() {
+                    error!("Could not retrieve target package");
+                }
             },
         }
-
-
-        /*let package_id = (self.package_mask >> 24) as u8;
-        let package = self.resources.get_package(package_id);
-        let mut package_borrow = package.borrow_mut();
-
-        package_borrow.set_string_table(string_table, origin);*/
     }
 
     fn visit_package(&mut self, package: Package<'a>) {
-        self.package_mask = package.get_id().unwrap() << 24;
+        if let Ok(package_id) = package.get_id() {
+            self.package_mask = package_id << 24;
 
-        let package_id = self.package_mask.get_package();
-        let mut rp = ResourcesPackage::default();
-        rp.add_package(package);
-        self.resources.push_package(package_id, rp);
+            let package_id = self.package_mask.get_package();
+            let mut rp = ResourcesPackage::default();
+            rp.add_package(package);
+            self.resources.push_package(package_id, rp);
 
-        if self.tables.contains_key(&Origin::Global) {
-            let st = self.tables.remove(&Origin::Global).unwrap();
-            let package_mut = self.resources.get_package(package_id);
-            let mut package_borrow = package_mut.borrow_mut();
-            package_borrow.set_string_table(st, Origin::Global);
+            if self.tables.contains_key(&Origin::Global) {
+                if let Some(st) = self.tables.remove(&Origin::Global) {
+                    let set_result = self.resources.get_package(package_id)
+                        .and_then(|package_mut| {
+                            let mut package_borrow = package_mut.borrow_mut();
+                            package_borrow.set_string_table(st, Origin::Global);
+
+                            Ok(())
+                        });
+
+                    if set_result.is_err() {
+                        error!("Could not set the string table because it refers to a non-existing package");
+                    }
+                }
+            }
         }
     }
 
@@ -74,11 +86,16 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 .and_then(|mask| table_type.get_entries(ts, mask))
                 .and_then(|entries| {
                     let package_id = self.package_mask.get_package();
-                    let package = self.resources.get_package(package_id);
-                    let mut package_borrow = package.borrow_mut();
 
-                    package_borrow.add_entries(entries);
-                    Ok(())
+                    let package = self.resources.get_package(package_id)
+                        .and_then(|package| {
+                            let mut package_borrow = package.borrow_mut();
+                            package_borrow.add_entries(entries);
+
+                            Ok(())
+                        });
+
+                    package
                 });
 
             if result.is_err() {
@@ -90,10 +107,15 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_type_spec(&mut self, type_spec: TypeSpec<'a>) {
         self.current_spec = Some(type_spec.clone());
         let package_id = (self.package_mask >> 24) as u8;
-        let package = self.resources.get_package(package_id);
-        let mut package_borrow = package.borrow_mut();
-
-        package_borrow.add_type_spec(type_spec);
+        match self.resources.get_package(package_id) {
+            Ok(package) => {
+                let mut package_borrow = package.borrow_mut();
+                package_borrow.add_type_spec(type_spec);
+            },
+            Err(_) => {
+                error!("Type spec refers to a non existing package");
+            }
+        }
     }
 }
 
@@ -114,14 +136,19 @@ impl<'a> Resources<'a> {
         self.packages.insert(package_id, Rc::new(RefCell::new(package)));
     }
 
-    pub fn get_package(&self, package_id: u8) -> RefPackage<'a> {
-        self.packages.get(&package_id).unwrap().clone()
+    pub fn get_package(&self, package_id: u8) -> Result<RefPackage<'a>> {
+        self.packages.get(&package_id)
+            .map(|package| package.clone())
+            .ok_or("Target package not found".into())
     }
 
     pub fn get_main_package(&self) -> Option<RefPackage<'a>> {
         match self.main_package {
             Some(package_id) => {
-                Some(self.packages.get(&package_id).unwrap().clone())
+                match self.packages.get(&package_id) {
+                    Some(package) => Some(package.clone()),
+                    None => None,
+                }
             },
             _ => None,
         }
@@ -173,10 +200,10 @@ impl<'a> ResourcesPackage<'a> {
         }
     }
 
-    pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Option<String> {
+    pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
         let spec_id = id.get_spec() as u32;
-        let spec_str = self.get_spec_as_str(spec_id).unwrap();
-        let string = self.get_entries_string(key).unwrap();
+        let spec_str = self.get_spec_as_str(spec_id)?;
+        let string = self.get_entries_string(key)?;
 
         let ending = if spec_str == "attr" {
             string
@@ -186,9 +213,9 @@ impl<'a> ResourcesPackage<'a> {
 
         match namespace {
             Some(ns) => {
-                Some(format!("{}{}:{}", prefix, ns, ending))
+                Ok(format!("{}{}:{}", prefix, ns, ending))
             },
-            None => Some(format!("{}{}", prefix, ending)),
+            None => Ok(format!("{}{}", prefix, ending)),
         }
     }
 
@@ -200,36 +227,36 @@ impl<'a> ResourcesPackage<'a> {
         self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
     }
 
-    pub fn get_entries_string(&mut self, str_id: u32) -> Option<String> {
+    pub fn get_entries_string(&mut self, str_id: u32) -> Result<String> {
         if let Some(ref mut string_table) = self.entries_string_table {
-            let out_string = string_table.get_string(str_id).unwrap();
+            let out_string = string_table.get_string(str_id)?;
 
-            return Some((*out_string).clone())
+            return Ok((*out_string).clone())
         }
 
-        None
+        Err("String not found on entries string table".into())
     }
 
-    pub fn get_spec_string(&mut self, str_id: u32) -> Option<String> {
+    pub fn get_spec_string(&mut self, str_id: u32) -> Result<String> {
         if let Some(ref mut string_table) = self.spec_string_table {
-            let out_string = string_table.get_string(str_id).unwrap();
+            let out_string = string_table.get_string(str_id)?;
 
-            return Some((*out_string).clone())
+            return Ok((*out_string).clone())
         }
 
-        None
+        Err("String not found on spec string table".into())
     }
 
-    fn get_spec_as_str(&mut self, spec_id: u32) -> Option<String>
+    fn get_spec_as_str(&mut self, spec_id: u32) -> Result<String>
     {
         if let Some(_) = self.specs.get((spec_id - 1) as usize) {
             if let Some(ref mut spec_string_table) = self.spec_string_table {
                 if let Ok(spec_str) = spec_string_table.get_string((spec_id - 1) as u32) {
-                    return Some((*spec_str).clone());
+                    return Ok((*spec_str).clone());
                 }
             }
         }
 
-        None
+        Err("Could not retrieve spec as string".into())
     }
 }
