@@ -20,6 +20,7 @@ pub mod errors {
         foreign_links {
             Io(::std::io::Error) #[cfg(unix)];
             Xml(::quick_xml::error::Error);
+            Utf8(::std::string::FromUtf8Error);
         }
     }
 }
