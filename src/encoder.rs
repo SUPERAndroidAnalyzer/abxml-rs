@@ -18,7 +18,7 @@ impl Xml {
         Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources)?;
 
         let result = writer.into_inner().into_inner();
-        let str_result = String::from_utf8(result).unwrap();
+        let str_result = String::from_utf8(result)?;
         let output = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}", str_result);
 
         Ok(output)
@@ -67,7 +67,7 @@ impl Xml {
             );
         }
 
-        writer.write(Start(elem)).unwrap();
+        writer.write(Start(elem))?;
 
         for child in element.get_children() {
             Self::encode_element(&mut writer, None, child, xml_resources, resources)?
@@ -102,7 +102,7 @@ impl Xml {
                 None
             };
 
-            return Some(package_borrow.format_reference(id, key, namespace, prefix).unwrap());
+            return package_borrow.format_reference(id, key, namespace, prefix);
         }
 
         None
@@ -113,7 +113,11 @@ impl Xml {
         // In that case, we return a crafted string instead of the integer itself
         let name_index = attribute.get_name_index();
         if name_index < xml_resources.len() as u32 {
-            let entry_ref = xml_resources.get(name_index as usize).unwrap();
+            let entry_ref = match xml_resources.get(name_index as usize) {
+                Some(entry_ref) => entry_ref,
+                None => return None,
+            };
+
             let package_id = entry_ref.get_package();
             let package = resources.get_package(package_id as u8);
 
@@ -122,8 +126,11 @@ impl Xml {
                 let mut masks = Vec::new();
 
                 let pb = package.borrow();
-                let entry = pb.get_entry(*entry_ref).unwrap().complex().unwrap();
-                let inner_entries = entry.get_entries();
+
+                let inner_entries = pb.get_entry(*entry_ref)
+                    .and_then(|e| e.complex())
+                    .and_then(|c| Ok(c.get_entries().to_vec()))
+                    .unwrap_or(Vec::new());
                 let mut sorted = inner_entries.to_vec();
 
                 sorted.sort_by(|a, b| {
@@ -168,8 +175,16 @@ impl Xml {
                                 }
 
                                 if has_to_add {
-                                    strs.push(entry.simple().unwrap().get_key());
-                                    masks.push(mask);
+                                    entry.simple()
+                                        .and_then(|s| Ok(s.get_key()))
+                                        .and_then(|key| {
+                                            strs.push(key);
+                                            masks.push(mask);
+                                            Ok(())
+                                        })
+                                        .unwrap_or_else(|_| {
+                                            error!("Value should be added but there was an issue reading the entry");
+                                        });
                                 }
                             },
                             Err(_) => {
@@ -230,21 +245,17 @@ impl Xml {
     pub fn attribute_name(label: Rc<String>, prefix: Option<Rc<String>>) -> String {
         let name = label.deref();
 
-        if prefix.is_some() {
-            let rc_prefix = prefix.unwrap();
-            let p = rc_prefix.deref();
+        prefix
+            .and_then(|rc_prefix| {
+                let p = rc_prefix.deref();
 
-            let mut s = String::new();
-            s.push_str(p);
-            s.push_str(":");
-            s.push_str(name);
+                let mut s = String::new();
+                s.push_str(p);
+                s.push_str(":");
+                s.push_str(name);
 
-            s
-        } else {
-            let mut s = String::new();
-            s.push_str(name);
-
-            s
-        }
+                Some(s)
+            })
+            .unwrap_or(name.to_owned())
     }
 }

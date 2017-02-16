@@ -15,7 +15,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
 
     fn visit_package(&mut self, package: Package) {
         println!("Package!");
-        println!("\tId: {}", package.get_id());
+        println!("\tId: {}", package.get_id().unwrap());
         println!("\tName: {}", package.get_name().unwrap());
     }
 

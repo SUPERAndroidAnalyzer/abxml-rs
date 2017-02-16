@@ -37,14 +37,14 @@ impl<'a> StringTableWrapper<'a> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
     pub fn get_styles_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(12));
 
-        cursor.read_u32::<LittleEndian>().unwrap()
+        cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
     pub fn get_string(&self, idx: u32) -> Result<String> {
@@ -53,15 +53,14 @@ impl<'a> StringTableWrapper<'a> {
             return Err("Trying to get index outside StringTable".into());
         }
 
-        let position = self.get_string_position(idx);
-
-        self.parse_string(position as u32)
+        self.get_string_position(idx)
+            .and_then(|position| self.parse_string(position as u32))
     }
 
-    fn get_string_position(&self, idx: u32) -> u64 {
+    fn get_string_position(&self, idx: u32) -> Result<u64> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(20));
-        let str_offset = self.header.get_offset() as u32 + cursor.read_u32::<LittleEndian>().unwrap();
+        let str_offset = self.header.get_offset() as u32 + cursor.read_u32::<LittleEndian>()?;
 
         cursor.set_position(self.header.absolute(28));
 
@@ -69,7 +68,7 @@ impl<'a> StringTableWrapper<'a> {
         let mut max_offset = 0;
 
         for _ in 0..(idx + 1) {
-            let current_offset = cursor.read_u32::<LittleEndian>().unwrap();
+            let current_offset = cursor.read_u32::<LittleEndian>()?;
             position = str_offset + current_offset;
 
             if current_offset > max_offset {
@@ -77,7 +76,7 @@ impl<'a> StringTableWrapper<'a> {
             }
         }
 
-        position as u64
+        Ok(position as u64)
     }
 
     fn parse_string(&self, offset: u32) -> Result<String> {
