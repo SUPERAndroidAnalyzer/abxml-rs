@@ -2,6 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
+use model::owned::{OwnedBuf, ResourceBuf};
 
 pub struct ResourceDecoder;
 
@@ -33,11 +34,22 @@ impl<'a> ResourceWrapper<'a> {
         let count = cursor.read_u32::<LittleEndian>()?;
         let mut resources = Vec::with_capacity(count as usize);
 
-        for _ in 0..(count / 4) {
+        for _ in 0..(count / 4) - 2 {
             resources.push(cursor.read_u32::<LittleEndian>()?);
         }
 
         Ok(resources)
+    }
+
+    pub fn to_owned(self) -> Result<ResourceBuf> {
+        let mut owned = ResourceBuf::new();
+
+        for r in &self.get_resources()? {
+            println!("Resource");
+            owned.push_resource(*r);
+        }
+
+        Ok(owned)
     }
 }
 
