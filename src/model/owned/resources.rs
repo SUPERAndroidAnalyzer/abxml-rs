@@ -70,7 +70,7 @@ mod tests {
         let resources = ResourcesBuf::new();
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(0, 8, 0*8, 0x0180);
+        let chunk_header = ChunkHeader::new(0, 8, (0*8)+8, 0x0180);
         let wrapper = ResourceWrapper::new(&out, chunk_header);
 
         let expected_resources: Vec<u32> = vec![];
