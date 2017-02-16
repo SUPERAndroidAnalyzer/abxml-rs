@@ -143,7 +143,7 @@ impl Value {
     fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;
-        let uvalue = (data & mantissa);
+        let uvalue = data & mantissa;
         let ivalue: i32 = unsafe {mem::transmute(uvalue)};
         let m = ivalue as f32;
         let mm = 1.0 / ((1 << 8) as f32);

@@ -100,7 +100,7 @@ impl<'a> TableTypeWrapper<'a> {
     }
 
     fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
-        let size = cursor.read_u16::<LittleEndian>()?;
+        cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
         let val_type = cursor.read_u8()?;
@@ -124,8 +124,7 @@ impl<'a> TableTypeWrapper<'a> {
         for j in 0..value_count {
             debug!("Parsing value: {}/{} (@{})", j, value_count - 1, cursor.position());
             let val_id = cursor.read_u32::<LittleEndian>()?;
-            // Resource value
-            let size = cursor.read_u16::<LittleEndian>()?;
+            cursor.read_u16::<LittleEndian>()?;
             // Padding
             cursor.read_u8()?;
             let val_type = cursor.read_u8()?;

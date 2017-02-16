@@ -1,5 +1,4 @@
 use std::fmt;
-use errors::*;
 
 #[derive(Clone, Copy)]
 pub struct ChunkHeader {
