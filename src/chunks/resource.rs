@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::owned::{OwnedBuf, ResourceBuf};
+use model::owned::ResourceBuf;
 
 pub struct ResourceDecoder;
 
