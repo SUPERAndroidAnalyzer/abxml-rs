@@ -1,4 +1,5 @@
 use std::fmt;
+use errors::*;
 
 #[derive(Clone, Copy)]
 pub struct ChunkHeader {
@@ -34,18 +35,14 @@ impl ChunkHeader {
         self.offset + self.chunk_size as u64
     }
 
-    pub fn relative(&self, reference: u64) -> u64 {
-        let offset = reference - 8;
+    pub fn absolute(&self, relative: u64) -> u64 {
+        let absolute = self.offset + relative;
 
-        if offset > self.get_chunk_end() {
-            panic!("Calculated offset greater than chunk end");
+        if absolute > self.get_chunk_end() {
+            panic!("Requested a relative value out of bounds");
         }
 
-        offset
-    }
-
-    pub fn absolute(&self, relative: u64) -> u64 {
-        self.offset + relative
+        absolute
     }
 }
 
@@ -59,5 +56,39 @@ impl fmt::Display for ChunkHeader {
             self.get_data_offset(),
             self.get_chunk_end()
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn it_returns_data_offset() {
+        let chunk = ChunkHeader::new(4000, 8, 16, 0);
+
+        assert_eq!(4008, chunk.get_data_offset());
+    }
+
+    #[test]
+    pub fn it_returns_chunk_end() {
+        let chunk = ChunkHeader::new(4000, 8, 16, 0);
+
+        assert_eq!(4016, chunk.get_chunk_end());
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn it_panics_from_relative_out_of_bound() {
+        let chunk = ChunkHeader::new(4000, 8, 500, 0);
+        let res = chunk.absolute(510);
+    }
+
+    #[test]
+    pub fn it_returns_absolute_offsets_from_relative_ones() {
+        let chunk = ChunkHeader::new(4000, 8, 500, 0);
+        let res = chunk.absolute(490);
+
+        assert_eq!(4490, res);
     }
 }
