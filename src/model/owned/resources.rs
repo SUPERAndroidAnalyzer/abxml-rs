@@ -33,7 +33,7 @@ impl OwnedBuf for ResourcesBuf {
         out.write_u16::<LittleEndian>(0x0180)?;
         // TODO: Check the header size. Fixed?
         out.write_u16::<LittleEndian>(8)?;
-        let chunk_size = (self.resources.len() * 4);
+        let chunk_size = (self.resources.len() * 4) + 8; // + header size
         out.write_u32::<LittleEndian>(chunk_size as u32)?;
 
         for r in &self.resources {
@@ -76,5 +76,17 @@ mod tests {
         let expected_resources: Vec<u32> = vec![];
 
         assert_eq!(expected_resources, wrapper.get_resources().unwrap());
+    }
+
+    #[test]
+    fn identity() {
+        let raw = vec![128, 1, 8, 0, 24, 0, 0, 0, 160, 0, 1, 1, 158, 0, 1, 1, 31, 3, 1, 1, 165, 1, 1, 1];
+        let chunk_header = ChunkHeader::new(0, 8, 24, 0x180);
+
+        let wrapper = ResourceWrapper::new(&raw, chunk_header);
+        let owned = wrapper.to_owned().unwrap();
+        let new_raw = owned.to_vec().unwrap();
+
+        assert_eq!(&raw, &new_raw);
     }
 }
