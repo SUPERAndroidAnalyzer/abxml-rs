@@ -43,15 +43,15 @@ use self::resource::ResourceDecoder;
 use errors::*;
 
 pub const TOKEN_STRING_TABLE: u16 = 0x0001;
-const TOKEN_RESOURCE: u16 = 0x0180;
-const TOKEN_PACKAGE: u16 = 0x0200;
-const TOKEN_TABLE_TYPE: u16 = 0x201;
-const TOKEN_TABLE_SPEC: u16 = 0x202;
-const TOKEN_XML_START_NAMESPACE: u16 = 0x100;
-const TOKEN_XML_END_NAMESPACE: u16 = 0x101;
-const TOKEN_XML_TAG_START: u16 = 0x102;
-const TOKEN_XML_TAG_END: u16 = 0x103;
-const TOKEN_XML_TEXT: u16 = 0x104;
+pub const TOKEN_RESOURCE: u16 = 0x0180;
+pub const TOKEN_PACKAGE: u16 = 0x0200;
+pub const TOKEN_TABLE_TYPE: u16 = 0x201;
+pub const TOKEN_TABLE_SPEC: u16 = 0x202;
+pub const TOKEN_XML_START_NAMESPACE: u16 = 0x100;
+pub const TOKEN_XML_END_NAMESPACE: u16 = 0x101;
+pub const TOKEN_XML_TAG_START: u16 = 0x102;
+pub const TOKEN_XML_TAG_END: u16 = 0x103;
+pub const TOKEN_XML_TEXT: u16 = 0x104;
 
 pub enum Chunk<'a>   {
     StringTable(StringTableWrapper<'a>),
