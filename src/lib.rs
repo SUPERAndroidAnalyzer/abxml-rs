@@ -9,6 +9,7 @@ extern crate error_chain;
 #[macro_use]
 extern crate log;
 extern crate encode_unicode;
+extern crate encoding;
 
 pub mod encoder;
 pub mod chunks;

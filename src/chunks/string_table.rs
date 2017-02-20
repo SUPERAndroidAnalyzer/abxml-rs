@@ -10,6 +10,8 @@ use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
 use model::StringTable as StringTableTrait;
 use encode_unicode::Utf16Char;
+use encoding::codec::{utf_16, utf_8};
+use encoding::{Encoding, DecoderTrap};
 
 pub struct StringTableDecoder;
 
@@ -44,6 +46,13 @@ impl<'a> StringTableWrapper<'a> {
     pub fn get_styles_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(12));
+
+        cursor.read_u32::<LittleEndian>().unwrap_or(0)
+    }
+
+    pub fn get_flags(&self) -> u32 {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(16));
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
@@ -83,14 +92,38 @@ impl<'a> StringTableWrapper<'a> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(offset as u64);
 
-        let size1 = cursor.read_u8()? as u32;
-        let size2 = cursor.read_u8()? as u32;
+        if self.is_utf8() {
+            let mut ini_offset = offset;
+            let v = cursor.read_u8()? as u32;
+            if v == 0x80 {
+                ini_offset += 2;
+                cursor.read_u8()?;
+            } else {
+                ini_offset += 1;
+            }
 
-        if size1 == size2 {
-            let str_len = size1;
-            let position = offset + 2;
-            let a = position;
-            let b = position + str_len;
+            let v = cursor.read_u8()? as u32;
+            if v == 0x80 {
+                ini_offset += 2;
+                cursor.read_u8()?;
+            } else {
+                ini_offset += 1;
+            }
+
+            let mut length = 0;
+
+            loop {
+                let v = cursor.read_u8()?;
+
+                if v != 0 {
+                    length += 1;
+                } else {
+                    break;
+                }
+            }
+
+            let a = ini_offset;
+            let b = ini_offset + length;
 
             if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
                 return Err("Sub-slice out of raw_data range".into());
@@ -98,51 +131,44 @@ impl<'a> StringTableWrapper<'a> {
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
-            let raw_str: Vec<u8> = subslice.iter()
-                .cloned()
-                .collect();
+            let mut decoder = utf_8::UTF8Decoder::new();
+            let mut o = String::new();
+            decoder.raw_feed(&subslice, &mut o);
+            let decode_error = decoder.raw_finish(&mut o);
 
-           String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
+            match decode_error {
+                None => Ok(o),
+                Some(_) => Err("Error decoding UTF8 string".into()),
+            }
         } else {
+            let size1 = cursor.read_u8()? as u32;
+            let size2 = cursor.read_u8()? as u32;
+
             let val = ((size2 & 0xFF) << 8) | size1 & 0xFF;
 
-            let (aa, bb) = if val == 0x8000 {
-                let low = (cursor.read_u8()? as u32) & 0xFF;
-                let high = ((cursor.read_u8()? & 0xFF) as u32) << 8;
-
-                (4 as u32, ((low + high) * 2) as u32)
-            } else {
-                (2 as u32, (size1 * 2) as u32)
-            };
-
-            let a = offset + aa;
-            let b = offset + bb;
-
-            // println!("Range: {} <-> {} ;;; Offset: {}", a, b, offset);
+            let a = offset + 2;
+            let b = offset + 2 + (val * 2);
 
             if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
                 return Err("Sub-slice out of raw_data range".into());
             }
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
-            let subslice_16: &[u16] = unsafe {::std::mem::transmute(subslice)};
-            /*let mut i = 0;
-            let raw_str: Vec<u8> = subslice.iter()
-                .cloned()
-                .filter(|_| {
-                    let result = i % 2 == 0;
-                    i += 1;
 
-                    result
-                })
-                .collect();*/
-            let (utf16char, _) = Utf16Char::from_slice(subslice_16)?;
+            let mut decoder = utf_16::UTF16Decoder::<utf_16::Little>::new();
+            let mut o = String::new();
+            decoder.raw_feed(&subslice, &mut o);
+            let decode_error = decoder.raw_finish(&mut o);
 
-            Ok(utf16char.to_char().to_string())
-
-           // String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
-            // Err("UTF16 not implemented".into())
+            match decode_error {
+                None => Ok(o),
+                Some(_) => Err("Error decoding UTF16 string".into()),
+            }
         }
+    }
+
+    fn is_utf8(&self) -> bool {
+        return (self.get_flags() & 0x00000100) == 0x00000100;
     }
 }
 
