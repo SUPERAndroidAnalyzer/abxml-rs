@@ -42,7 +42,7 @@ use self::resource::ResourceDecoder;
 
 use errors::*;
 
-const TOKEN_STRING_TABLE: u16 = 0x0001;
+pub const TOKEN_STRING_TABLE: u16 = 0x0001;
 const TOKEN_RESOURCE: u16 = 0x0180;
 const TOKEN_PACKAGE: u16 = 0x0200;
 const TOKEN_TABLE_TYPE: u16 = 0x201;

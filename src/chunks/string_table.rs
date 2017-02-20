@@ -148,6 +148,7 @@ impl<'a> StringTableWrapper<'a> {
             let a = offset + 2;
             let b = offset + 2 + (val * 2);
 
+
             if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
                 return Err("Sub-slice out of raw_data range".into());
             }
