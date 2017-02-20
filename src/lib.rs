@@ -8,7 +8,6 @@ extern crate quick_xml;
 extern crate error_chain;
 #[macro_use]
 extern crate log;
-extern crate encode_unicode;
 extern crate encoding;
 
 pub mod encoder;
@@ -23,7 +22,6 @@ pub mod errors {
             Io(::std::io::Error) #[cfg(unix)];
             Xml(::quick_xml::error::Error);
             Utf8(::std::string::FromUtf8Error);
-            Utf16(::encode_unicode::error::InvalidUtf16Slice);
         }
     }
 }
