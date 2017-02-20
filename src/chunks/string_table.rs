@@ -9,7 +9,6 @@ use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
 use model::StringTable as StringTableTrait;
-use encode_unicode::Utf16Char;
 use encoding::codec::{utf_16, utf_8};
 use encoding::{Encoding, DecoderTrap};
 
