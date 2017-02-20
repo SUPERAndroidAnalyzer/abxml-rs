@@ -34,7 +34,7 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
-                println!("Secondary table!");
+                error!("Secondary table!");
             },
             None => {
                 self.main_string_table = Some(string_table);
@@ -63,7 +63,9 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                         let element = Element::new(element_name, attributes);
                         self.container.start_element(element);
                     },
-                    _ => {
+                    Err(e) => {
+                        println!("{}", string_table);
+                        println!("Could not start tag: {:?}", e);
                         error!("Could not retrieve tag");
                     }
                 }
