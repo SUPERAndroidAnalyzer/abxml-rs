@@ -5,15 +5,16 @@ use chunks::*;
 use model::StringTable as StringTableTrait;
 use std::rc::Rc;
 
-pub enum StringMode {
+#[derive(Clone, Copy)]
+pub enum Encoding {
     Utf8,
-    Utf16Ext,
     Utf16,
 }
 
 pub struct StringTableBuf {
-    strings: Vec<(StringMode, String)>,
-    styles: Vec<(StringMode, String)>,
+    strings: Vec<Rc<String>>,
+    styles: Vec<Rc<String>>,
+    encoding: Encoding,
 }
 
 impl StringTableBuf {
@@ -21,15 +22,26 @@ impl StringTableBuf {
         StringTableBuf {
             strings: Vec::new(),
             styles: Vec::new(),
+            encoding: Encoding::Utf8,
         }
+    }
+
+    pub fn set_encoding(&mut self, encoding: Encoding) {
+        self.encoding = encoding;
+    }
+
+    pub fn get_encoding(&self) -> Encoding {
+        self.encoding
     }
 }
 
 impl OwnedBuf for StringTableBuf {
-    fn to_vec(&self) -> Result<Vec<u8>> {
-        let mut out = Vec::new();
+    fn get_token(&self) -> u16 {
+        TOKEN_STRING_TABLE
+    }
 
-        out.write_u16::<LittleEndian>(TOKEN_STRING_TABLE)?;
+    fn get_body_data(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
 
         Ok(out)
     }
@@ -37,15 +49,18 @@ impl OwnedBuf for StringTableBuf {
 
 impl StringTableTrait for StringTableBuf {
     fn get_strings_len(&self) -> u32 {
-        0
+        self.strings.len() as u32
     }
 
     fn get_styles_len(&self) -> u32 {
-        12
+        self.styles.len() as u32
     }
 
     fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-        Ok(Rc::new("string".to_string()))
+        match self.strings.get(idx as usize) {
+            None => Err("String not found".into()),
+            Some(s) => Ok(s.clone()),
+        }
     }
 }
 
@@ -63,6 +78,8 @@ mod tests {
         let wrapper = StringTableWrapper::new(&out, chunk_header);
 
         assert_eq!(0, string_table.get_strings_len());
+        assert_eq!(0, string_table.get_styles_len());
+        assert!(string_table.get_string(0).is_err());
     }
 
     /*

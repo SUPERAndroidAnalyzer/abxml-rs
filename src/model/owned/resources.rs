@@ -1,5 +1,6 @@
 use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
+use chunks::*;
 use errors::*;
 
 pub struct ResourcesBuf {
@@ -23,18 +24,12 @@ impl ResourcesBuf {
 }
 
 impl OwnedBuf for ResourcesBuf {
-    fn to_vec(&self) -> Result<Vec<u8>> {
-        // Generate a chunk with the current data
-        // TODO: Generate with capacity
-        let mut out = Vec::new();
+    fn get_token(&self) -> u16 {
+        TOKEN_RESOURCE
+    }
 
-        // Token
-        // TODO: Use constant on chunks/mod.rs
-        out.write_u16::<LittleEndian>(0x0180)?;
-        // TODO: Check the header size. Fixed?
-        out.write_u16::<LittleEndian>(8)?;
-        let chunk_size = (self.resources.len() * 4) + 8; // + header size
-        out.write_u32::<LittleEndian>(chunk_size as u32)?;
+    fn get_body_data(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
 
         for r in &self.resources {
             out.write_u32::<LittleEndian>(*r)?;
