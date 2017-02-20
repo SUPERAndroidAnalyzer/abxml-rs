@@ -9,6 +9,7 @@ use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
 use model::StringTable as StringTableTrait;
+use encode_unicode::Utf16Char;
 
 pub struct StringTableDecoder;
 
@@ -53,8 +54,7 @@ impl<'a> StringTableWrapper<'a> {
             return Err("Trying to get index outside StringTable".into());
         }
 
-        self.get_string_position(idx)
-            .and_then(|position| self.parse_string(position as u32))
+        self.get_string_position(idx).and_then(|position| self.parse_string(position as u32))
     }
 
     fn get_string_position(&self, idx: u32) -> Result<u64> {
@@ -80,14 +80,21 @@ impl<'a> StringTableWrapper<'a> {
     }
 
     fn parse_string(&self, offset: u32) -> Result<String> {
-        let size1: u32 = self.raw_data[offset as usize] as u32;
-        let size2: u32 = self.raw_data[(offset + 1) as usize] as u32;
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(offset as u64);
+
+        let size1 = cursor.read_u8()? as u32;
+        let size2 = cursor.read_u8()? as u32;
 
         if size1 == size2 {
             let str_len = size1;
             let position = offset + 2;
             let a = position;
             let b = position + str_len;
+
+            if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
+                return Err("Sub-slice out of raw_data range".into());
+            }
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
@@ -97,14 +104,29 @@ impl<'a> StringTableWrapper<'a> {
 
            String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
         } else {
-            let str_len = ((size2 << 8) & 0xFF00) | size1 & 0xFF;
-            let position = offset + 2;
-            let mut i = 0;
-            let a = position;
-            let b = position + (str_len * 2);
+            let val = ((size2 & 0xFF) << 8) | size1 & 0xFF;
+
+            let (aa, bb) = if val == 0x8000 {
+                let low = (cursor.read_u8()? as u32) & 0xFF;
+                let high = ((cursor.read_u8()? & 0xFF) as u32) << 8;
+
+                (4 as u32, ((low + high) * 2) as u32)
+            } else {
+                (2 as u32, (size1 * 2) as u32)
+            };
+
+            let a = offset + aa;
+            let b = offset + bb;
+
+            // println!("Range: {} <-> {} ;;; Offset: {}", a, b, offset);
+
+            if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
+                return Err("Sub-slice out of raw_data range".into());
+            }
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
-
+            let subslice_16: &[u16] = unsafe {::std::mem::transmute(subslice)};
+            /*let mut i = 0;
             let raw_str: Vec<u8> = subslice.iter()
                 .cloned()
                 .filter(|_| {
@@ -113,9 +135,13 @@ impl<'a> StringTableWrapper<'a> {
 
                     result
                 })
-                .collect();
+                .collect();*/
+            let (utf16char, _) = Utf16Char::from_slice(subslice_16)?;
 
-           String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
+            Ok(utf16char.to_char().to_string())
+
+           // String::from_utf8(raw_str).chain_err(|| "Could not convert to UTF-8")
+            // Err("UTF16 not implemented".into())
         }
     }
 }
