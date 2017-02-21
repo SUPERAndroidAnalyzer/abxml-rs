@@ -32,6 +32,7 @@ impl Executor {
         let _header_size = cursor.read_u16::<LittleEndian>()?;
         let _chunk_size = cursor.read_u32::<LittleEndian>()?;
         let _package_amount = cursor.read_u32::<LittleEndian>()?;
+        cursor.set_position(_header_size as u64);
 
         let stream = ChunkLoaderStream::new(cursor);
         let mut origin = Origin::Global;

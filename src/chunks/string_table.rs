@@ -11,6 +11,7 @@ use std::fmt::Error as FmtError;
 use model::StringTable as StringTableTrait;
 use encoding::codec::{utf_16, utf_8};
 use encoding::{Encoding, DecoderTrap};
+use model::owned::{StringTableBuf, Encoding as EncodingType};
 
 pub struct StringTableDecoder;
 
@@ -63,6 +64,22 @@ impl<'a> StringTableWrapper<'a> {
         }
 
         self.get_string_position(idx).and_then(|position| self.parse_string(position as u32))
+    }
+
+    pub fn to_owned(self) -> Result<StringTableBuf> {
+        let mut owned = StringTableBuf::new();
+
+        if !self.is_utf8() {
+            owned.set_encoding(EncodingType::Utf16);
+        }
+
+        println!("Strings: {}", self.get_strings_len());
+
+        for i in 0..self.get_strings_len() {
+            owned.add_string(self.get_string(i)?);
+        }
+
+        Ok(owned)
     }
 
     fn get_string_position(&self, idx: u32) -> Result<u64> {
