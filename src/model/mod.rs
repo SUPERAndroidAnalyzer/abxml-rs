@@ -50,6 +50,12 @@ pub trait StringTable {
     fn get_string(&self, idx: u32) -> Result<Rc<String>>;
 }
 
+// TODO: Decide if the trait should return Results or not
+pub trait Package {
+    fn get_id(&self) -> Result<u32>;
+    fn get_name(&self) -> Result<String>;
+}
+
 #[cfg(test)]
 mod tests {
     use model::Identifier;

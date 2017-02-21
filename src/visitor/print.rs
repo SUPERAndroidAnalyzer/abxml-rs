@@ -1,5 +1,6 @@
 use chunks::*;
 use model::StringTable as StringTableTrait;
+use model::Package;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -13,7 +14,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
         println!("\tLength ({:?}): {} ", origin, string_table.get_strings_len());
     }
 
-    fn visit_package(&mut self, package: Package) {
+    fn visit_package(&mut self, package: PackageRef) {
         println!("Package!");
         println!("\tId: {}", package.get_id().unwrap());
         println!("\tName: {}", package.get_name().unwrap());

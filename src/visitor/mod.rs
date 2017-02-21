@@ -13,7 +13,7 @@ pub use self::xml::XmlVisitor as XmlVisitor;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
-    fn visit_package(&mut self, _package: Package<'a>) {}
+    fn visit_package(&mut self, _package: PackageRef<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
     fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
@@ -45,7 +45,7 @@ impl Executor {
                     origin = Origin::next(origin);
                 },
                 Chunk::Package(pw) => {
-                    let package = Package::new(pw);
+                    let package = PackageRef::new(pw);
                     visitor.visit_package(package);
                 },
                 Chunk::TableType(ttw) => {
@@ -78,7 +78,7 @@ impl Executor {
                     visitor.visit_string_table(st, origin);
                 },
                 Chunk::Package(pw) => {
-                    let package = Package::new(pw);
+                    let package = PackageRef::new(pw);
                     visitor.visit_package(package);
                 },
                 Chunk::TableType(ttw) => {
