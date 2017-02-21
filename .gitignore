@@ -2,4 +2,3 @@ target
 Cargo.lock
 AndroidManifest*.xml
 *.arsc
-script/
