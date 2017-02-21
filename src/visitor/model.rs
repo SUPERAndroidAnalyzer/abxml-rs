@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use model::{Identifier, Entries};
+use model::Package;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -50,7 +51,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         }
     }
 
-    fn visit_package(&mut self, package: Package<'a>) {
+    fn visit_package(&mut self, package: PackageRef<'a>) {
         if let Ok(package_id) = package.get_id() {
             self.package_mask = package_id << 24;
 
@@ -162,7 +163,7 @@ impl<'a> Resources<'a> {
 
 #[derive(Default)]
 pub struct ResourcesPackage<'a> {
-    package: Option<Package<'a>>,
+    package: Option<PackageRef<'a>>,
     specs: Vec<TypeSpec<'a>>,
     string_table: Option<StringTable<'a>>,
     spec_string_table: Option<StringTable<'a>>,
@@ -179,7 +180,7 @@ impl<'a> ResourcesPackage<'a> {
         }
     }
 
-    pub fn add_package(&mut self, package: Package<'a>) {
+    pub fn add_package(&mut self, package: PackageRef<'a>) {
         self.package = Some(package);
     }
 

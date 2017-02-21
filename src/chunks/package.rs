@@ -2,6 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
+use model::Package;
 
 pub struct PackageDecoder;
 
@@ -55,22 +56,24 @@ impl<'a> PackageWrapper<'a> {
     }
 }
 
-pub struct Package<'a> {
+pub struct PackageRef<'a> {
     wrapper: PackageWrapper<'a>,
 }
 
-impl<'a> Package<'a> {
+impl<'a> PackageRef<'a> {
     pub fn new(wrapper: PackageWrapper<'a>) -> Self {
-        Package {
+        PackageRef {
             wrapper: wrapper,
         }
     }
+}
 
-    pub fn get_id(&self) -> Result<u32> {
+impl<'a> Package for PackageRef<'a> {
+    fn get_id(&self) -> Result<u32> {
         self.wrapper.get_id()
     }
 
-    pub fn get_name(&self) -> Result<String>{
+    fn get_name(&self) -> Result<String>{
         self.wrapper.get_name()
     }
 }
