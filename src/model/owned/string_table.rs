@@ -6,7 +6,6 @@ use model::StringTable as StringTableTrait;
 use std::rc::Rc;
 use encoding::codec::{utf_16, utf_8};
 use encoding::Encoding as EncodingTrait;
-use encoding::{DecoderTrap};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Encoding {
@@ -66,7 +65,7 @@ impl OwnedBuf for StringTableBuf {
         let mut string_offsets: Vec<u32> = Vec::new();
         let mut style_offsets: Vec<u32> = Vec::new();
         let mut string_buffer: Vec<u8> = Vec::new();
-        let mut style_buffer: Vec<u8> = Vec::new();
+        let style_buffer: Vec<u8> = Vec::new();
 
         let mut current_offset = 0;
         let mut encoder = if self.encoding == Encoding::Utf8 {
@@ -85,6 +84,11 @@ impl OwnedBuf for StringTableBuf {
             string_offsets.push(current_offset);
             let mut encoded_string = Vec::new();
             let (size, error) = encoder.raw_feed(string, &mut encoded_string);
+
+            if let Some(_) = error {
+                return Err("Error encoding string".into());
+            }
+
             // Write size
             let low = (size & 0xFF) as u8;
             let high = ((size & 0xFF00) >> 8) as u8;
@@ -99,7 +103,7 @@ impl OwnedBuf for StringTableBuf {
         }
 
         // Encode styles and save offsets
-        for style in self.styles.iter() {
+        for _ in self.styles.iter() {
             style_offsets.push(current_offset);
             // Encode with utf8/utf16 depending on the flag
         }
