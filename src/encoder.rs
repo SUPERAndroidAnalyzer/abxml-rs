@@ -1,4 +1,4 @@
-use quick_xml::{Element,    XmlWriter};
+use quick_xml::{Element, XmlWriter};
 use quick_xml::Event::*;
 use std::io::Cursor;
 use model::Element as AbxmlElement;
@@ -43,11 +43,11 @@ impl Xml {
                 Value::ReferenceId(ref id) => {
                     Self::resolve_reference(*id, resources, "@").ok()
                 }
-                Value::AttributeReferenceId(ref id)=> {
+                Value::AttributeReferenceId(ref id) => {
                     Self::resolve_reference(*id, resources, "?").ok()
                 },
                 Value::Integer(ref value) |
-                Value::Flags(ref value)=> {
+                Value::Flags(ref value) => {
                     let flag_resolution = Self::resolve_flags(*value as u32, a, xml_resources, resources);
 
                     if flag_resolution.is_none() {
@@ -221,11 +221,11 @@ impl Xml {
                 }
             }
 
-            return None;
+            None
         } else {
             let str = format!("@flags:{}", flags);
 
-            return Some(str.to_string());
+            Some(str.to_string())
         }
     }
 

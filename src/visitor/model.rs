@@ -87,15 +87,13 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 .and_then(|entries| {
                     let package_id = self.package_mask.get_package();
 
-                    let package = self.resources.get_package(package_id)
+                    self.resources.get_package(package_id)
                         .and_then(|package| {
                             let mut package_borrow = package.borrow_mut();
                             package_borrow.add_entries(entries);
 
                             Ok(())
-                        });
-
-                    package
+                        })
                 });
 
             if result.is_err() {
