@@ -184,7 +184,7 @@ impl<'a> StringTableWrapper<'a> {
     }
 
     fn is_utf8(&self) -> bool {
-        return (self.get_flags() & 0x00000100) == 0x00000100;
+        (self.get_flags() & 0x00000100) == 0x00000100
     }
 }
 
