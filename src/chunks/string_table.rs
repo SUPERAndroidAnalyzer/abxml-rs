@@ -10,7 +10,6 @@ use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
 use model::StringTable as StringTableTrait;
 use encoding::codec::{utf_16, utf_8};
-use encoding::{Encoding, DecoderTrap};
 use model::owned::{StringTableBuf, Encoding as EncodingType};
 
 pub struct StringTableDecoder;
