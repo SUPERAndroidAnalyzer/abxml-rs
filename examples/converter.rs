@@ -61,11 +61,9 @@ fn run() -> Result<()> {
     };
 
     // Android lib
-    let file = std::fs::File::open(&android_apk_path)?;
-    let mut android_archive = zip::ZipArchive::new(file).unwrap();
-
     let mut android_resources_content = Vec::new();
-    android_archive.by_name("resources.arsc").unwrap().read_to_end(&mut android_resources_content)?;
+    let mut file = std::fs::File::open(&android_apk_path)?;
+    file.read_to_end(&mut android_resources_content)?;
 
     // APK
     let file = std::fs::File::open(&apk_path)?;
