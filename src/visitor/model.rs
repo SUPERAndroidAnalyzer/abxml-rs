@@ -201,8 +201,8 @@ impl<'a> ResourcesPackage<'a> {
 
     pub fn format_reference(&mut self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
         let spec_id = id.get_spec() as u32;
-        let spec_str = self.get_spec_as_str(spec_id)?;
-        let string = self.get_entries_string(key)?;
+        let spec_str = self.get_spec_as_str(spec_id).chain_err(|| format!("Could not find spec: {}", spec_id))?;
+        let string = self.get_entries_string(key).chain_err(|| format!("Could not find key {} on entries string table", key))?;
 
         let ending = if spec_str == "attr" {
             string
@@ -228,7 +228,7 @@ impl<'a> ResourcesPackage<'a> {
 
     pub fn get_entries_string(&mut self, str_id: u32) -> Result<String> {
         if let Some(ref mut string_table) = self.entries_string_table {
-            let out_string = string_table.get_string(str_id)?;
+            let out_string = string_table.get_string(str_id).chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
 
             return Ok((*out_string).clone())
         }
@@ -238,7 +238,7 @@ impl<'a> ResourcesPackage<'a> {
 
     pub fn get_spec_string(&mut self, str_id: u32) -> Result<String> {
         if let Some(ref mut string_table) = self.spec_string_table {
-            let out_string = string_table.get_string(str_id)?;
+            let out_string = string_table.get_string(str_id).chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
 
             return Ok((*out_string).clone())
         }

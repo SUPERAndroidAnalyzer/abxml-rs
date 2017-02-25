@@ -66,7 +66,7 @@ impl Value {
                 Value::AttributeReferenceId(data)
             }
             TOKEN_TYPE_STRING => {
-                let string = str_table.get_string(data)?;
+                let string = str_table.get_string(data).chain_err(|| format!("Could not find string {} on string table", data))?;
 
                 Value::String(string.clone())
             }
