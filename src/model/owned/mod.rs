@@ -11,9 +11,9 @@ pub trait OwnedBuf {
 
     fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
-        let body = self.get_body_data()?;
+        let body = self.get_body_data().chain_err(|| "Could not read chunk body")?;
 
-        self.write_header(&mut out, &body)?;
+        self.write_header(&mut out, &body).chain_err(|| "Could not write header")?;
 
         out.extend(body.iter());
 

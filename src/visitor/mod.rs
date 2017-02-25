@@ -28,17 +28,17 @@ pub struct Executor;
 
 impl Executor {
     pub fn arsc<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
-        let _token = cursor.read_u16::<LittleEndian>()?;
-        let _header_size = cursor.read_u16::<LittleEndian>()?;
-        let _chunk_size = cursor.read_u32::<LittleEndian>()?;
-        let _package_amount = cursor.read_u32::<LittleEndian>()?;
+        let _token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+        let _header_size = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading header size")?;
+        let _chunk_size = cursor.read_u32::<LittleEndian>().chain_err(|| "Error reading chunk size")?;
+        let _package_amount = cursor.read_u32::<LittleEndian>().chain_err(|| "Error reading package amount")?;
         cursor.set_position(_header_size as u64);
 
         let stream = ChunkLoaderStream::new(cursor);
         let mut origin = Origin::Global;
 
         for c in stream {
-            match c? {
+            match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
                     let st = StringTable::new(stw);
                     visitor.visit_string_table(st, origin);
@@ -64,15 +64,15 @@ impl Executor {
     }
 
     pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>, mut visitor: &mut V) -> Result<()> {
-        let _token = cursor.read_u16::<LittleEndian>()?;
-        let _header_size = cursor.read_u16::<LittleEndian>()?;
-        let _chunk_size = cursor.read_u32::<LittleEndian>()?;
+        let _token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+        let _header_size = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading header size")?;
+        let _chunk_size = cursor.read_u32::<LittleEndian>().chain_err(|| "Error reading chunk size")?;
 
         let stream = ChunkLoaderStream::new(cursor);
         let mut origin = Origin::Global;
 
         for c in stream {
-            match c? {
+            match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
                     let st = StringTable::new(stw);
                     visitor.visit_string_table(st, origin);

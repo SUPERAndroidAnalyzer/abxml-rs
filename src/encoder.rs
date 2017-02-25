@@ -15,10 +15,10 @@ impl Xml {
     pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources)?;
+        Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources).chain_err(|| "Error decoding an element")?;
 
         let result = writer.into_inner().into_inner();
-        let str_result = String::from_utf8(result)?;
+        let str_result = String::from_utf8(result).chain_err(|| "Could not encode to UTF-8")?;
         let output = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}", str_result);
 
         Ok(output)
@@ -67,13 +67,13 @@ impl Xml {
             );
         }
 
-        writer.write(Start(elem))?;
+        writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, xml_resources, resources)?
+            Self::encode_element(&mut writer, None, child, xml_resources, resources).chain_err(|| "Error while writing a children")?;
         }
 
-        writer.write(End(Element::new(tag.deref())))?;
+        writer.write(End(Element::new(tag.deref()))).chain_err(|| "Error while writing end element")?;
 
         Ok(())
     }
@@ -87,7 +87,7 @@ impl Xml {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id)?;
+        let package = resources.get_package(package_id).chain_err(|| format!("Package {} not found", package_id))?;
         let mut package_borrow = package.borrow_mut();
 
         let entry_key = package_borrow
