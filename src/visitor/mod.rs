@@ -4,12 +4,13 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 
 mod xml;
-mod model;
+pub mod model;
 mod print;
 
 pub use self::model::Resources as Resources;
 pub use self::model::ModelVisitor as ModelVisitor;
 pub use self::xml::XmlVisitor as XmlVisitor;
+pub use self::model::RefPackage as RefPackage;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
