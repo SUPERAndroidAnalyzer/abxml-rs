@@ -118,7 +118,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 }
 
-type RefPackage<'a> = Rc<RefCell<ResourcesPackage<'a>>>;
+pub type RefPackage<'a> = Rc<RefCell<ResourcesPackage<'a>>>;
 
 #[derive(Default)]
 pub struct Resources<'a> {
