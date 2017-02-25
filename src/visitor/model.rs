@@ -56,7 +56,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             self.package_mask = package_id << 24;
 
             let package_id = self.package_mask.get_package();
-            let mut rp = ResourcesPackage::default();
+            let mut rp = Library::default();
             rp.add_package(package);
             self.resources.push_package(package_id, rp);
 
@@ -118,7 +118,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     }
 }
 
-pub type RefPackage<'a> = Rc<RefCell<ResourcesPackage<'a>>>;
+pub type RefPackage<'a> = Rc<RefCell<Library<'a>>>;
 
 #[derive(Default)]
 pub struct Resources<'a> {
@@ -127,7 +127,7 @@ pub struct Resources<'a> {
 }
 
 impl<'a> Resources<'a> {
-    pub fn push_package(&mut self, package_id: u8, package: ResourcesPackage<'a>) {
+    pub fn push_package(&mut self, package_id: u8, package: Library<'a>) {
         if self.packages.is_empty() {
             self.main_package = Some(package_id);
         }
@@ -162,7 +162,7 @@ impl<'a> Resources<'a> {
 }
 
 #[derive(Default)]
-pub struct ResourcesPackage<'a> {
+pub struct Library<'a> {
     package: Option<PackageRef<'a>>,
     specs: Vec<TypeSpec<'a>>,
     string_table: Option<StringTable<'a>>,
@@ -171,7 +171,7 @@ pub struct ResourcesPackage<'a> {
     entries: Entries,
 }
 
-impl<'a> ResourcesPackage<'a> {
+impl<'a> Library<'a> {
     pub fn set_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
         match origin {
             Origin::Global => self.string_table = Some(string_table),
