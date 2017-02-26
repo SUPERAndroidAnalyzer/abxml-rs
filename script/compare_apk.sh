@@ -5,7 +5,6 @@ GREEN=$(echo -en '\033[00;32m')
 RESTORE=$(echo -en '\033[0m')
 
 APK=$1
-APKFW=resources/resources.arsc
 
 SANITIZED_OUT=$(basename $APK)
 APKTOOL_OUT="/tmp/apktool_$SANITIZED_OUT"
@@ -17,7 +16,7 @@ cargo build --release --example converter
 
 for f in $APKTOOL_OUT/res/**/*.xml; do
     RELATIVE=${f#$APKTOOL_OUT/}
-    target/release/examples/converter $APK $APKFW $RELATIVE > /tmp/out.xml
+    target/release/examples/converter $APK $RELATIVE > /tmp/out.xml
 
     # Format output file
     xmllint --format /tmp/out.xml > /tmp/out_format.xml
