@@ -5,6 +5,7 @@ use std::rc::Rc;
 use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
+use model::StringTable;
 
 pub struct XmlDecoder;
 
@@ -442,6 +443,6 @@ impl<'a> XmlText<'a> {
         let index = self.wrapper.get_text_index()?;
         // println!("{}", string_table);
         // println!("TARGET STR: {} {}", index, string_table.get_uncached_string(index)?);
-        string_table.get_uncached_string(index)
+        string_table.get_string(index)
     }
 }

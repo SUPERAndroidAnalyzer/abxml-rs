@@ -2,8 +2,10 @@ use std::rc::Rc;
 use model::Value;
 use visitor::Resources;
 use model::Identifier;
-use visitor::model::RefPackage;
+// use visitor::model::RefPackage;
 use errors::*;
+use model::Resources as ResourcesTrait;
+use model::Library;
 
 #[derive(Debug)]
 pub struct Attribute {
@@ -72,22 +74,21 @@ impl Attribute {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id).chain_err(|| format!("Package {} not found", package_id))?;
-        let mut package_borrow = package.borrow_mut();
+        let package = resources.get_package(package_id).unwrap();
 
-        let entry_key = package_borrow
+        let entry_key = package
             .get_entries()
             .get(&res_id)
             .and_then(|e| Some(e.get_key()));
 
         if let Some(key) = entry_key {
             let namespace = if !is_main {
-                package_borrow.get_name()
+                package.get_name()
             } else {
                 None
             };
 
-            return package_borrow.format_reference(id, key, namespace, prefix);
+            return package.format_reference(id, key, namespace, prefix);
         }
 
         Err("Error resolving reference".into())
@@ -103,21 +104,17 @@ impl Attribute {
 
         resources.get_package(package_id)
             .and_then(|package| {
-                self.search_flags(flags, *entry_ref, &package)
-                    .ok_or("Could not find entry on package".into())
+                self.search_flags(flags, *entry_ref, package)
             })
-            .ok()
     }
 
-    fn search_flags(&self, flags: u32, entry_ref: u32, package: &RefPackage) -> Option<String> {
+    fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = self.get_strings(flags, entry_ref, package);
 
         let str_strs: Vec<String> = str_indexes
             .iter()
             .map(|si| {
-                let mut pb = package.borrow_mut();
-
-                match pb.get_entries_string(*si) {
+                match package.get_entries_string(*si) {
                     Ok(str) => str,
                     Err(_) => {
                         error!("Key not found on the string table");
@@ -136,13 +133,11 @@ impl Attribute {
         }
     }
 
-    fn get_strings(&self, flags: u32, entry_ref: u32, package: &RefPackage) -> Vec<u32> {
+    fn get_strings(&self, flags: u32, entry_ref: u32, package: &Library) -> Vec<u32> {
         let mut strs = Vec::new();
         let mut masks = Vec::new();
 
-        let pb = package.borrow();
-
-        let inner_entries = pb.get_entry(entry_ref)
+        let inner_entries = package.get_entry(entry_ref)
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
             .unwrap_or(Vec::new());
@@ -176,7 +171,7 @@ impl Attribute {
             let mask = ie.get_value();
 
             if (mask & flags) == mask {
-                let maybe_entry = pb.get_entry(ie.get_id());
+                let maybe_entry = package.get_entry(ie.get_id());
 
                 match maybe_entry {
                     Ok(entry) => {
