@@ -1,8 +1,6 @@
 use std::rc::Rc;
 use model::Value;
-use visitor::Resources;
 use model::Identifier;
-// use visitor::model::RefPackage;
 use errors::*;
 use model::Resources as ResourcesTrait;
 use model::Library;
@@ -52,7 +50,7 @@ impl Attribute {
         self.name_index
     }
 
-    pub fn resolve_flags(&self, flags: u32, xml_resources: &[u32], resources: &Resources) -> Option<String> {
+    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self, flags: u32, xml_resources: &[u32], resources: &R) -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
         let name_index = self.get_name_index();
@@ -65,7 +63,7 @@ impl Attribute {
         }
     }
 
-    pub fn resolve_reference(&self, id: u32, resources: &Resources, prefix: &str) -> Result<String> {
+    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self, id: u32, resources: &R, prefix: &str) -> Result<String> {
         let res_id = id;
         let package_id = id.get_package();
 
@@ -74,12 +72,18 @@ impl Attribute {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id).unwrap();
+        let package = resources.get_package(package_id).ok_or_else(|| {
+            let error = ErrorKind::Msg("Package not found".into());
+
+            error
+        })?;
 
         let entry_key = package
-            .get_entries()
-            .get(&res_id)
-            .and_then(|e| Some(e.get_key()));
+            .get_entry(res_id)
+            .and_then(|e| Ok(e.get_key()))
+            .ok();
+
+        println!("Is main: {} Package: {}", is_main, package_id);
 
         if let Some(key) = entry_key {
             let namespace = if !is_main {
@@ -94,7 +98,7 @@ impl Attribute {
         Err("Error resolving reference".into())
     }
 
-    fn search_values(&self, flags: u32, name_index: u32, xml_resources: &[u32], resources: &Resources) -> Option<String> {
+    fn search_values<'a, R: ResourcesTrait<'a>>(&self, flags: u32, name_index: u32, xml_resources: &[u32], resources: &R) -> Option<String> {
         let entry_ref = match xml_resources.get(name_index as usize) {
             Some(entry_ref) => entry_ref,
             None => return None,
@@ -205,5 +209,188 @@ impl Attribute {
         }
 
         strs
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use model::Value;
+    use model::{StringTable, Resources, Library, LibraryBuilder};
+    use model::{Entries};
+    use chunks::table_type::{Entry, SimpleEntry};
+    use visitor::Origin;
+    use chunks::TypeSpec;
+    
+    struct NoopStringTable;
+    impl StringTable for NoopStringTable {
+        fn get_strings_len(&self) -> u32 {
+            0
+        }
+
+        fn get_styles_len(&self) -> u32 {
+            0
+        }
+
+        fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+            Err("Get string".into())
+        }
+    }
+
+    struct FakeLibrary {
+        entries: Entries,
+    }
+
+    impl FakeLibrary {
+        pub fn new() -> Self {
+            let simple_entry1 = SimpleEntry::new(1, 1, 1, 1);
+            let entry1 = Entry::Simple(simple_entry1);
+
+            let simple_entry2 = SimpleEntry::new(1, 1, 1, 1);
+            let entry2 = Entry::Simple(simple_entry2);
+
+            let mut entries = Entries::new();
+            entries.insert((1<<24) | 1, entry1);
+            entries.insert((2<<24) | 1, entry2);
+
+            FakeLibrary {
+                entries: entries,
+            }
+        }
+    }
+
+    impl Library for FakeLibrary {
+        fn get_name(&self) -> Option<String> {
+            Some("Package name".to_string())
+        }
+
+        fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
+            if id == (1<<24) | 1 && namespace.is_none() {
+                Ok("reference#1".to_string())
+            } else if id == (2<<24) | 1 && namespace.is_some() {
+                Ok("NS:reference#2".to_string())
+            } else {
+                Err("Could not format".into())
+            }
+        }
+
+        fn get_entry(&self, id: u32) -> Result<&Entry> {
+            println!("Get entry: {}", id);
+
+            self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
+        }
+
+        fn get_entries_string(&self, str_id: u32) -> Result<String> {
+            Err("Entries string".into())
+        }
+
+        fn get_spec_string(&self, str_id: u32) -> Result<String> {
+            Err("Sepc string".into())
+        }
+    }
+
+    impl<'a> LibraryBuilder<'a> for FakeLibrary {
+        type StringTable = NoopStringTable;
+
+        fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
+
+        }
+
+        fn add_entries(&mut self, entries: Entries) {
+
+        }
+
+        fn add_type_spec(&mut self, type_spec: TypeSpec<'a>) {
+
+        }
+    }
+
+    struct FakeResources {
+        library: FakeLibrary,
+    }
+
+    impl FakeResources {
+        pub fn fake() -> Self {
+            let library = FakeLibrary::new();
+
+            FakeResources {
+                library: library,
+            }
+        }
+    }
+
+    impl<'a> Resources<'a> for FakeResources {
+        type Library = FakeLibrary;
+
+        fn get_package(&self, package_id: u8) -> Option<&Self::Library> {
+            if package_id == 1 || package_id == 2 {
+                Some(&self.library)
+            } else {
+                None
+            }
+        }
+
+        fn get_mut_package(&mut self, package_id: u8) -> Option<&mut Self::Library> {
+            None
+        }
+
+        fn get_main_package(&self) -> Option<&Self::Library> {
+            None
+        }
+
+        fn is_main_package(&self, package_id: u8) -> bool {
+            package_id == 1
+        }
+    }
+
+    #[test]
+    fn it_resolves_to_null_if_id_is_0() {
+        let string_table = NoopStringTable;
+        let value = Value::new(0x01, 0 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
+        let resources = FakeResources::fake();
+
+        let reference = a.resolve_reference(0, &resources, "prefix");
+
+        assert_eq!("@null", reference.unwrap());
+    }
+
+    #[test]
+    fn it_returns_error_if_the_provided_id_is_related_to_a_non_existing_package() {
+        let string_table = NoopStringTable;
+        let value = Value::new(0x01, 0 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
+        let resources = FakeResources::fake();
+
+        let reference = a.resolve_reference(3 << 24, &resources, "prefix");
+
+        assert!(reference.is_err());
+        assert_eq!("Package not found", reference.err().unwrap().to_string());
+    }
+
+    #[test]
+    fn it_resolves_a_reference_without_namespace() {
+        let string_table = NoopStringTable;
+        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
+        let resources = FakeResources::fake();
+        let reference = (1 << 24) | 1;
+
+        let result = a.resolve_reference(reference, &resources, "prefix");
+
+        assert_eq!("reference#1", result.unwrap());
+    }
+
+    #[test]
+    fn it_resolves_a_reference_with_namespace() {
+        let string_table = NoopStringTable;
+        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
+        let resources = FakeResources::fake();
+        let reference = (2 << 24) | 1;
+
+        let result = a.resolve_reference(reference, &resources, "prefix");
+
+        assert_eq!("NS:reference#2", result.unwrap());
     }
 }

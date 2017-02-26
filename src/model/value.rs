@@ -57,7 +57,7 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u8, data: u32, str_table: &mut StringTable) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
                 Value::ReferenceId(data)

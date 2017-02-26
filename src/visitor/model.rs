@@ -227,10 +227,6 @@ impl<'a> LibraryTrait for Library<'a> {
         }
     }
 
-    fn get_entries(&self) -> &Entries {
-        &self.entries
-    }
-
     fn get_entry(&self, id: u32) -> Result<&Entry> {
         self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
     }
