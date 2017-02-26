@@ -105,7 +105,6 @@ impl Attribute {
         };
 
         let package_id = entry_ref.get_package() as u8;
-
         resources.get_package(package_id)
             .and_then(|package| {
                 self.search_flags(flags, *entry_ref, package)
@@ -114,7 +113,7 @@ impl Attribute {
 
     fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = self.get_strings(flags, entry_ref, package);
-
+println!("Strings: {:?}", str_indexes);
         let str_strs: Vec<String> = str_indexes
             .iter()
             .map(|si| {
@@ -145,6 +144,7 @@ impl Attribute {
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
             .unwrap_or(Vec::new());
+println!("Inner: {:?}", inner_entries);
         let mut sorted = inner_entries.to_vec();
 
         sorted.sort_by(|a, b| {
@@ -173,7 +173,6 @@ impl Attribute {
 
         for ie in sorted {
             let mask = ie.get_value();
-
             if (mask & flags) == mask {
                 let maybe_entry = package.get_entry(ie.get_id());
 
@@ -218,12 +217,13 @@ mod tests {
     use model::Value;
     use model::{StringTable, Resources, Library, LibraryBuilder};
     use model::{Entries};
-    use chunks::table_type::{Entry, SimpleEntry};
+    use chunks::table_type::{Entry, SimpleEntry, ComplexEntry};
     use visitor::Origin;
     use chunks::TypeSpec;
-    
-    struct NoopStringTable;
-    impl StringTable for NoopStringTable {
+    use std::rc::Rc;
+
+    struct FakeStringTable;
+    impl StringTable for FakeStringTable {
         fn get_strings_len(&self) -> u32 {
             0
         }
@@ -233,7 +233,12 @@ mod tests {
         }
 
         fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-            Err("Get string".into())
+            match idx {
+                456 => Ok(Rc::new("left".to_string())),
+                789 => Ok(Rc::new("right".to_string())),
+                123 => Ok(Rc::new("center".to_string())),
+                _ => Err("Get string".into())
+            }
         }
     }
 
@@ -249,9 +254,34 @@ mod tests {
             let simple_entry2 = SimpleEntry::new(1, 1, 1, 1);
             let entry2 = Entry::Simple(simple_entry2);
 
+            let simple_entry3 = SimpleEntry::new((2<<24) | 4, 1, 1, 1 << 8);
+            let entry3 = Entry::Simple(simple_entry3.clone());
+
+            let simple_entry4 = SimpleEntry::new((2 << 24) | 4, 456, 1, 1 << 8);
+            let entry4 = Entry::Simple(simple_entry4);
+
+            let simple_entry5 = SimpleEntry::new((2 << 24) | 5, 789, 1, 1 << 9);
+            let entry5 = Entry::Simple(simple_entry5.clone());
+
+            let simple_entry6 = SimpleEntry::new((2 << 24) | 6, 123, 1, 1 << 10);
+            let entry6 = Entry::Simple(simple_entry6.clone());
+
+            let mut ce1_childen_entries = Vec::new();
+            ce1_childen_entries.push(simple_entry3);
+            ce1_childen_entries.push(simple_entry5);
+            ce1_childen_entries.push(simple_entry6);
+
+            let complex_entry1 = ComplexEntry::new(1, 1, 1, ce1_childen_entries);
+            let entry_ce1 = Entry::Complex(complex_entry1);
+
             let mut entries = Entries::new();
             entries.insert((1<<24) | 1, entry1);
             entries.insert((2<<24) | 1, entry2);
+            entries.insert((2<<24) | 2, entry3);
+            entries.insert((2<<24) | 3, entry_ce1);
+            entries.insert((2<<24) | 4, entry4);
+            entries.insert((2<<24) | 5, entry5);
+            entries.insert((2<<24) | 6, entry6);
 
             FakeLibrary {
                 entries: entries,
@@ -281,7 +311,9 @@ mod tests {
         }
 
         fn get_entries_string(&self, str_id: u32) -> Result<String> {
-            Err("Entries string".into())
+            let st = FakeStringTable;
+
+            Ok((*st.get_string(str_id)?).clone())
         }
 
         fn get_spec_string(&self, str_id: u32) -> Result<String> {
@@ -290,7 +322,7 @@ mod tests {
     }
 
     impl<'a> LibraryBuilder<'a> for FakeLibrary {
-        type StringTable = NoopStringTable;
+        type StringTable = FakeStringTable;
 
         fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
 
@@ -345,7 +377,7 @@ mod tests {
 
     #[test]
     fn it_resolves_to_null_if_id_is_0() {
-        let string_table = NoopStringTable;
+        let string_table = FakeStringTable;
         let value = Value::new(0x01, 0 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
         let resources = FakeResources::fake();
@@ -357,7 +389,7 @@ mod tests {
 
     #[test]
     fn it_returns_error_if_the_provided_id_is_related_to_a_non_existing_package() {
-        let string_table = NoopStringTable;
+        let string_table = FakeStringTable;
         let value = Value::new(0x01, 0 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
         let resources = FakeResources::fake();
@@ -370,7 +402,7 @@ mod tests {
 
     #[test]
     fn it_resolves_a_reference_without_namespace() {
-        let string_table = NoopStringTable;
+        let string_table = FakeStringTable;
         let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
         let resources = FakeResources::fake();
@@ -383,7 +415,7 @@ mod tests {
 
     #[test]
     fn it_resolves_a_reference_with_namespace() {
-        let string_table = NoopStringTable;
+        let string_table = FakeStringTable;
         let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
         let resources = FakeResources::fake();
@@ -392,5 +424,52 @@ mod tests {
         let result = a.resolve_reference(reference, &resources, "prefix");
 
         assert_eq!("NS:reference#2", result.unwrap());
+    }
+
+    #[test]
+    fn it_resolves_flags_if_index_out_of_bounds() {
+        let string_table = FakeStringTable;
+        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
+        let resources = FakeResources::fake();
+        let reference = (2 << 24) | 1;
+
+        let default_flags = format!("@flags:{}", 567);
+        let resc = vec![];
+        let result = a.resolve_flags(567, &resc, &resources);
+
+        assert_eq!(default_flags, result.unwrap());
+    }
+
+    #[test]
+    fn it_resolves_flags_if_in_resources() {
+        let string_table = FakeStringTable;
+        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 0);
+        let resources = FakeResources::fake();
+        let reference = (2 << 24) | 1;
+
+        let resc = vec![2 << 24 | 3];
+        let flags = 1<<8;
+
+        let result = a.resolve_flags(flags, &resc, &resources);
+
+        assert_eq!("left", result.unwrap());
+    }
+
+    #[test]
+    fn it_resolves_flags_if_in_resources_multiple() {
+        let string_table = FakeStringTable;
+        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 0);
+        let resources = FakeResources::fake();
+        let reference = (2 << 24) | 1;
+
+        let resc = vec![2 << 24 | 3];
+        let flags = 1<<8 | 1<<9;
+
+        let result = a.resolve_flags(flags, &resc, &resources);
+
+        assert_eq!("left|right", result.unwrap());
     }
 }
