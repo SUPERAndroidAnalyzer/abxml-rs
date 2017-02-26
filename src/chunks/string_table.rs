@@ -3,8 +3,6 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use errors::*;
-use std::clone::Clone;
-use std::collections::hash_map::{HashMap, Entry};
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
@@ -190,7 +188,7 @@ impl<'a> StringTableWrapper<'a> {
 
 pub struct StringTable<'a> {
     wrapper: StringTableWrapper<'a>,
-    cache: HashMap<u32, Rc<String>>,
+//    cache: HashMap<u32, Rc<String>>,
 }
 
 impl<'a> Display for StringTable<'a> {
@@ -198,7 +196,7 @@ impl<'a> Display for StringTable<'a> {
         let amount = self.get_strings_len();
 
         for i in 0..amount {
-            write!(formatter, "{} - {}\n", i, self.get_uncached_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
+            write!(formatter, "{} - {}\n", i, self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
         }
 
         Ok(())
@@ -228,11 +226,11 @@ impl<'a> StringTable <'a> {
     pub fn new(wrapper: StringTableWrapper<'a>) -> Self {
         StringTable {
             wrapper: wrapper,
-            cache: HashMap::new(),
+//          cache: HashMap::new(),
         }
     }
 
-    pub fn get_string(&mut self, idx: u32) -> Result<Rc<String>> {
+    /*pub fn get_string(&mut self, idx: u32) -> Result<Rc<String>> {
         // TODO: THinkf about how to be able to cache this. Check serde or serde_json to check how they did it
         if idx > self.get_strings_len() {
             return Err("Index out of bounds".into());
@@ -258,5 +256,5 @@ impl<'a> StringTable <'a> {
     pub fn get_uncached_string(&self, idx: u32) -> Result<Rc<String>> {
         let string = self.wrapper.get_string(idx)?;
         Ok(Rc::new(string))
-    }
+    }*/
 }
