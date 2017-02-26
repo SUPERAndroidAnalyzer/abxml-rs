@@ -13,6 +13,9 @@ pub use self::element::ElementContainer as ElementContainer;
 pub use self::value::Value as Value;
 pub use self::attribute::Attribute as Attribute;
 
+use visitor::Origin;
+use chunks::TypeSpec;
+
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 pub type Entries = HashMap<u32, Entry>;
 
@@ -54,6 +57,32 @@ pub trait StringTable {
 pub trait Package {
     fn get_id(&self) -> Result<u32>;
     fn get_name(&self) -> Result<String>;
+}
+
+pub trait Library {
+    fn get_name(&self) -> Option<String>;
+    fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String>;
+    fn get_entries(&self) -> &Entries;
+    fn get_entry(&self, id: u32) -> Result<&Entry>;
+    fn get_entries_string(&self, str_id: u32) -> Result<String>;
+    fn get_spec_string(&self, str_id: u32) -> Result<String>;
+}
+
+pub trait LibraryBuilder<'a> {
+    type StringTable: StringTable;
+
+    fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin);
+    fn add_entries(&mut self, entries: Entries);
+    fn add_type_spec(&mut self, type_spec: TypeSpec<'a>);
+}
+
+pub trait Resources<'a> {
+    type Library: Library + LibraryBuilder<'a>;
+
+    fn get_package(&self, package_id: u8) -> Option<&Self::Library>;
+    fn get_mut_package(&mut self, package_id: u8) -> Option<&mut Self::Library>;
+    fn get_main_package(&self) -> Option<&Self::Library>;
+    fn is_main_package(&self, package_id: u8) -> bool;
 }
 
 #[cfg(test)]
