@@ -12,3 +12,7 @@ log = "0.3.6"
 env_logger = "0.3.5"
 zip = "0.2"
 encoding = "0.2"
+
+[features]
+default = ["embbed_default_arsc"]
+embbed_default_arsc = []
