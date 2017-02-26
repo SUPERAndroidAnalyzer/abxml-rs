@@ -83,8 +83,6 @@ impl Attribute {
             .and_then(|e| Ok(e.get_key()))
             .ok();
 
-        println!("Is main: {} Package: {}", is_main, package_id);
-
         if let Some(key) = entry_key {
             let namespace = if !is_main {
                 package.get_name()
@@ -113,7 +111,6 @@ impl Attribute {
 
     fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = self.get_strings(flags, entry_ref, package);
-println!("Strings: {:?}", str_indexes);
         let str_strs: Vec<String> = str_indexes
             .iter()
             .map(|si| {
@@ -144,7 +141,7 @@ println!("Strings: {:?}", str_indexes);
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
             .unwrap_or(Vec::new());
-println!("Inner: {:?}", inner_entries);
+
         let mut sorted = inner_entries.to_vec();
 
         sorted.sort_by(|a, b| {
@@ -305,8 +302,6 @@ mod tests {
         }
 
         fn get_entry(&self, id: u32) -> Result<&Entry> {
-            println!("Get entry: {}", id);
-
             self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
         }
 

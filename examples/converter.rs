@@ -44,15 +44,7 @@ fn run() -> Result<()> {
         }
     };
 
-    let android_apk_path = match env::args().nth(2) {
-        Some(path) => path,
-        None => {
-            println!("Usage: converter <path>");
-            return Ok(())
-        }
-    };
-
-    let target_file = match env::args().nth(3) {
+    let target_file = match env::args().nth(2) {
         Some(path) => path,
         None => {
             println!("Usage: converter <path>");
@@ -61,9 +53,7 @@ fn run() -> Result<()> {
     };
 
     // Android lib
-    let mut android_resources_content = Vec::new();
-    let mut file = std::fs::File::open(&android_apk_path)?;
-    file.read_to_end(&mut android_resources_content)?;
+    let android_resources_content = abxml::STR_ARSC.to_owned();
 
     // APK
     let file = std::fs::File::open(&apk_path)?;

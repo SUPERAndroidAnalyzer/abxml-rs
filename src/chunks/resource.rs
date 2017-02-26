@@ -45,7 +45,6 @@ impl<'a> ResourceWrapper<'a> {
         let mut owned = ResourceBuf::new();
 
         for r in &self.get_resources()? {
-            println!("Resource");
             owned.push_resource(*r);
         }
 

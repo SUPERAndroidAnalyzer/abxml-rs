@@ -15,6 +15,9 @@ pub mod chunks;
 pub mod visitor;
 pub mod model;
 
+#[cfg(feature = "embbed_default_arsc")]
+pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");
+
 pub mod errors {
     // Create the Error, ErrorKind, ResultExt, and Result types
     error_chain! {

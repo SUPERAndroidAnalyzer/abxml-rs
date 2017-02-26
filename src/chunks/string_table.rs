@@ -70,8 +70,6 @@ impl<'a> StringTableWrapper<'a> {
             owned.set_encoding(EncodingType::Utf16);
         }
 
-        println!("Strings: {}", self.get_strings_len());
-
         for i in 0..self.get_strings_len() {
             owned.add_string(self.get_string(i)?);
         }
