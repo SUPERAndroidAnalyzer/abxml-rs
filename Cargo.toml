@@ -14,5 +14,5 @@ zip = "0.2"
 encoding = "0.2"
 
 [features]
-default = ["embbed_default_arsc"]
-embbed_default_arsc = []
+default = ["embed_default_arsc"]
+embed_default_arsc = []
