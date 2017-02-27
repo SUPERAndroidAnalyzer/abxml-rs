@@ -116,12 +116,10 @@ impl<'a> Apk<'a> {
                 current_file.read_to_end(&mut contents).chain_err(|| format!("Could not read: {}", current_file.name()))?;
                 let is_xml = current_file.name().to_string();
 
-                (is_xml, contents.clone())
+                (is_xml, contents)
             };
 
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) || file_name == "AndroidManifest.xml" {
-                println!("File name:{}", file_name);
-
                 let new_content = contents.clone();
                 let resources = self.decoder.get_resources();
                 let out = self.parse_xml(&new_content).chain_err(|| format!("Could not decode: {}", file_name))?;
