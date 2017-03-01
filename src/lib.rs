@@ -97,6 +97,7 @@ impl<'a> Apk<'a> {
         Ok(apk)
     }
 
+    /// It exports to target output_path the contents of the APK, transcoding the binary XML files found on it.
     pub fn export(&mut self, output_path: &Path, force: bool) -> Result<()> {
         match fs::create_dir(output_path) {
             Err(_) => {
@@ -146,6 +147,7 @@ impl<'a> Apk<'a> {
                             .chain_err(|| "Could not open file to write")?;
 
         descriptor.write_all(&content).chain_err(|| "Could not write to target file")?;
+        descriptor.sync_all().chain_err(|| "Could not flush")?;
 
         Ok(())
     }
