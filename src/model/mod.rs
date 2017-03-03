@@ -7,6 +7,7 @@ mod element;
 mod value;
 mod attribute;
 pub mod owned;
+mod builder;
 
 pub use self::element::Element as Element;
 pub use self::element::ElementContainer as ElementContainer;
@@ -83,6 +84,10 @@ pub trait Resources<'a> {
     fn get_mut_package(&mut self, package_id: u8) -> Option<&mut Self::Library>;
     fn get_main_package(&self) -> Option<&Self::Library>;
     fn is_main_package(&self, package_id: u8) -> bool;
+}
+
+pub trait TagStart {
+    fn get_tag_start(&self) -> Result<(Vec<Attribute>, Rc<String>)>;
 }
 
 #[cfg(test)]

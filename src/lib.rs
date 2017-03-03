@@ -48,7 +48,7 @@ pub mod errors {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use decoder::{Apk, File};
+    use decoder::{Apk, Decoder};
 
     #[test]
     #[should_panic]
@@ -61,8 +61,10 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_decoder_from_a_buffer() {
-        let buffer = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let arsc = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let xml = vec![0, 0, 12, 0, 0, 0, 0, 0];
 
-        File::new(&buffer).unwrap();
+        let decoder = Decoder::new(&arsc).unwrap();
+        let out = decoder.as_xml(&xml).unwrap();
     }
 }
