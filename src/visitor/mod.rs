@@ -57,7 +57,9 @@ impl Executor {
                     let ts = TypeSpec::new(tsw);
                     visitor.visit_type_spec(ts);
                 },
-                _ => (),
+                _ => {
+                    warn!("Not expected chunk on ARSC");
+                },
             }
         }
 
