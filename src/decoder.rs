@@ -42,21 +42,35 @@ impl<'a> Decoder<'a> {
     pub fn get_resources(&self) -> &'a Resources {
         &self.visitor.get_resources()
     }
-}
 
-pub struct File<'a> {
-    decoder: Decoder<'a>,
-}
+    pub fn as_xml(&self, content: &Vec<u8>) -> Result<String> {
+        let cursor: Cursor<&[u8]> = Cursor::new(&content);
+        let mut visitor = XmlVisitor::default();
 
-impl<'a> File<'a> {
-    pub fn new(buffer: &'a Vec<u8>) -> Result<Self> {
-        let decoder = Decoder::new(buffer.as_slice())?;
+        Executor::xml(cursor, &mut visitor)?;
 
-        let file = File {
-            decoder: decoder,
-        };
+        match *visitor.get_root() {
+            Some(ref root) => {
+                match *visitor.get_string_table() {
+                    Some(_) => {
+                        return Xml::encode(
+                            visitor.get_namespaces(),
+                            root,
+                            visitor.get_resources(),
+                            self.get_resources(),
+                        ).chain_err(|| "Could note encode XML");
+                    },
+                    None => {
+                        println!("No string table found");
+                    }
+                }
+            },
+            None => {
+                println!("No root on target XML");
+            }
+        }
 
-        Ok(file)
+        Err("Could not decode XML".into())
     }
 }
 
@@ -109,7 +123,7 @@ impl<'a> Apk<'a> {
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) || file_name == "AndroidManifest.xml" {
                 let new_content = contents.clone();
                 let resources = self.decoder.get_resources();
-                let out = self.parse_xml(&new_content).chain_err(|| format!("Could not decode: {}", file_name))?;
+                let out = self.decoder.as_xml(&new_content).chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()
             } else {
@@ -136,35 +150,5 @@ impl<'a> Apk<'a> {
         descriptor.sync_all().chain_err(|| "Could not flush")?;
 
         Ok(())
-    }
-
-    fn parse_xml(&self, content: &Vec<u8>) -> Result<String> {
-        let cursor: Cursor<&[u8]> = Cursor::new(&content);
-        let mut visitor = XmlVisitor::default();
-
-        Executor::xml(cursor, &mut visitor)?;
-
-        match *visitor.get_root() {
-            Some(ref root) => {
-                match *visitor.get_string_table() {
-                    Some(_) => {
-                        return Xml::encode(
-                            visitor.get_namespaces(),
-                            root,
-                            visitor.get_resources(),
-                            self.decoder.get_resources(),
-                        ).chain_err(|| "Could note encode XML");
-                    },
-                    None => {
-                        println!("No string table found");
-                    }
-                }
-            },
-            None => {
-                println!("No root on target XML");
-            }
-        }
-
-        Err("Could not decode XML".into())
     }
 }
