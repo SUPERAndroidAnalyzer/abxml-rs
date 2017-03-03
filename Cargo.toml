@@ -18,6 +18,3 @@ log = "0.3.6"
 env_logger = "0.3.5"
 zip = "0.2"
 encoding = "0.2"
-
-[features]
-default = ["embed_default_arsc"]
