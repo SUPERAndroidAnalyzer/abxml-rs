@@ -44,6 +44,22 @@ impl<'a> Decoder<'a> {
     }
 }
 
+pub struct File<'a> {
+    decoder: Decoder<'a>,
+}
+
+impl<'a> File<'a> {
+    pub fn new(buffer: &'a Vec<u8>) -> Result<Self> {
+        let decoder = Decoder::new(buffer.as_slice())?;
+
+        let file = File {
+            decoder: decoder,
+        };
+
+        Ok(file)
+    }
+}
+
 pub struct Apk<'a> {
     handler: ZipArchive<std::fs::File>,
     decoder: Decoder<'a>,
