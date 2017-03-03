@@ -29,7 +29,6 @@ use visitor::*;
 use encoder::Xml;
 use std::io::Write;
 
-#[cfg(feature = "embed_default_arsc")]
 pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");
 
 pub mod errors {
