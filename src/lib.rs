@@ -15,7 +15,6 @@ pub mod encoder;
 pub mod chunks;
 pub mod visitor;
 pub mod model;
-pub mod apk;
 pub mod decoder;
 
 use visitor::ModelVisitor;
@@ -49,7 +48,7 @@ pub mod errors {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apk::Apk;
+    use decoder::Apk;
 
     #[test]
     #[should_panic]
