@@ -78,7 +78,6 @@ mod tests {
 
     impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
         fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {
-            println!("Stringtable");
             self.count += 1
         }
         fn visit_package(&mut self, _package: PackageRef<'a>) {
@@ -106,7 +105,6 @@ mod tests {
             self.count += 1
         }
         fn visit_resource(&mut self, _resource: Resource<'a>) {
-            println!("Resource");
             self.count += 1
         }
     }
