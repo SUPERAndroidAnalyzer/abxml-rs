@@ -11,7 +11,7 @@ use std::io::prelude::*;
 use abxml::errors::*;
 use abxml::visitor::*;
 use std::io::Cursor;
-use abxml::Apk;
+use abxml::apk::Apk;
 use std::path::Path;
 
 fn main() {
