@@ -50,6 +50,50 @@ impl Arsc {
     }
 }
 
+pub struct Xml {
+    chunks: Vec<Box<OwnedBuf>>,
+}
+
+impl Xml {
+    pub fn new() -> Self {
+        Xml {
+            chunks: Vec::new(),
+        }
+    }
+
+    pub fn push_owned(&mut self, chunk: Box<OwnedBuf>) {
+        self.chunks.push(chunk);
+    }
+
+    pub fn to_vec(self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+        let mut inner = Vec::new();
+        let mut file_size = 0;
+
+        for c in self.chunks {
+            let encoded_chunk = c.to_vec().chain_err(|| "Could not encode a chunk")?;
+            file_size += encoded_chunk.len();
+
+            inner.extend(encoded_chunk);
+        }
+
+        // TODO: Check initial token
+        // Token
+        out.write_u16::<LittleEndian>(0)?;
+
+        // Header_size
+        out.write_u16::<LittleEndian>(3*4)?;
+
+        // Chunk size
+        out.write_u32::<LittleEndian>(file_size as u32)?;
+
+        out.extend(inner);
+
+        Ok(out)
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -137,5 +181,37 @@ mod tests {
 
         // Resource should be ignored as it is not a chunk that appears on an ARSC
         assert_eq!(2, visitor.get_count());
+    }
+
+    #[test]
+    fn it_can_generate_a_resources_xml_file_content() {
+        let xml = Xml::new();
+        let content = xml.to_vec().unwrap();
+        let mut visitor = CounterChunkVisitor::new();
+
+        assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0], content);
+
+        Executor::arsc(Cursor::new(&content), &mut visitor);
+
+        assert_eq!(0, visitor.get_count());
+    }
+
+    #[test]
+    fn it_can_generate_a_resources_xml_file_content_with_some_chunks() {
+        /*
+        let mut xml = Xml::new();
+
+        xml.push_owned(Box::new(StringTableBuf::new()));
+        xml.push_owned(Box::new(StringTableBuf::new()));
+        xml.push_owned(Box::new(ResourceBuf::new()));
+
+        let content = xml.to_vec().unwrap();
+        let mut visitor = CounterChunkVisitor::new();
+
+        Executor::arsc(Cursor::new(&content), &mut visitor);
+
+        // Resource should be ignored as it is not a chunk that appears on an ARSC
+        assert_eq!(1, visitor.get_count());
+        */
     }
 }
