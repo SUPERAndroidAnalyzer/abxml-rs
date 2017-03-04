@@ -49,6 +49,8 @@ pub mod errors {
 mod tests {
     use super::*;
     use decoder::{Apk, Decoder};
+    use model::builder::Xml;
+    use model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf};
 
     #[test]
     #[should_panic]
@@ -62,9 +64,24 @@ mod tests {
     #[test]
     fn it_can_generate_a_decoder_from_a_buffer() {
         let arsc = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let xml = vec![0, 0, 12, 0, 0, 0, 0, 0];
+        let mut xml = Xml::new();
+        let mut st = StringTableBuf::new();
+        st.add_string("Some string".to_string());
+        st.add_string("Another srtring".to_string());
+        st.add_string("start_tag".to_string());
+
+        xml.push_owned(Box::new(st));
+        xml.push_owned(Box::new(XmlTagStartBuf::new(2, None)));
+        xml.push_owned(Box::new(XmlTagEndBuf::new()));
+
+        let xml_content = xml.to_vec().unwrap();
 
         let decoder = Decoder::new(&arsc).unwrap();
-        let out = decoder.as_xml(&xml).unwrap();
+        let out = decoder.as_xml(&xml_content).unwrap();
+
+        let inner_expected = "<start_tag></start_tag>";
+        let expected = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}", inner_expected);
+
+        assert_eq!(expected, out);
     }
 }

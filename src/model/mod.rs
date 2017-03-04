@@ -7,7 +7,7 @@ mod element;
 mod value;
 mod attribute;
 pub mod owned;
-mod builder;
+pub mod builder;
 
 pub use self::element::Element as Element;
 pub use self::element::ElementContainer as ElementContainer;
