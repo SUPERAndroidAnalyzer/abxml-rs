@@ -190,7 +190,7 @@ mod tests {
 
         assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0], content);
 
-        Executor::arsc(Cursor::new(&content), &mut visitor).unwrap();
+        Executor::xml(Cursor::new(&content), &mut visitor).unwrap();
 
         assert_eq!(0, visitor.get_count());
     }
