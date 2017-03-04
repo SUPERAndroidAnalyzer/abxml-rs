@@ -34,3 +34,5 @@ pub trait OwnedBuf {
 pub use self::resources::ResourcesBuf as ResourceBuf;
 pub use self::string_table::StringTableBuf as StringTableBuf;
 pub use self::string_table::Encoding as Encoding;
+pub use self::xml::XmlTagStartBuf as XmlTagStartBuf;
+pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;
