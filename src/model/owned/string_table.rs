@@ -147,15 +147,10 @@ impl StringTableTrait for StringTableBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
         let string_table = StringTableBuf::new();
-        let out = string_table.to_vec().unwrap();
-
-        let chunk_header = ChunkHeader::new(0, 8, (0*8)+8, TOKEN_STRING_TABLE);
-        let wrapper = StringTableWrapper::new(&out, chunk_header);
 
         assert_eq!(0, string_table.get_strings_len());
         assert_eq!(0, string_table.get_styles_len());
@@ -167,7 +162,6 @@ mod tests {
         let mut string_table = StringTableBuf::new();
         string_table.add_string("some string".to_string());
         string_table.add_string("忠犬ハチ公".to_string());
-        let out = string_table.to_vec().unwrap();
 
         assert_eq!(2, string_table.get_strings_len());
         assert_eq!(0, string_table.get_styles_len());

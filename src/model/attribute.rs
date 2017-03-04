@@ -291,7 +291,7 @@ mod tests {
             Some("Package name".to_string())
         }
 
-        fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
+        fn format_reference(&self, id: u32, _: u32, namespace: Option<String>, _: &str) -> Result<String> {
             if id == (1<<24) | 1 && namespace.is_none() {
                 Ok("reference#1".to_string())
             } else if id == (2<<24) | 1 && namespace.is_some() {
@@ -311,7 +311,7 @@ mod tests {
             Ok((*st.get_string(str_id)?).clone())
         }
 
-        fn get_spec_string(&self, str_id: u32) -> Result<String> {
+        fn get_spec_string(&self, _: u32) -> Result<String> {
             Err("Sepc string".into())
         }
     }
@@ -319,15 +319,15 @@ mod tests {
     impl<'a> LibraryBuilder<'a> for FakeLibrary {
         type StringTable = FakeStringTable;
 
-        fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
+        fn set_string_table(&mut self, _: Self::StringTable, _: Origin) {
 
         }
 
-        fn add_entries(&mut self, entries: Entries) {
+        fn add_entries(&mut self, _: Entries) {
 
         }
 
-        fn add_type_spec(&mut self, type_spec: TypeSpec<'a>) {
+        fn add_type_spec(&mut self, _: TypeSpec<'a>) {
 
         }
     }
@@ -357,7 +357,7 @@ mod tests {
             }
         }
 
-        fn get_mut_package(&mut self, package_id: u8) -> Option<&mut Self::Library> {
+        fn get_mut_package(&mut self, _: u8) -> Option<&mut Self::Library> {
             None
         }
 
@@ -427,7 +427,6 @@ mod tests {
         let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 1234);
         let resources = FakeResources::fake();
-        let reference = (2 << 24) | 1;
 
         let default_flags = format!("@flags:{}", 567);
         let resc = vec![];
@@ -442,7 +441,6 @@ mod tests {
         let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 0);
         let resources = FakeResources::fake();
-        let reference = (2 << 24) | 1;
 
         let resc = vec![2 << 24 | 3];
         let flags = 1<<8;
@@ -458,7 +456,6 @@ mod tests {
         let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 0);
         let resources = FakeResources::fake();
-        let reference = (2 << 24) | 1;
 
         let resc = vec![2 << 24 | 3];
         let flags = 1<<8 | 1<<9;

@@ -17,19 +17,6 @@ pub mod visitor;
 pub mod model;
 pub mod decoder;
 
-use visitor::ModelVisitor;
-use std::path::Path;
-use std::io::Cursor;
-use visitor::Executor;
-use errors::*;
-use std::io::Read;
-use std::io;
-use std::fs;
-use zip::ZipArchive;
-use visitor::*;
-use encoder::Xml;
-use std::io::Write;
-
 pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");
 
 pub mod errors {
@@ -47,7 +34,7 @@ pub mod errors {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::path::Path;
     use decoder::{Apk, Decoder};
     use model::builder::Xml;
     use model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf};
