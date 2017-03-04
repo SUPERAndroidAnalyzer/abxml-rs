@@ -29,7 +29,7 @@ impl<'a> Decoder<'a> {
             buffer_apk: data,
         };
 
-        let android_resources_cursor: Cursor<&[u8]> = Cursor::new(decoder.buffer_android);
+        let android_resources_cursor = Cursor::new(decoder.buffer_android);
         Executor::arsc(android_resources_cursor, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
 
         let cursor: Cursor<&[u8]> = Cursor::new(decoder.buffer_apk);
@@ -42,8 +42,8 @@ impl<'a> Decoder<'a> {
         &self.visitor.get_resources()
     }
 
-    pub fn as_xml(&self, content: &Vec<u8>) -> Result<String> {
-        let cursor: Cursor<&[u8]> = Cursor::new(&content);
+    pub fn as_xml(&self, content: &[u8]) -> Result<String> {
+        let cursor = Cursor::new(content);
         let mut visitor = XmlVisitor::default();
 
         Executor::xml(cursor, &mut visitor)?;
@@ -79,12 +79,11 @@ pub struct Apk<'a> {
 }
 
 impl<'a> Apk<'a> {
-    pub fn new(path: &Path, mut buffer: &'a mut Vec<u8>) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, mut buffer: &'a mut Vec<u8>) -> Result<Self> {
         let file = std::fs::File::open(&path)?;
         let mut zip_handler = zip::ZipArchive::new(file)?;
 
-        zip_handler.by_name("resources.arsc")?
-            .read_to_end(&mut buffer)?;
+        zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;
 
         let decoder = Decoder::new(buffer.as_slice())?;
 
@@ -97,12 +96,12 @@ impl<'a> Apk<'a> {
     }
 
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files found on it.
-    pub fn export(&mut self, output_path: &Path, force: bool) -> Result<()> {
-        match fs::create_dir(output_path) {
+    pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
+        match fs::create_dir(&output_path) {
             Err(_) => {
                 if force {
-                    fs::remove_dir_all(output_path).chain_err(|| "Could not clean target directory")?;
-                    fs::create_dir(output_path).chain_err(|| "Error creating the output folder")?;
+                    fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
+                    fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
                 }
             }
             _ => (),
@@ -128,15 +127,15 @@ impl<'a> Apk<'a> {
                 contents
             };
 
-            Self::write_file(output_path, &file_name, &contents).chain_err(|| "Could not write output file")?;
+            Self::write_file(&output_path, &file_name, &contents).chain_err(|| "Could not write output file")?;
 
         }
         Ok(())
     }
 
-    fn write_file(base_path: &Path, relative: &String, content: &Vec<u8>) -> Result<()> {
-        let full_path = base_path.join(Path::new(relative));
-        //println!("Full path: {:?}", full_path);
+    fn write_file<B: AsRef<Path>, R: AsRef<Path>>(base_path: B, relative: R, content: &[u8]) -> Result<()> {
+        let full_path = base_path.as_ref().join(&relative);
+        // println!("Full path: {}", full_path.display());
         fs::create_dir_all(full_path.parent().unwrap()).chain_err(|| "Could not create the output dir")?;
 
         let mut descriptor = fs::OpenOptions::new().write(true)
