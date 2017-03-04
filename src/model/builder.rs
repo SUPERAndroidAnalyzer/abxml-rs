@@ -1,6 +1,5 @@
 use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
-use chunks::*;
 use errors::*;
 
 pub struct Arsc {
@@ -161,7 +160,7 @@ mod tests {
 
         assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], content);
 
-        Executor::arsc(Cursor::new(&content), &mut visitor);
+        Executor::arsc(Cursor::new(&content), &mut visitor).unwrap();
 
         assert_eq!(0, visitor.get_count());
     }
@@ -177,7 +176,7 @@ mod tests {
         let content = arsc.to_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
-        Executor::arsc(Cursor::new(&content), &mut visitor);
+        Executor::arsc(Cursor::new(&content), &mut visitor).unwrap();
 
         // Resource should be ignored as it is not a chunk that appears on an ARSC
         assert_eq!(2, visitor.get_count());
@@ -191,7 +190,7 @@ mod tests {
 
         assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0], content);
 
-        Executor::arsc(Cursor::new(&content), &mut visitor);
+        Executor::arsc(Cursor::new(&content), &mut visitor).unwrap();
 
         assert_eq!(0, visitor.get_count());
     }
