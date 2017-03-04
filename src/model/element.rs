@@ -45,7 +45,7 @@ impl Element {
 
 impl Display for Element {
     fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
-        let tabs = "\t".to_string().repeat(self.level as usize);
+        let tabs = "\t".repeat(self.level as usize);
         write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
 
         for c in &self.children {
@@ -69,7 +69,8 @@ impl ElementContainer {
     }
 
     pub fn end_element(&mut self) {
-        self.stack.pop()
+        self.stack
+            .pop()
             .and_then(|element| {
                 if self.stack.is_empty() {
                     self.root = Some(element);
