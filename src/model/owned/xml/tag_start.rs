@@ -46,7 +46,7 @@ impl OwnedBuf for XmlTagStartBuf {
         out.write_u32::<LittleEndian>(0)?;
 
         // Namespace
-        out.write_u32::<LittleEndian>(0)?;
+        out.write_u32::<LittleEndian>(self.namespace.unwrap_or(0))?;
 
         // Element name
         out.write_u32::<LittleEndian>(self.name)?;
@@ -76,11 +76,10 @@ impl OwnedBuf for XmlTagStartBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
-        let mut tag_start = XmlTagStartBuf::new(2, None);
+        let tag_start = XmlTagStartBuf::new(2, None);
         let out = tag_start.to_vec().unwrap();
         let expected = vec![2, 1, 8, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -89,8 +88,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
-        let mut tag_start = XmlTagStartBuf::new(54, None);
-        let out = tag_start.to_vec().unwrap();
+
     }
 
     #[test]

@@ -4,7 +4,6 @@ use std::io::Cursor;
 use visitor::Executor;
 use errors::*;
 use std::io::Read;
-use std::io;
 use std::fs;
 use zip::ZipArchive;
 use visitor::*;
@@ -122,7 +121,6 @@ impl<'a> Apk<'a> {
 
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) || file_name == "AndroidManifest.xml" {
                 let new_content = contents.clone();
-                let resources = self.decoder.get_resources();
                 let out = self.decoder.as_xml(&new_content).chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()

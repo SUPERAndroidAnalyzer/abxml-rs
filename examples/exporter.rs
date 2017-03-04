@@ -6,11 +6,7 @@ extern crate log;
 extern crate env_logger;
 
 use std::env;
-use abxml::encoder::Xml;
-use std::io::prelude::*;
 use abxml::errors::*;
-use abxml::visitor::*;
-use std::io::Cursor;
 use abxml::decoder::Apk;
 use std::path::Path;
 

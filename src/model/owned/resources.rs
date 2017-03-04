@@ -46,7 +46,6 @@ impl OwnedBuf for ResourcesBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
