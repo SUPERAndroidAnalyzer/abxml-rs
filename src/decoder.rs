@@ -52,18 +52,17 @@ impl<'a> Decoder<'a> {
             Some(ref root) => {
                 match *visitor.get_string_table() {
                     Some(_) => {
-                        return Xml::encode(
-                            visitor.get_namespaces(),
-                            root,
-                            visitor.get_resources(),
-                            self.get_resources(),
-                        ).chain_err(|| "Could note encode XML");
-                    },
+                        return Xml::encode(visitor.get_namespaces(),
+                                           root,
+                                           visitor.get_resources(),
+                                           self.get_resources())
+                            .chain_err(|| "Could note encode XML");
+                    }
                     None => {
                         println!("No string table found");
                     }
                 }
-            },
+            }
             None => {
                 println!("No root on target XML");
             }
@@ -106,17 +105,22 @@ impl<'a> Apk<'a> {
         // Iterate over all the files on the ZIP and extract them
         for i in 0..self.handler.len() {
             let (file_name, contents) = {
-                let mut current_file = self.handler.by_index(i).chain_err(|| "Could not read ZIP entry")?;
+                let mut current_file =
+                    self.handler.by_index(i).chain_err(|| "Could not read ZIP entry")?;
                 let mut contents = Vec::new();
-                current_file.read_to_end(&mut contents).chain_err(|| format!("Could not read: {}", current_file.name()))?;
+                current_file.read_to_end(&mut contents)
+                    .chain_err(|| format!("Could not read: {}", current_file.name()))?;
                 let is_xml = current_file.name().to_string();
 
                 (is_xml, contents)
             };
 
-            let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) || file_name == "AndroidManifest.xml" {
+            let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
+                              file_name == "AndroidManifest.xml" {
                 let new_content = contents.clone();
-                let out = self.decoder.as_xml(&new_content).chain_err(|| format!("Could not decode: {}", file_name))?;
+                let out = self.decoder
+                    .as_xml(&new_content)
+                    .chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()
             } else {
@@ -129,7 +133,10 @@ impl<'a> Apk<'a> {
         Ok(())
     }
 
-    fn write_file<B: AsRef<Path>, R: AsRef<Path>>(base_path: B, relative: R, content: &[u8]) -> Result<()> {
+    fn write_file<B: AsRef<Path>, R: AsRef<Path>>(base_path: B,
+                                                  relative: R,
+                                                  content: &[u8])
+                                                  -> Result<()> {
         let full_path = base_path.as_ref().join(&relative);
         // println!("Full path: {}", full_path.display());
         fs::create_dir_all(full_path.parent().unwrap()).chain_err(|| "Could not create the output dir")?;

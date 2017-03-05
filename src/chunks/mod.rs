@@ -9,30 +9,30 @@ mod resource;
 mod table_type_spec;
 mod xml;
 
-pub use self::string_table::StringTableDecoder as StringTableDecoder;
-pub use self::string_table::StringTableWrapper as StringTableWrapper;
-pub use self::string_table::StringTable as StringTable;
-pub use self::chunk_header::ChunkHeader as ChunkHeader;
-pub use self::package::PackageWrapper as PackageWrapper;
-pub use self::package::PackageRef as PackageRef;
-pub use self::table_type_spec::TypeSpecWrapper as TypeSpecWrapper;
-pub use self::table_type_spec::TypeSpec as TypeSpec;
-pub use self::table_type::TableTypeWrapper as TableTypeWrapper;
-pub use self::table_type::TableType as TableType;
-pub use self::table_type::Entry as Entry;
+pub use self::string_table::StringTableDecoder;
+pub use self::string_table::StringTableWrapper;
+pub use self::string_table::StringTable;
+pub use self::chunk_header::ChunkHeader;
+pub use self::package::PackageWrapper;
+pub use self::package::PackageRef;
+pub use self::table_type_spec::TypeSpecWrapper;
+pub use self::table_type_spec::TypeSpec;
+pub use self::table_type::TableTypeWrapper;
+pub use self::table_type::TableType;
+pub use self::table_type::Entry;
 
-pub use self::resource::ResourceWrapper as ResourceWrapper;
-pub use self::resource::Resource as Resource;
-pub use self::xml::XmlNamespaceStart as XmlNamespaceStart;
-pub use self::xml::XmlNamespaceStartWrapper as XmlNamespaceStartWrapper;
-pub use self::xml::XmlNamespaceEnd as XmlNamespaceEnd;
-pub use self::xml::XmlNamespaceEndWrapper as XmlNamespaceEndWrapper;
-pub use self::xml::XmlTagStart as XmlTagStart;
-pub use self::xml::XmlTagStartWrapper as XmlTagStartWrapper;
-pub use self::xml::XmlTagEnd as XmlTagEnd;
-pub use self::xml::XmlTagEndWrapper as XmlTagEndWrapper;
-pub use self::xml::XmlText as XmlText;
-pub use self::xml::XmlTextWrapper as XmlTextWrapper;
+pub use self::resource::ResourceWrapper;
+pub use self::resource::Resource;
+pub use self::xml::XmlNamespaceStart;
+pub use self::xml::XmlNamespaceStartWrapper;
+pub use self::xml::XmlNamespaceEnd;
+pub use self::xml::XmlNamespaceEndWrapper;
+pub use self::xml::XmlTagStart;
+pub use self::xml::XmlTagStartWrapper;
+pub use self::xml::XmlTagEnd;
+pub use self::xml::XmlTagEndWrapper;
+pub use self::xml::XmlText;
+pub use self::xml::XmlTextWrapper;
 
 use self::package::PackageDecoder;
 use self::table_type_spec::TableTypeSpecDecoder;
@@ -53,7 +53,7 @@ pub const TOKEN_XML_TAG_START: u16 = 0x102;
 pub const TOKEN_XML_TAG_END: u16 = 0x103;
 pub const TOKEN_XML_TEXT: u16 = 0x104;
 
-pub enum Chunk<'a>   {
+pub enum Chunk<'a> {
     StringTable(StringTableWrapper<'a>),
     Package(PackageWrapper<'a>),
     TableTypeSpec(TypeSpecWrapper<'a>),
@@ -73,9 +73,7 @@ pub struct ChunkLoaderStream<'a> {
 
 impl<'a> ChunkLoaderStream<'a> {
     pub fn new(cursor: Cursor<&'a [u8]>) -> Self {
-        ChunkLoaderStream {
-            cursor: cursor,
-        }
+        ChunkLoaderStream { cursor: cursor }
     }
 
     fn read_one(&mut self) -> Result<Chunk<'a>> {
@@ -90,9 +88,15 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_TAG_START => XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?,
+            TOKEN_XML_START_NAMESPACE => {
+                XmlDecoder::decode_xml_namespace_start(&mut self.cursor, &chunk_header)?
+            }
+            TOKEN_XML_END_NAMESPACE => {
+                XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?
+            }
+            TOKEN_XML_TAG_START => {
+                XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?
+            }
             TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TEXT => XmlDecoder::decode_xml_text(&mut self.cursor, &chunk_header)?,
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,
@@ -100,7 +104,7 @@ impl<'a> ChunkLoaderStream<'a> {
                 error!("Unknown chunk: 0x{:X}", t);
 
                 Chunk::Unknown
-            },
+            }
         };
 
         if let Chunk::Package(_) = chunk {
