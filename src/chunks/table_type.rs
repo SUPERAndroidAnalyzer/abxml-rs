@@ -10,7 +10,7 @@ pub struct TableTypeDecoder;
 const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::TableType(ttw))
     }
@@ -58,7 +58,11 @@ impl<'a> TableTypeWrapper<'a> {
         self.decode_entries(&mut cursor, type_spec, mask)
     }
 
-    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>, _: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
+    fn decode_entries(&self,
+                      mut cursor: &mut Cursor<&[u8]>,
+                      _: &TypeSpec<'a>,
+                      mask: u32)
+                      -> Result<HashMap<u32, Entry>> {
         let mut offsets = Vec::new();
         let mut entries = HashMap::new();
 
@@ -75,7 +79,7 @@ impl<'a> TableTypeWrapper<'a> {
                 match maybe_entry {
                     Some(e) => {
                         entries.insert(id, e);
-                    },
+                    }
                     None => {
                         debug!("Entry with a negative count");
                     }
@@ -99,7 +103,10 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
-    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
+    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>,
+                           header: &EntryHeader,
+                           id: u32)
+                           -> Result<Option<Entry>> {
         cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
@@ -112,7 +119,10 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(Some(entry))
     }
 
-    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
+    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>,
+                            header: &EntryHeader,
+                            id: u32)
+                            -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
@@ -122,7 +132,10 @@ impl<'a> TableTypeWrapper<'a> {
         }
 
         for j in 0..value_count {
-            debug!("Parsing value: {}/{} (@{})", j, value_count - 1, cursor.position());
+            debug!("Parsing value: {}/{} (@{})",
+                   j,
+                   value_count - 1,
+                   cursor.position());
             let val_id = cursor.read_u32::<LittleEndian>()?;
             cursor.read_u16::<LittleEndian>()?;
             // Padding
@@ -148,9 +161,7 @@ pub struct TableType<'a> {
 
 impl<'a> TableType<'a> {
     pub fn new(wrapper: TableTypeWrapper<'a>) -> Self {
-        TableType {
-            wrapper: wrapper,
-        }
+        TableType { wrapper: wrapper }
     }
 
     pub fn get_id(&self) -> Result<u8> {
@@ -253,7 +264,7 @@ impl ComplexEntry {
     }
 
     pub fn get_referent_id(&self, value: u32) -> Option<u32> {
-        for e in self.entries.iter() {
+        for e in &self.entries {
             if e.get_value() == value {
                 return Some(e.get_id());
             }
@@ -265,27 +276,26 @@ impl ComplexEntry {
     pub fn get_entries(&self) -> &Vec<SimpleEntry> {
         &self.entries
     }
-
 }
 
 #[derive(Debug, Clone)]
 pub enum Entry {
     Simple(SimpleEntry),
-    Complex(ComplexEntry)
+    Complex(ComplexEntry),
 }
 
 impl Entry {
     pub fn simple(&self) -> Result<&SimpleEntry> {
         match *self {
-            Entry::Simple(ref simple) => Ok(&simple),
-            Entry::Complex(_) => Err("Asked for a complex entry on a simple one".into())
+            Entry::Simple(ref simple) => Ok(simple),
+            Entry::Complex(_) => Err("Asked for a complex entry on a simple one".into()),
         }
     }
 
     pub fn complex(&self) -> Result<&ComplexEntry> {
         match *self {
-            Entry::Complex(ref complex) => Ok(&complex),
-            Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into())
+            Entry::Complex(ref complex) => Ok(complex),
+            Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into()),
         }
     }
 
@@ -315,7 +325,7 @@ impl Region {
 
         if ((self.low >> 7) & 1) == 1 {
             chrs.push(self.high & 0x1F);
-            chrs.push(((self.high & 0xE0) >> 5 ) + ((self.low & 0x03) << 3));
+            chrs.push(((self.high & 0xE0) >> 5) + ((self.low & 0x03) << 3));
             chrs.push((self.low & 0x7C) >> 2);
         } else {
             chrs.push(self.low);
@@ -333,7 +343,7 @@ pub struct ResourceConfiguration {
     mnc: u16,
     language: String,
     region: String,
-    orientation : u8,
+    orientation: u8,
     touchscreen: u8,
     density: u16,
     keyboard: u8,

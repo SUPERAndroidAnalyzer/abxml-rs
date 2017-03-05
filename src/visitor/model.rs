@@ -36,11 +36,12 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         match origin {
             Origin::Global => {
                 self.tables.insert(origin, string_table);
-            },
+            }
             _ => {
                 let package_id = self.package_mask.get_package();
 
-                let st_res = self.resources.get_mut_package(package_id)
+                let st_res = self.resources
+                    .get_mut_package(package_id)
                     .and_then(|package| {
                         package.set_string_table(string_table, origin);
                         Some(())
@@ -49,7 +50,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                 if st_res.is_none() {
                     error!("Could not retrieve target package");
                 }
-            },
+            }
         }
     }
 
@@ -64,7 +65,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
             if self.tables.contains_key(&Origin::Global) {
                 if let Some(st) = self.tables.remove(&Origin::Global) {
-                    let set_result = self.resources.get_mut_package(package_id)
+                    let set_result = self.resources
+                        .get_mut_package(package_id)
                         .and_then(|package| {
                             package.set_string_table(st, Origin::Global);
 
@@ -72,7 +74,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                         });
 
                     if set_result.is_none() {
-                        error!("Could not set the string table because it refers to a non-existing package");
+                        error!("Could not set the string table because it refers to a \
+                                non-existing package");
                     }
                 }
             }
@@ -84,9 +87,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         if let Some(ref ts) = self.current_spec {
             let result = ts.get_id()
-                .and_then(|id| {
-                    Ok(self.package_mask | ((id as u32) << 16))
-                })
+                .and_then(|id| Ok(self.package_mask | ((id as u32) << 16)))
                 .and_then(|mask| table_type.get_entries(ts, mask));
 
             if result.is_err() {
@@ -98,7 +99,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         let package_id = self.package_mask.get_package();
 
-        self.resources.get_mut_package(package_id)
+        self.resources
+            .get_mut_package(package_id)
             .and_then(|package| {
                 package.add_entries(entries);
                 Some(())
@@ -111,7 +113,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         match self.resources.get_mut_package(package_id) {
             Some(package) => {
                 package.add_type_spec(type_spec);
-            },
+            }
             None => {
                 error!("Type spec refers to a non existing package");
             }
@@ -152,10 +154,10 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
         match self.main_package {
             Some(package_id) => {
                 match self.packages.get(&package_id) {
-                    Some(package) => Some(package.clone()),
+                    Some(package) => Some(package),
                     None => None,
                 }
-            },
+            }
             _ => None,
         }
     }
@@ -189,9 +191,8 @@ impl<'a> Library<'a> {
         }
     }
 
-    fn get_spec_as_str(&self, spec_id: u32) -> Result<String>
-    {
-        if let Some(_) = self.specs.get((spec_id - 1) as usize) {
+    fn get_spec_as_str(&self, spec_id: u32) -> Result<String> {
+        if self.specs.get((spec_id - 1) as usize).is_some() {
             if let Some(ref spec_string_table) = self.spec_string_table {
                 if let Ok(spec_str) = spec_string_table.get_string((spec_id - 1) as u32) {
                     return Ok((*spec_str).clone());
@@ -208,10 +209,17 @@ impl<'a> LibraryTrait for Library<'a> {
         self.package.get_name().ok()
     }
 
-    fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
+    fn format_reference(&self,
+                        id: u32,
+                        key: u32,
+                        namespace: Option<String>,
+                        prefix: &str)
+                        -> Result<String> {
         let spec_id = id.get_spec() as u32;
-        let spec_str = self.get_spec_as_str(spec_id).chain_err(|| format!("Could not find spec: {}", spec_id))?;
-        let string = self.get_entries_string(key).chain_err(|| format!("Could not find key {} on entries string table", key))?;
+        let spec_str = self.get_spec_as_str(spec_id)
+            .chain_err(|| format!("Could not find spec: {}", spec_id))?;
+        let string = self.get_entries_string(key)
+            .chain_err(|| format!("Could not find key {} on entries string table", key))?;
 
         let ending = if spec_str == "attr" {
             string
@@ -220,9 +228,7 @@ impl<'a> LibraryTrait for Library<'a> {
         };
 
         match namespace {
-            Some(ns) => {
-                Ok(format!("{}{}:{}", prefix, ns, ending))
-            },
+            Some(ns) => Ok(format!("{}{}:{}", prefix, ns, ending)),
             None => Ok(format!("{}{}", prefix, ending)),
         }
     }
@@ -233,9 +239,10 @@ impl<'a> LibraryTrait for Library<'a> {
 
     fn get_entries_string(&self, str_id: u32) -> Result<String> {
         if let Some(ref string_table) = self.entries_string_table {
-            let out_string = string_table.get_string(str_id).chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
+            let out_string = string_table.get_string(str_id)
+                .chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
 
-            return Ok((*out_string).clone())
+            return Ok((*out_string).clone());
         }
 
         Err("String not found on entries string table".into())
@@ -243,9 +250,10 @@ impl<'a> LibraryTrait for Library<'a> {
 
     fn get_spec_string(&self, str_id: u32) -> Result<String> {
         if let Some(ref string_table) = self.spec_string_table {
-            let out_string = string_table.get_string(str_id).chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
+            let out_string = string_table.get_string(str_id)
+                .chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
 
-            return Ok((*out_string).clone())
+            return Ok((*out_string).clone());
         }
 
         Err("String not found on spec string table".into())

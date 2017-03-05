@@ -2,13 +2,8 @@ use model::owned::OwnedBuf;
 use chunks::TOKEN_XML_TAG_END;
 use errors::*;
 
+#[derive(Default)]
 pub struct XmlTagEndBuf;
-
-impl XmlTagEndBuf {
-    pub fn new() -> Self {
-        XmlTagEndBuf
-    }
-}
 
 impl OwnedBuf for XmlTagEndBuf {
     fn get_token(&self) -> u16 {
@@ -38,12 +33,8 @@ mod tests {
     }
 
     #[test]
-    fn it_can_generate_a_chunk_with_the_given_data() {
-
-    }
+    fn it_can_generate_a_chunk_with_the_given_data() {}
 
     #[test]
-    fn identity() {
-
-    }
+    fn identity() {}
 }
