@@ -95,6 +95,10 @@ pub trait TagStart {
     fn get_tag_start(&self) -> Result<(Vec<Attribute>, Rc<String>)>;
 }
 
+pub trait TagEnd {
+    fn get_id(&self) -> Result<u32>;
+}
+
 #[cfg(test)]
 mod tests {
     use model::Identifier;
