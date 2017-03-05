@@ -13,11 +13,11 @@ use model::owned::{StringTableBuf, Encoding as EncodingType};
 pub struct StringTableDecoder;
 
 impl StringTableDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
-         let stw = StringTableWrapper::new(cursor.get_ref(), *header);
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+        let stw = StringTableWrapper::new(cursor.get_ref(), *header);
 
-         Ok(Chunk::StringTable(stw))
-     }
+        Ok(Chunk::StringTable(stw))
+    }
 }
 
 pub struct StringTableWrapper<'a> {
@@ -185,7 +185,7 @@ impl<'a> StringTableWrapper<'a> {
 }
 
 pub struct StringTable<'a> {
-    wrapper: StringTableWrapper<'a>,
+    wrapper: StringTableWrapper<'a>, 
 //    cache: HashMap<u32, Rc<String>>,
 }
 
@@ -194,7 +194,10 @@ impl<'a> Display for StringTable<'a> {
         let amount = self.get_strings_len();
 
         for i in 0..amount {
-            write!(formatter, "{} - {}\n", i, self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
+            write!(formatter,
+                   "{} - {}\n",
+                   i,
+                   self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
         }
 
         Ok(())
@@ -220,10 +223,10 @@ impl<'a> StringTableTrait for StringTable<'a> {
     }
 }
 
-impl<'a> StringTable <'a> {
+impl<'a> StringTable<'a> {
     pub fn new(wrapper: StringTableWrapper<'a>) -> Self {
         StringTable {
-            wrapper: wrapper,
+            wrapper: wrapper, 
 //          cache: HashMap::new(),
         }
     }

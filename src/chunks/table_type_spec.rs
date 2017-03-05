@@ -6,7 +6,7 @@ use errors::*;
 pub struct TableTypeSpecDecoder;
 
 impl TableTypeSpecDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let tsw = TypeSpecWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::TableTypeSpec(tsw))
     }
@@ -41,9 +41,7 @@ pub struct TypeSpec<'a> {
 
 impl<'a> TypeSpec<'a> {
     pub fn new(wrapper: TypeSpecWrapper<'a>) -> Self {
-        TypeSpec {
-            wrapper: wrapper,
-        }
+        TypeSpec { wrapper: wrapper }
     }
 
     pub fn get_id(&self) -> Result<u16> {
