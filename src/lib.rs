@@ -14,6 +14,8 @@ pub mod chunks;
 pub mod visitor;
 pub mod model;
 pub mod decoder;
+#[cfg(test)]
+pub mod test;
 
 pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");
 
