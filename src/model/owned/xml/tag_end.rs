@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
-        let tag_end = XmlTagEndBuf::new();
+        let tag_end = XmlTagEndBuf::default();
         let out = tag_end.to_vec().unwrap();
         let expected = vec![3, 1, 8, 0, 8, 0, 0, 0];
 

@@ -3,6 +3,7 @@ use model::Attribute;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
+use std::iter;
 
 #[derive(Default, Debug)]
 pub struct Element {
@@ -45,7 +46,7 @@ impl Element {
 
 impl Display for Element {
     fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
-        let tabs = "\t".repeat(self.level as usize);
+        let tabs = iter::repeat("\t").take(self.level as usize).collect::<String>();
         write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
 
         for c in &self.children {
