@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
-        let mut resources = ResourcesBuf::new();
+        let mut resources = ResourcesBuf::default();
         resources.push_resource(111);
         resources.push_resource(222);
 
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
-        let resources = ResourcesBuf::new();
+        let resources = ResourcesBuf::default();
         let out = resources.to_vec().unwrap();
 
         let chunk_header = ChunkHeader::new(0, 8, (0 * 8) + 8, 0x0180);

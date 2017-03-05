@@ -70,13 +70,13 @@ impl<'a> Resource<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::owned::ResourceBuf;
+    use model::owned::ResourcesBuf;
     use chunks::*;
     use model::owned::OwnedBuf;
 
     #[test]
     fn it_can_not_decode_a_buffer_with_an_invalid_size() {
-        let mut resources = ResourceBuf::new();
+        let mut resources = ResourcesBuf::default();
         resources.push_resource(111);
         resources.push_resource(222);
         let mut out = resources.to_vec().unwrap();
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn it_can_not_decode_a_buffer_if_chunk_header_is_not_correct() {
-        let mut resources = ResourceBuf::new();
+        let mut resources = ResourcesBuf::default();
         resources.push_resource(111);
         resources.push_resource(222);
         let out = resources.to_vec().unwrap();
