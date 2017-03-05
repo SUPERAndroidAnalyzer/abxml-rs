@@ -6,6 +6,8 @@ use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
 use model::StringTable;
+use model::owned::XmlTagEndBuf;
+use model::TagEnd as TagEndTrait;
 
 pub struct XmlDecoder;
 
@@ -404,6 +406,20 @@ impl<'a> XmlTagEndWrapper<'a> {
             raw_data: raw_data,
             header: header,
         }
+    }
+
+    pub fn to_owned(self) -> Result<XmlTagEndBuf> {
+        Ok(XmlTagEndBuf::new(self.get_id()?))
+
+    }
+}
+
+impl<'a> TagEndTrait for XmlTagEndWrapper<'a> {
+    fn get_id(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(5*4));
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 }
 
