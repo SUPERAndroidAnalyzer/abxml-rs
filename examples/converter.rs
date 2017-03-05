@@ -40,7 +40,7 @@ fn run() -> Result<()> {
         Some(path) => path,
         None => {
             println!("Usage: converter <path>");
-            return Ok(())
+            return Ok(());
         }
     };
 
@@ -48,7 +48,7 @@ fn run() -> Result<()> {
         Some(path) => path,
         None => {
             println!("Usage: converter <path>");
-            return Ok(())
+            return Ok(());
         }
     };
 
@@ -88,8 +88,8 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn parse_xml<'a>(content: &Vec<u8>, resources: &'a Resources<'a>) -> Result<String> {
-    let cursor: Cursor<&[u8]> = Cursor::new(&content);
+fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String> {
+    let cursor = Cursor::new(content);
     let mut visitor = XmlVisitor::default();
 
     Executor::xml(cursor, &mut visitor)?;
@@ -98,18 +98,17 @@ fn parse_xml<'a>(content: &Vec<u8>, resources: &'a Resources<'a>) -> Result<Stri
         Some(ref root) => {
             match *visitor.get_string_table() {
                 Some(_) => {
-                    return Xml::encode(
-                        visitor.get_namespaces(),
-                        root,
-                        visitor.get_resources(),
-                        resources,
-                    ).chain_err(|| "Could note encode XML");
-                },
+                    return Xml::encode(visitor.get_namespaces(),
+                                       root,
+                                       visitor.get_resources(),
+                                       resources)
+                        .chain_err(|| "Could note encode XML");
+                }
                 None => {
                     println!("No string table found");
                 }
             }
-        },
+        }
         None => {
             println!("No root on target XML");
         }

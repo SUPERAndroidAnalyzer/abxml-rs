@@ -73,9 +73,7 @@ impl Attribute {
 
         let is_main = resources.is_main_package(package_id);
         let package = resources.get_package(package_id).ok_or_else(|| {
-            let error = ErrorKind::Msg("Package not found".into());
-
-            error
+            ErrorKind::Msg("Package not found".into())
         })?;
 
         let entry_key = package
@@ -140,7 +138,7 @@ impl Attribute {
         let inner_entries = package.get_entry(entry_ref)
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
-            .unwrap_or(Vec::new());
+            .unwrap_or_else(|_|Vec::new());
 
         let mut sorted = inner_entries.to_vec();
 
@@ -150,20 +148,20 @@ impl Attribute {
 
             // TODO: This code is to create an exact match with Apktool. A simple descending ordering seems to be also ok.
             let mut i = id_a;
-            i = i - ((i >> 1) & 0x55555555);
+            i -= (i >> 1) & 0x55555555;
             i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
             i = (i + (i >> 4)) & 0x0f0f0f0f;
-            i = i + (i >> 8);
-            i = i + (i >> 16);
-            i = i & 0x3f;
+            i += i >> 8;
+            i += i >> 16;
+            i &= 0x3f;
 
             let mut j = id_b;
-            j = j - ((j >> 1) & 0x55555555);
+            j -= (j >> 1) & 0x55555555;
             j = (j & 0x33333333) + ((j >> 2) & 0x33333333);
             j = (j + (j >> 4)) & 0x0f0f0f0f;
-            j = j + (j >> 8);
-            j = j + (j >> 16);
-            j = j & 0x3f;
+            j += j >> 8;
+            j += j >> 16;
+            j &= 0x3f;
 
             j.cmp(&i)
         });
@@ -177,7 +175,7 @@ impl Attribute {
                     Ok(entry) => {
                         let mut has_to_add = true;
 
-                        for s in masks.iter() {
+                        for s in &masks {
                             if mask & s == mask {
                                 has_to_add = false;
                                 break;

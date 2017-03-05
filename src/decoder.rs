@@ -32,14 +32,14 @@ impl<'a> Decoder<'a> {
         let android_resources_cursor = Cursor::new(decoder.buffer_android);
         Executor::arsc(android_resources_cursor, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
 
-        let cursor: Cursor<&[u8]> = Cursor::new(decoder.buffer_apk);
+        let cursor = Cursor::new(decoder.buffer_apk);
         Executor::arsc(cursor, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
 
         Ok(decoder)
     }
 
     pub fn get_resources(&self) -> &'a Resources {
-        &self.visitor.get_resources()
+        self.visitor.get_resources()
     }
 
     pub fn as_xml(&self, content: &[u8]) -> Result<String> {
@@ -95,16 +95,12 @@ impl<'a> Apk<'a> {
         Ok(apk)
     }
 
-    /// It exports to target output_path the contents of the APK, transcoding the binary XML files found on it.
+    /// It exports to target output_path the contents of the APK, transcoding the binary XML files
+    /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
-        match fs::create_dir(&output_path) {
-            Err(_) => {
-                if force {
-                    fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
-                    fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
-                }
-            }
-            _ => (),
+        if fs::create_dir(&output_path).is_err() && force {
+            fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
+            fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
         }
 
         // Iterate over all the files on the ZIP and extract them
@@ -143,7 +139,7 @@ impl<'a> Apk<'a> {
             .open(full_path)
             .chain_err(|| "Could not open file to write")?;
 
-        descriptor.write_all(&content).chain_err(|| "Could not write to target file")?;
+        descriptor.write_all(content).chain_err(|| "Could not write to target file")?;
         descriptor.sync_all().chain_err(|| "Could not flush")?;
 
         Ok(())

@@ -2,17 +2,12 @@ use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
 use errors::*;
 
+#[derive(Default)]
 pub struct Arsc {
     chunks: Vec<Box<OwnedBuf>>,
 }
 
 impl Arsc {
-    pub fn new() -> Self {
-        Arsc {
-            chunks: Vec::new(),
-        }
-    }
-
     pub fn push_owned(&mut self, chunk: Box<OwnedBuf>) {
         self.chunks.push(chunk);
     }
@@ -34,7 +29,7 @@ impl Arsc {
         out.write_u16::<LittleEndian>(0)?;
 
         // Header_size
-        out.write_u16::<LittleEndian>(3*4)?;
+        out.write_u16::<LittleEndian>(3 * 4)?;
 
         // Chunk size
         out.write_u32::<LittleEndian>(file_size as u32)?;
@@ -49,22 +44,17 @@ impl Arsc {
     }
 }
 
+#[derive(Default)]
 pub struct Xml {
     chunks: Vec<Box<OwnedBuf>>,
 }
 
 impl Xml {
-    pub fn new() -> Self {
-        Xml {
-            chunks: Vec::new(),
-        }
-    }
-
     pub fn push_owned(&mut self, chunk: Box<OwnedBuf>) {
         self.chunks.push(chunk);
     }
 
-    pub fn to_vec(self) -> Result<Vec<u8>> {
+    pub fn into_vec(self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;
@@ -81,7 +71,7 @@ impl Xml {
         out.write_u16::<LittleEndian>(0)?;
 
         // Header_size
-        out.write_u16::<LittleEndian>(3*4)?;
+        out.write_u16::<LittleEndian>(3 * 4)?;
 
         // Chunk size
         out.write_u32::<LittleEndian>(file_size as u32)?;
@@ -109,9 +99,7 @@ mod tests {
 
     impl CounterChunkVisitor {
         pub fn new() -> CounterChunkVisitor {
-            CounterChunkVisitor {
-                count: 0,
-            }
+            CounterChunkVisitor { count: 0 }
         }
 
         pub fn get_count(&self) -> u32 {

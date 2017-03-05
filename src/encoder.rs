@@ -12,19 +12,33 @@ use model::{Namespaces, Value};
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces,
+                  element: &AbxmlElement,
+                  xml_resources: &[u32],
+                  resources: &Resources)
+                  -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
-        Self::encode_element(&mut writer, Some(namespaces), element, xml_resources, resources).chain_err(|| "Error decoding an element")?;
+        Self::encode_element(&mut writer,
+                             Some(namespaces),
+                             element,
+                             xml_resources,
+                             resources).chain_err(|| "Error decoding an element")?;
 
         let result = writer.into_inner().into_inner();
         let str_result = String::from_utf8(result).chain_err(|| "Could not encode to UTF-8")?;
-        let output = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}", str_result);
+        let output = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}",
+                             str_result);
 
         Ok(output)
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>, namespaces: Option<&Namespaces>, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<()> {
+    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>,
+                                namespaces: Option<&Namespaces>,
+                                element: &AbxmlElement,
+                                xml_resources: &[u32],
+                                resources: &Resources)
+                                -> Result<()> {
         let tag = element.get_tag();
         let mut elem = Element::new(tag.deref());
 
@@ -40,15 +54,14 @@ impl Xml {
 
 
             let val = match *a.get_value() {
-                Value::ReferenceId(ref id) => {
-                    a.resolve_reference(*id, resources, "@").ok()
-                }
+                Value::ReferenceId(ref id) => a.resolve_reference(*id, resources, "@").ok(),
                 Value::AttributeReferenceId(ref id) => {
                     a.resolve_reference(*id, resources, "?").ok()
-                },
+                }
                 Value::Integer(ref value) |
                 Value::Flags(ref value) => {
-                    // let flag_resolution = Self::resolve_flags(*value as u32, a, xml_resources, resources);
+                    // let flag_resolution =
+                    //       Self::resolve_flags(*value as u32, a, xml_resources, resources);
                     let flag_resolution = a.resolve_flags(*value as u32, xml_resources, resources);
 
                     if flag_resolution.is_none() {
@@ -56,25 +69,23 @@ impl Xml {
                     } else {
                         flag_resolution
                     }
-                },
-                _ => {
-                    None
                 }
+                _ => None,
             };
 
-            elem.push_attribute(
-                final_name,
-                &val.unwrap_or_else(|| a.get_value_as_str()),
-            );
+            elem.push_attribute(final_name, &val.unwrap_or_else(|| a.get_value_as_str()));
         }
 
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, xml_resources, resources).chain_err(|| "Error while writing a children")?;
+            Self::encode_element(&mut writer, None, child, xml_resources, resources).chain_err(|| {
+                "Error while writing a children"
+            })?;
         }
 
-        writer.write(End(Element::new(tag.deref()))).chain_err(|| "Error while writing end element")?;
+        writer.write(End(Element::new(tag.deref())))
+            .chain_err(|| "Error while writing end element")?;
 
         Ok(())
     }
@@ -86,9 +97,7 @@ impl Xml {
         for (namespace, prefix) in namespaces {
             let label = Self::attribute_name(prefix.clone(), Some(xmlns.clone()));
 
-            output.push(
-                (label, namespace.deref().clone())
-            );
+            output.push((label, namespace.deref().clone()));
         }
 
         output
@@ -97,8 +106,7 @@ impl Xml {
     pub fn attribute_name(label: Rc<String>, prefix: Option<Rc<String>>) -> String {
         let name = label.deref();
 
-        prefix
-            .and_then(|rc_prefix| {
+        prefix.and_then(|rc_prefix| {
                 let p = rc_prefix.deref();
 
                 let mut s = String::new();
@@ -108,6 +116,6 @@ impl Xml {
 
                 Some(s)
             })
-            .unwrap_or(name.to_owned())
+            .unwrap_or_else(|| name.to_owned())
     }
 }

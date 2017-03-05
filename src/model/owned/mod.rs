@@ -1,6 +1,12 @@
 use errors::*;
 use byteorder::{LittleEndian, WriteBytesExt};
 
+pub use self::resources::ResourcesBuf;
+pub use self::string_table::StringTableBuf;
+pub use self::string_table::Encoding;
+pub use self::xml::XmlTagStartBuf;
+pub use self::xml::XmlTagEndBuf;
+
 mod resources;
 mod string_table;
 mod xml;
@@ -21,7 +27,7 @@ pub trait OwnedBuf {
         Ok(out)
     }
 
-    fn write_header(&self, buffer: &mut Vec<u8>, body: &Vec<u8>) -> Result<()> {
+    fn write_header(&self, buffer: &mut Vec<u8>, body: &[u8]) -> Result<()> {
         let header_size = self.get_header_size();
         buffer.write_u16::<LittleEndian>(self.get_token())?;
         buffer.write_u16::<LittleEndian>(header_size)?;
@@ -30,9 +36,3 @@ pub trait OwnedBuf {
         Ok(())
     }
 }
-
-pub use self::resources::ResourcesBuf as ResourceBuf;
-pub use self::string_table::StringTableBuf as StringTableBuf;
-pub use self::string_table::Encoding as Encoding;
-pub use self::xml::XmlTagStartBuf as XmlTagStartBuf;
-pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;

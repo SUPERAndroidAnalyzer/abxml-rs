@@ -2,15 +2,15 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::owned::ResourceBuf;
+use model::owned::ResourcesBuf;
 
 pub struct ResourceDecoder;
 
 impl ResourceDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let ttw = ResourceWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::Resource(ttw))
-     }
+    }
 }
 
 #[allow(dead_code)]
@@ -41,8 +41,8 @@ impl<'a> ResourceWrapper<'a> {
         Ok(resources)
     }
 
-    pub fn to_owned(self) -> Result<ResourceBuf> {
-        let mut owned = ResourceBuf::new();
+    pub fn to_owned(self) -> Result<ResourcesBuf> {
+        let mut owned = ResourcesBuf::default();
 
         for r in &self.get_resources()? {
             owned.push_resource(*r);
@@ -59,9 +59,7 @@ pub struct Resource<'a> {
 
 impl<'a> Resource<'a> {
     pub fn new(wrapper: ResourceWrapper<'a>) -> Self {
-        Resource {
-            wrapper: wrapper,
-        }
+        Resource { wrapper: wrapper }
     }
 
     pub fn get_resources(&self) -> Result<Vec<u32>> {
@@ -90,7 +88,8 @@ mod tests {
 
         let result = wrapper.get_resources();
         assert!(result.is_err());
-        assert_eq!("failed to fill whole buffer", result.err().unwrap().to_string());
+        assert_eq!("failed to fill whole buffer",
+                   result.err().unwrap().to_string());
     }
 
     #[test]
@@ -100,11 +99,12 @@ mod tests {
         resources.push_resource(222);
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(3000, 8, 2*4, 0x0180);
+        let chunk_header = ChunkHeader::new(3000, 8, 2 * 4, 0x0180);
         let wrapper = ResourceWrapper::new(&out, chunk_header);
 
         let result = wrapper.get_resources();
         assert!(result.is_err());
-        assert_eq!("failed to fill whole buffer", result.err().unwrap().to_string());
+        assert_eq!("failed to fill whole buffer",
+                   result.err().unwrap().to_string());
     }
 }
