@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
-        let string_table = StringTableBuf::new();
+        let string_table = StringTableBuf::default();
 
         assert_eq!(0, string_table.get_strings_len());
         assert_eq!(0, string_table.get_styles_len());
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
-        let mut string_table = StringTableBuf::new();
+        let mut string_table = StringTableBuf::default();
         string_table.add_string("some string".to_string());
         string_table.add_string("忠犬ハチ公".to_string());
 

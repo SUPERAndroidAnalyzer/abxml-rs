@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_resources_arsc_file_content() {
-        let arsc = Arsc::new();
+        let arsc = Arsc::default();
         let content = arsc.to_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
@@ -155,11 +155,11 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_resources_arsc_file_content_with_some_chunks() {
-        let mut arsc = Arsc::new();
+        let mut arsc = Arsc::default();
 
-        arsc.push_owned(Box::new(StringTableBuf::new()));
-        arsc.push_owned(Box::new(StringTableBuf::new()));
-        arsc.push_owned(Box::new(ResourceBuf::new()));
+        arsc.push_owned(Box::new(StringTableBuf::default()));
+        arsc.push_owned(Box::new(StringTableBuf::default()));
+        arsc.push_owned(Box::new(ResourcesBuf::default()));
 
         let content = arsc.to_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
@@ -172,8 +172,8 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_resources_xml_file_content() {
-        let xml = Xml::new();
-        let content = xml.to_vec().unwrap();
+        let xml = Xml::default();
+        let content = xml.into_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
         assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0], content);
