@@ -5,7 +5,7 @@ pub struct ChunkHeader {
     offset: u64,
     header_size: u16,
     chunk_size: u32,
-    chunk_type: u16
+    chunk_type: u16,
 }
 
 impl ChunkHeader {
@@ -47,14 +47,12 @@ impl ChunkHeader {
 
 impl fmt::Display for ChunkHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "(Token:{:X}; Start: {}; Data: {}; End {})",
-            self.chunk_type,
-            self.offset,
-            self.get_data_offset(),
-            self.get_chunk_end()
-        )
+        write!(f,
+               "(Token:{:X}; Start: {}; Data: {}; End {})",
+               self.chunk_type,
+               self.offset,
+               self.get_data_offset(),
+               self.get_chunk_end())
     }
 }
 

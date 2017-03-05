@@ -38,7 +38,7 @@ fn run() -> Result<()> {
         Some(path) => path,
         None => {
             println!("Usage: exporter <apk> <path>");
-            return Ok(())
+            return Ok(());
         }
     };
 
@@ -46,7 +46,7 @@ fn run() -> Result<()> {
         Some(path) => path,
         None => {
             println!("Usage: exporter <apk> <path>");
-            return Ok(())
+            return Ok(());
         }
     };
 

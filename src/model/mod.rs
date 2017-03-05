@@ -9,10 +9,10 @@ mod attribute;
 pub mod owned;
 pub mod builder;
 
-pub use self::element::Element as Element;
-pub use self::element::ElementContainer as ElementContainer;
-pub use self::value::Value as Value;
-pub use self::attribute::Attribute as Attribute;
+pub use self::element::Element;
+pub use self::element::ElementContainer;
+pub use self::value::Value;
+pub use self::attribute::Attribute;
 
 use visitor::Origin;
 use chunks::TypeSpec;
@@ -50,7 +50,7 @@ impl Identifier for u32 {
 // Traits
 pub trait StringTable {
     fn get_strings_len(&self) -> u32;
-    fn get_styles_len(&self) ->  u32;
+    fn get_styles_len(&self) -> u32;
     fn get_string(&self, idx: u32) -> Result<Rc<String>>;
 }
 
@@ -62,7 +62,12 @@ pub trait Package {
 
 pub trait Library {
     fn get_name(&self) -> Option<String>;
-    fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String>;
+    fn format_reference(&self,
+                        id: u32,
+                        key: u32,
+                        namespace: Option<String>,
+                        prefix: &str)
+                        -> Result<String>;
     // fn get_entries(&self) -> &Entries;
     fn get_entry(&self, id: u32) -> Result<&Entry>;
     fn get_entries_string(&self, str_id: u32) -> Result<String>;

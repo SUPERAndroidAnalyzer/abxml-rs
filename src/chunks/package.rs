@@ -7,7 +7,7 @@ use model::Package;
 pub struct PackageDecoder;
 
 impl PackageDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader)  -> Result<Chunk<'a>> {
+    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let pw = PackageWrapper::new(cursor.get_ref(), *header);
 
         Ok(Chunk::Package(pw))
@@ -39,7 +39,8 @@ impl<'a> PackageWrapper<'a> {
         cursor.set_position(self.header.absolute(12));
         let initial_position = cursor.position();
 
-        let raw_str = cursor.get_ref()[initial_position as usize..(initial_position+256) as usize].to_vec();
+        let raw_str =
+            cursor.get_ref()[initial_position as usize..(initial_position + 256) as usize].to_vec();
         let a: Vec<u8> = raw_str;
         let mut i = 0;
         let rw: Vec<u8> = a.iter()
@@ -62,9 +63,7 @@ pub struct PackageRef<'a> {
 
 impl<'a> PackageRef<'a> {
     pub fn new(wrapper: PackageWrapper<'a>) -> Self {
-        PackageRef {
-            wrapper: wrapper,
-        }
+        PackageRef { wrapper: wrapper }
     }
 }
 
@@ -73,7 +72,7 @@ impl<'a> Package for PackageRef<'a> {
         self.wrapper.get_id()
     }
 
-    fn get_name(&self) -> Result<String>{
+    fn get_name(&self) -> Result<String> {
         self.wrapper.get_name()
     }
 }

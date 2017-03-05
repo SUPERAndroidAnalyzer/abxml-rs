@@ -30,24 +30,25 @@ impl<'a> XmlVisitor<'a> {
     }
 }
 
-impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
+impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
                 error!("Secondary table!");
-            },
+            }
             None => {
                 self.main_string_table = Some(string_table);
-            },
+            }
         }
     }
 
     fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStart<'a>) {
         if let Some(ref mut string_table) = self.main_string_table {
-            match (namespace_start.get_namespace(string_table), namespace_start.get_prefix(string_table)) {
+            match (namespace_start.get_namespace(string_table),
+                   namespace_start.get_prefix(string_table)) {
                 (Ok(namespace), Ok(prefix)) => {
                     self.namespaces.insert(namespace, prefix);
-                },
+                }
                 _ => {
                     error!("Error reading namespace from the string table");
                 }
@@ -62,14 +63,14 @@ impl <'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                     Ok((attributes, element_name)) => {
                         let element = Element::new(element_name, attributes);
                         self.container.start_element(element);
-                    },
+                    }
                     Err(e) => {
                         println!("{}", string_table);
                         println!("Could not start tag: {:?}", e);
                         error!("Could not retrieve tag");
                     }
                 }
-            },
+            }
             None => {
                 error!("No main string table found!");
             }
