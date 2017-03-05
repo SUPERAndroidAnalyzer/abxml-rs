@@ -172,8 +172,6 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_resources_xml_file_content() {
-        use model::owned::OwnedBuf;
-
         let xml = Xml::default();
         let content = xml.into_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
