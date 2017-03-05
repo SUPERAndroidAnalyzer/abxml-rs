@@ -64,7 +64,7 @@ impl<'a> StringTableWrapper<'a> {
     }
 
     pub fn to_owned(self) -> Result<StringTableBuf> {
-        let mut owned = StringTableBuf::new();
+        let mut owned = StringTableBuf::default();
 
         if !self.is_utf8() {
             owned.set_encoding(EncodingType::Utf16);
@@ -144,7 +144,7 @@ impl<'a> StringTableWrapper<'a> {
 
             let mut decoder = utf_8::UTF8Decoder::new();
             let mut o = String::new();
-            decoder.raw_feed(&subslice, &mut o);
+            decoder.raw_feed(subslice, &mut o);
             let decode_error = decoder.raw_finish(&mut o);
 
             match decode_error {
@@ -169,7 +169,7 @@ impl<'a> StringTableWrapper<'a> {
 
             let mut decoder = utf_16::UTF16Decoder::<utf_16::Little>::new();
             let mut o = String::new();
-            decoder.raw_feed(&subslice, &mut o);
+            decoder.raw_feed(subslice, &mut o);
             let decode_error = decoder.raw_finish(&mut o);
 
             match decode_error {

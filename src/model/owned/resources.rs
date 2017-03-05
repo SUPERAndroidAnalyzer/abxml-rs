@@ -3,17 +3,12 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use chunks::*;
 use errors::*;
 
+#[derive(Default)]
 pub struct ResourcesBuf {
     resources: Vec<u32>,
 }
 
 impl ResourcesBuf {
-    pub fn new() -> Self {
-        ResourcesBuf {
-            resources: Vec::new(),
-        }
-    }
-
     pub fn push_resource(&mut self, resource: u32) {
         self.resources.push(resource);
     }
@@ -55,7 +50,7 @@ mod tests {
 
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(0, 8, 2*8, 0x0180);
+        let chunk_header = ChunkHeader::new(0, 8, 2 * 8, 0x0180);
         let wrapper = ResourceWrapper::new(&out, chunk_header);
 
         let expected_resources: Vec<u32> = vec![111, 222];
@@ -68,7 +63,7 @@ mod tests {
         let resources = ResourcesBuf::new();
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(0, 8, (0*8)+8, 0x0180);
+        let chunk_header = ChunkHeader::new(0, 8, (0 * 8) + 8, 0x0180);
         let wrapper = ResourceWrapper::new(&out, chunk_header);
 
         let expected_resources: Vec<u32> = vec![];
@@ -78,7 +73,8 @@ mod tests {
 
     #[test]
     fn identity() {
-        let raw = vec![128, 1, 8, 0, 24, 0, 0, 0, 160, 0, 1, 1, 158, 0, 1, 1, 31, 3, 1, 1, 165, 1, 1, 1];
+        let raw = vec![128, 1, 8, 0, 24, 0, 0, 0, 160, 0, 1, 1, 158, 0, 1, 1, 31, 3, 1, 1, 165, 1,
+                       1, 1];
         let chunk_header = ChunkHeader::new(0, 8, 24, 0x180);
 
         let wrapper = ResourceWrapper::new(&raw, chunk_header);
