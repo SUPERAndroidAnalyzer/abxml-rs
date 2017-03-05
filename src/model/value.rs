@@ -38,35 +38,29 @@ impl Value {
     pub fn to_string(&self) -> String {
         match *self {
             Value::String(ref s) => s.deref().clone(),
-            Value::Dimension(ref s) | Value::Fraction(ref s) |
-            Value::Color(ref s) | Value::Color2(ref s) => {
-                s.clone()
-            },
-            Value::Float(f) => {
-                format!("{:.*}", 1, f)
-            },
-            Value::Integer(i) | Value::Flags(i) => i.to_string(),
+            Value::Dimension(ref s) |
+            Value::Fraction(ref s) |
+            Value::Color(ref s) |
+            Value::Color2(ref s) => s.clone(),
+            Value::Float(f) => format!("{:.*}", 1, f),
+            Value::Integer(i) |
+            Value::Flags(i) => i.to_string(),
             Value::Boolean(b) => b.to_string(),
-            Value::ReferenceId(ref s) => {
-                format!("@id/0x{:x}", s)
-            },
-            Value::AttributeReferenceId(ref s) => {
-                format!("@id/0x{:x}", s)
-            },
+            Value::ReferenceId(ref s) => format!("@id/0x{:x}", s),
+            Value::AttributeReferenceId(ref s) => format!("@id/0x{:x}", s),
             _ => "Unknown".to_string(),
         }
     }
 
     pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => {
-                Value::ReferenceId(data)
-            },
-            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
-                Value::AttributeReferenceId(data)
-            }
+            TOKEN_TYPE_REFERENCE_ID |
+            TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
+            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID |
+            TOKEN_TYPE_DYN_ATTRIBUTE => Value::AttributeReferenceId(data),
             TOKEN_TYPE_STRING => {
-                let string = str_table.get_string(data).chain_err(|| format!("Could not find string {} on string table", data))?;
+                let string = str_table.get_string(data)
+                    .chain_err(|| format!("Could not find string {} on string table", data))?;
 
                 Value::String(string.clone())
             }
@@ -79,10 +73,9 @@ impl Value {
                     Some(unit) => {
                         let formatted = format!("{:.*}{}", 1, value, unit);
                         Value::Dimension(formatted)
-                    },
+                    }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}",
-                                           unit_idx).into())
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
                     }
                 }
             }
@@ -102,22 +95,21 @@ impl Value {
                         };
 
                         Value::Fraction(formatted_fraction)
-                    },
+                    }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}",
-                                           unit_idx).into())
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
                     }
                 }
             }
             TOKEN_TYPE_INTEGER => {
                 // TODO: Should we transmute to signed integer?
                 Value::Integer(data as u64)
-            },
+            }
             TOKEN_TYPE_FLAGS => Value::Flags(data as u64),
             TOKEN_TYPE_FLOAT => {
-                let f = unsafe { mem::transmute::<u32, f32>(data)};
+                let f = unsafe { mem::transmute::<u32, f32>(data) };
                 Value::Float(f)
-            },
+            }
             TOKEN_TYPE_BOOLEAN => {
                 if data > 0 {
                     Value::Boolean(true)
@@ -144,16 +136,14 @@ impl Value {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;
         let uvalue = data & mantissa;
-        let ivalue: i32 = unsafe {mem::transmute(uvalue)};
+        let ivalue: i32 = unsafe { mem::transmute(uvalue) };
         let m = ivalue as f32;
         let mm = 1.0 / ((1 << 8) as f32);
 
-        let radix = [
-            1.0 * mm,
-            1.0 / ((1 << 7) as f32) * mm,
-            1.0 / ((1 << 15) as f32) * mm,
-            1.0 / ((1 << 23) as f32) * mm,
-        ];
+        let radix = [1.0 * mm,
+                     1.0 / ((1 << 7) as f32) * mm,
+                     1.0 / ((1 << 15) as f32) * mm,
+                     1.0 / ((1 << 23) as f32) * mm];
 
         let idx = (data >> 4) & 0x3;
 
@@ -214,7 +204,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_positive_dimension() {
-        let dim = 1 << 30;  // Positive value 2-complement
+        let dim = 1 << 30; // Positive value 2-complement
         let units = 0x5;
 
         let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units, &mut FakeStringTable);
@@ -225,7 +215,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_negative_dimension() {
-        let dim = 1 << 31;  // Negative value 2-complement
+        let dim = 1 << 31; // Negative value 2-complement
         let units = 0x0;
 
         let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units, &mut FakeStringTable);
@@ -247,7 +237,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_positive_fraction() {
-        let dim = 1 << 25;  // Positive value 2-complement
+        let dim = 1 << 25; // Positive value 2-complement
         let units = 0x1;
 
         let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);
@@ -258,7 +248,7 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_negative_fraction() {
-        let dim = 1 << 31 | 1 << 5 | 1 << 10;  // Positive value 2-complement
+        let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x0;
 
         let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);
@@ -269,7 +259,7 @@ mod tests {
 
     #[test]
     fn it_can_not_generate_a_fraction_if_units_are_out_of_range() {
-        let dim = 1 << 31 | 1 << 5 | 1 << 10;  // Positive value 2-complement
+        let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x2;
 
         let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);

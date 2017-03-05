@@ -11,7 +11,9 @@ pub struct PrintVisitor;
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
     fn visit_string_table(&mut self, string_table: StringTable, origin: Origin) {
         println!("String Table!");
-        println!("\tLength ({:?}): {} ", origin, string_table.get_strings_len());
+        println!("\tLength ({:?}): {} ",
+                 origin,
+                 string_table.get_strings_len());
     }
 
     fn visit_package(&mut self, package: PackageRef) {
