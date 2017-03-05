@@ -1,8 +1,6 @@
 #![recursion_limit = "1024"]
 
-#![feature(repeat_str, test)]
 extern crate byteorder;
-extern crate test;
 extern crate quick_xml;
 #[macro_use]
 extern crate error_chain;
@@ -67,7 +65,8 @@ mod tests {
         let out = decoder.as_xml(&xml_content).unwrap();
 
         let inner_expected = "<start_tag></start_tag>";
-        let expected = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}", inner_expected);
+        let expected = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}",
+                               inner_expected);
 
         assert_eq!(expected, out);
     }
