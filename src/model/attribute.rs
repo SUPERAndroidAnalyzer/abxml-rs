@@ -19,8 +19,8 @@ impl Attribute {
                value: Value,
                namespace: Option<Rc<String>>,
                prefix: Option<Rc<String>>,
-               name_index: u32,
-    ) -> Self {
+               name_index: u32)
+               -> Self {
         Attribute {
             name: name,
             namespace: namespace,
@@ -50,7 +50,11 @@ impl Attribute {
         self.name_index
     }
 
-    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self, flags: u32, xml_resources: &[u32], resources: &R) -> Option<String> {
+    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self,
+                                                    flags: u32,
+                                                    xml_resources: &[u32],
+                                                    resources: &R)
+                                                    -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
         let name_index = self.get_name_index();
@@ -63,7 +67,11 @@ impl Attribute {
         }
     }
 
-    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self, id: u32, resources: &R, prefix: &str) -> Result<String> {
+    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self,
+                                                        id: u32,
+                                                        resources: &R,
+                                                        prefix: &str)
+                                                        -> Result<String> {
         let res_id = id;
         let package_id = id.get_package();
 
@@ -72,21 +80,15 @@ impl Attribute {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id).ok_or_else(|| {
-            ErrorKind::Msg("Package not found".into())
-        })?;
+        let package = resources.get_package(package_id)
+            .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
-        let entry_key = package
-            .get_entry(res_id)
+        let entry_key = package.get_entry(res_id)
             .and_then(|e| Ok(e.get_key()))
             .ok();
 
         if let Some(key) = entry_key {
-            let namespace = if !is_main {
-                package.get_name()
-            } else {
-                None
-            };
+            let namespace = if !is_main { package.get_name() } else { None };
 
             return package.format_reference(id, key, namespace, prefix);
         }
@@ -94,7 +96,12 @@ impl Attribute {
         Err("Error resolving reference".into())
     }
 
-    fn search_values<'a, R: ResourcesTrait<'a>>(&self, flags: u32, name_index: u32, xml_resources: &[u32], resources: &R) -> Option<String> {
+    fn search_values<'a, R: ResourcesTrait<'a>>(&self,
+                                                flags: u32,
+                                                name_index: u32,
+                                                xml_resources: &[u32],
+                                                resources: &R)
+                                                -> Option<String> {
         let entry_ref = match xml_resources.get(name_index as usize) {
             Some(entry_ref) => entry_ref,
             None => return None,
@@ -102,23 +109,18 @@ impl Attribute {
 
         let package_id = entry_ref.get_package() as u8;
         resources.get_package(package_id)
-            .and_then(|package| {
-                self.search_flags(flags, *entry_ref, package)
-            })
+            .and_then(|package| self.search_flags(flags, *entry_ref, package))
     }
 
     fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = self.get_strings(flags, entry_ref, package);
-        let str_strs: Vec<String> = str_indexes
-            .iter()
-            .map(|si| {
-                match package.get_entries_string(*si) {
-                    Ok(str) => str,
-                    Err(_) => {
-                        error!("Key not found on the string table");
+        let str_strs: Vec<String> = str_indexes.iter()
+            .map(|si| match package.get_entries_string(*si) {
+                Ok(str) => str,
+                Err(_) => {
+                    error!("Key not found on the string table");
 
-                        "".to_string()
-                    },
+                    "".to_string()
                 }
             })
             .collect();
@@ -138,7 +140,7 @@ impl Attribute {
         let inner_entries = package.get_entry(entry_ref)
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
-            .unwrap_or_else(|_|Vec::new());
+            .unwrap_or_else(|_| Vec::new());
 
         let mut sorted = inner_entries.to_vec();
 
@@ -191,10 +193,11 @@ impl Attribute {
                                     Ok(())
                                 })
                                 .unwrap_or_else(|_| {
-                                    error!("Value should be added but there was an issue reading the entry");
+                                    error!("Value should be added but there was an issue reading \
+                                            the entry");
                                 });
                         }
-                    },
+                    }
                     Err(_) => {
                         info!("Some entry matched but could not found on entries");
                     }
@@ -211,7 +214,7 @@ mod tests {
     use super::*;
     use model::Value;
     use model::{StringTable, Resources, Library, LibraryBuilder};
-    use model::{Entries};
+    use model::Entries;
     use chunks::table_type::{Entry, SimpleEntry, ComplexEntry};
     use visitor::Origin;
     use chunks::TypeSpec;
@@ -232,7 +235,7 @@ mod tests {
                 456 => Ok(Rc::new("left".to_string())),
                 789 => Ok(Rc::new("right".to_string())),
                 123 => Ok(Rc::new("center".to_string())),
-                _ => Err("Get string".into())
+                _ => Err("Get string".into()),
             }
         }
     }
@@ -249,7 +252,7 @@ mod tests {
             let simple_entry2 = SimpleEntry::new(1, 1, 1, 1);
             let entry2 = Entry::Simple(simple_entry2);
 
-            let simple_entry3 = SimpleEntry::new((2<<24) | 4, 1, 1, 1 << 8);
+            let simple_entry3 = SimpleEntry::new((2 << 24) | 4, 1, 1, 1 << 8);
             let entry3 = Entry::Simple(simple_entry3.clone());
 
             let simple_entry4 = SimpleEntry::new((2 << 24) | 4, 456, 1, 1 << 8);
@@ -270,17 +273,15 @@ mod tests {
             let entry_ce1 = Entry::Complex(complex_entry1);
 
             let mut entries = Entries::new();
-            entries.insert((1<<24) | 1, entry1);
-            entries.insert((2<<24) | 1, entry2);
-            entries.insert((2<<24) | 2, entry3);
-            entries.insert((2<<24) | 3, entry_ce1);
-            entries.insert((2<<24) | 4, entry4);
-            entries.insert((2<<24) | 5, entry5);
-            entries.insert((2<<24) | 6, entry6);
+            entries.insert((1 << 24) | 1, entry1);
+            entries.insert((2 << 24) | 1, entry2);
+            entries.insert((2 << 24) | 2, entry3);
+            entries.insert((2 << 24) | 3, entry_ce1);
+            entries.insert((2 << 24) | 4, entry4);
+            entries.insert((2 << 24) | 5, entry5);
+            entries.insert((2 << 24) | 6, entry6);
 
-            FakeLibrary {
-                entries: entries,
-            }
+            FakeLibrary { entries: entries }
         }
     }
 
@@ -289,10 +290,15 @@ mod tests {
             Some("Package name".to_string())
         }
 
-        fn format_reference(&self, id: u32, _: u32, namespace: Option<String>, _: &str) -> Result<String> {
-            if id == (1<<24) | 1 && namespace.is_none() {
+        fn format_reference(&self,
+                            id: u32,
+                            _: u32,
+                            namespace: Option<String>,
+                            _: &str)
+                            -> Result<String> {
+            if id == (1 << 24) | 1 && namespace.is_none() {
                 Ok("reference#1".to_string())
-            } else if id == (2<<24) | 1 && namespace.is_some() {
+            } else if id == (2 << 24) | 1 && namespace.is_some() {
                 Ok("NS:reference#2".to_string())
             } else {
                 Err("Could not format".into())
@@ -317,17 +323,11 @@ mod tests {
     impl<'a> LibraryBuilder<'a> for FakeLibrary {
         type StringTable = FakeStringTable;
 
-        fn set_string_table(&mut self, _: Self::StringTable, _: Origin) {
+        fn set_string_table(&mut self, _: Self::StringTable, _: Origin) {}
 
-        }
+        fn add_entries(&mut self, _: Entries) {}
 
-        fn add_entries(&mut self, _: Entries) {
-
-        }
-
-        fn add_type_spec(&mut self, _: TypeSpec<'a>) {
-
-        }
+        fn add_type_spec(&mut self, _: TypeSpec<'a>) {}
     }
 
     struct FakeResources {
@@ -338,9 +338,7 @@ mod tests {
         pub fn fake() -> Self {
             let library = FakeLibrary::new();
 
-            FakeResources {
-                library: library,
-            }
+            FakeResources { library: library }
         }
     }
 
@@ -441,7 +439,7 @@ mod tests {
         let resources = FakeResources::fake();
 
         let resc = vec![2 << 24 | 3];
-        let flags = 1<<8;
+        let flags = 1 << 8;
 
         let result = a.resolve_flags(flags, &resc, &resources);
 
@@ -456,7 +454,7 @@ mod tests {
         let resources = FakeResources::fake();
 
         let resc = vec![2 << 24 | 3];
-        let flags = 1<<8 | 1<<9;
+        let flags = 1 << 8 | 1 << 9;
 
         let result = a.resolve_flags(flags, &resc, &resources);
 
