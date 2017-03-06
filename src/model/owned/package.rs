@@ -89,7 +89,7 @@ mod tests {
     use chunks::{PackageWrapper, ChunkHeader, ChunkLoaderStream, Chunk};
     use model::owned::StringTableBuf;
     use std::io::Cursor;
-
+    use std::iter;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
@@ -143,5 +143,21 @@ mod tests {
             },
             _ => panic!("Second chunk should be string table"),
         }
+    }
+
+    #[test]
+    fn it_can_not_create_a_package_with_a_too_large_package_name() {
+        let target = iter::repeat('\u{1F624}').take((256/4) + 1).collect::<String>();
+        let package = PackageBuf::new(1, target);
+
+        assert!(package.is_err());
+    }
+
+    #[test]
+    fn it_can_create_a_package_with_the_maximum_length() {
+        let target = iter::repeat('\u{1F624}').take((256/4)).collect::<String>();
+        let package = PackageBuf::new(1, target);
+
+        assert!(package.is_ok());
     }
 }
