@@ -3,6 +3,8 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use model::Package;
+use encoding::codec::utf_16;
+use encoding::codec::utf_16::Little;
 
 pub struct PackageDecoder;
 
@@ -38,22 +40,41 @@ impl<'a> PackageWrapper<'a> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(12));
         let initial_position = cursor.position();
+        let final_position = self.find_end_position(initial_position as usize);
 
-        let raw_str =
-            cursor.get_ref()[initial_position as usize..(initial_position + 256) as usize].to_vec();
-        let a: Vec<u8> = raw_str;
+        let raw_str = &cursor.get_ref()[initial_position as usize..final_position];
+        let mut decoder = utf_16::UTF16Decoder::<Little>::new();
+        let mut o = String::new();
+        decoder.raw_feed(raw_str, &mut o);
+        let decode_error = decoder.raw_finish(&mut o);
+
+        match decode_error {
+            None => Ok(o),
+            Some(_) => Err("Error decoding UTF8 string".into()),
+        }
+    }
+
+    fn find_end_position(&self, initial_position: usize) -> usize {
+        let buffer = &self.raw_data[initial_position..initial_position+256];
+
+        let mut zeros = 0;
         let mut i = 0;
-        let rw: Vec<u8> = a.iter()
-            .cloned()
-            .filter(|current| {
-                let result = i % 2 == 0;
-                i += 1;
 
-                result && current != &0
-            })
-            .collect();
+        for c in buffer {
+            if *c == 0 {
+                zeros += 1;
+            } else {
+                zeros = 0;
+            }
 
-        String::from_utf8(rw).chain_err(|| "Could not convert to UTF-8")
+            if zeros > 1 {
+                break;
+            }
+
+            i += 1;
+        }
+
+        initial_position + i
     }
 }
 
