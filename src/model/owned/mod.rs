@@ -10,6 +10,7 @@ pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;
 mod resources;
 mod string_table;
 mod xml;
+mod package;
 
 pub trait OwnedBuf {
     fn get_token(&self) -> u16;
