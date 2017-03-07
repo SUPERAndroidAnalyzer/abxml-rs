@@ -12,15 +12,17 @@ use std::io::Write;
 use STR_ARSC;
 use std;
 use zip;
+use std::borrow::Cow;
+use std::borrow::Borrow;
 
 pub struct Decoder<'a> {
     visitor: ModelVisitor<'a>,
     buffer_android: &'a [u8],
-    buffer_apk: &'a [u8],
+    buffer_apk: Cow<'a, [u8]>,
 }
 
 impl<'a> Decoder<'a> {
-    pub fn new(data: &'a [u8]) -> Result<Self> {
+    pub fn new(data: Cow<'a, [u8]>) -> Result<Decoder<'a>> {
         let visitor = ModelVisitor::default();
 
         let mut decoder = Decoder {
@@ -28,13 +30,13 @@ impl<'a> Decoder<'a> {
             buffer_android: STR_ARSC,
             buffer_apk: data,
         };
-
+/*
         let android_resources_cursor = Cursor::new(decoder.buffer_android);
         Executor::arsc(android_resources_cursor, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
 
-        let cursor = Cursor::new(decoder.buffer_apk);
+        let cursor = Cursor::new(decoder.get_buffer());
         Executor::arsc(cursor, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
-
+*/
         Ok(decoder)
     }
 
@@ -75,20 +77,22 @@ impl<'a> Decoder<'a> {
 pub struct Apk<'a> {
     handler: ZipArchive<std::fs::File>,
     decoder: Decoder<'a>,
+    cow: Cow<'a, [u8]>
 }
 
 impl<'a> Apk<'a> {
-    pub fn new<P: AsRef<Path>>(path: P, mut buffer: &'a mut Vec<u8>) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let mut buffer = Vec::new();
         let file = std::fs::File::open(&path)?;
         let mut zip_handler = zip::ZipArchive::new(file)?;
-
         zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;
-
-        let decoder = Decoder::new(buffer.as_slice())?;
+        let cow = Cow::from(buffer);
+        let decoder = Decoder::new(cow.clone())?;
 
         let apk = Apk {
             handler: zip_handler,
             decoder: decoder,
+            cow: cow,
         };
 
         Ok(apk)

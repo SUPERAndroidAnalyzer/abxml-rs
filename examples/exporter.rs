@@ -51,9 +51,7 @@ fn run() -> Result<()> {
     };
 
     let path = Path::new(&apk_path);
-    let mut buffer = Vec::new();
-
-    let mut apk = Apk::new(path, &mut buffer).chain_err(|| "Error loading APK")?;
+    let mut apk = Apk::new(path).chain_err(|| "Error loading APK")?;
     apk.export(Path::new(&output), true).chain_err(|| "APK could not be exported")?;
 
     Ok(())

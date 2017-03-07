@@ -65,8 +65,8 @@ fn run() -> Result<()> {
     let resources_cursor: Cursor<&[u8]> = Cursor::new(&resources_content);
     let android_resources_cursor: Cursor<&[u8]> = Cursor::new(&android_resources_content);
     let mut resources_visitor = ModelVisitor::default();
-    Executor::arsc(resources_cursor, &mut resources_visitor)?;
-    Executor::arsc(android_resources_cursor, &mut resources_visitor)?;
+    Executor::arsc(&resources_content, &mut resources_visitor)?;
+    Executor::arsc(&android_resources_content, &mut resources_visitor)?;
 
     for i in 0..archive.len() {
         let mut current_file = archive.by_index(i).unwrap();

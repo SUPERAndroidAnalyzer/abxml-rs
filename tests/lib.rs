@@ -4,19 +4,18 @@ use std::path::Path;
 use abxml::decoder::{Apk, Decoder};
 use abxml::model::builder::Xml;
 use abxml::model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf};
+use std::borrow::Cow;
 
 #[test]
 #[should_panic]
 fn it_can_generate_a_decoder_from_an_apk() {
     let path = Path::new("some.apk");
-    let mut buffer = Vec::new();
-
-    Apk::new(path, &mut buffer).unwrap();
+    Apk::new(path).unwrap();
 }
 
 #[test]
 fn it_can_generate_a_decoder_from_a_buffer() {
-    let arsc = [0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let arsc = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut xml = Xml::default();
     let mut st = StringTableBuf::default();
     st.add_string("Some string".to_string());
@@ -28,8 +27,8 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     xml.push_owned(Box::new(XmlTagEndBuf::new(90)));
 
     let xml_content = xml.into_vec().unwrap();
-
-    let decoder = Decoder::new(&arsc).unwrap();
+    let cow_arsc = Cow::from(arsc);
+    let decoder = Decoder::new(cow_arsc).unwrap();
     let out = decoder.as_xml(&xml_content).unwrap();
 
     let inner_expected = "<start_tag></start_tag>";
