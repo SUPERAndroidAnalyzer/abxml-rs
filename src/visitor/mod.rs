@@ -39,6 +39,7 @@ impl Executor {
             .chain_err(|| "Error reading chunk size")?;
         let _package_amount = cursor.read_u32::<LittleEndian>()
             .chain_err(|| "Error reading package amount")?;
+        // TODO: Avoid infinite loop
         cursor.set_position(_header_size as u64);
 
         let stream = ChunkLoaderStream::new(cursor);

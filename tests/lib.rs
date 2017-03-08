@@ -1,17 +1,10 @@
 extern crate abxml;
 
 use std::path::Path;
-use abxml::decoder::{Apk, Decoder};
+use abxml::decoder::Decoder;
 use abxml::model::builder::Xml;
 use abxml::model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf};
 use std::borrow::Cow;
-
-#[test]
-#[should_panic]
-fn it_can_generate_a_decoder_from_an_apk() {
-    let path = Path::new("some.apk");
-    Apk::new(path).unwrap();
-}
 
 #[test]
 fn it_can_generate_a_decoder_from_a_buffer() {

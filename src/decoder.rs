@@ -6,6 +6,22 @@ use visitor::*;
 use encoder::Xml;
 use STR_ARSC;
 
+pub struct OwnedDecoder {
+    buffer: Vec<u8>,
+}
+
+impl OwnedDecoder {
+    pub fn new(buffer: Vec<u8>) -> OwnedDecoder {
+        OwnedDecoder {
+            buffer: buffer,
+        }
+    }
+
+    pub fn get_decoder(&self) -> Result<Decoder> {
+        Decoder::new(&self.buffer)
+    }
+}
+
 pub struct Decoder<'a> {
     visitor: ModelVisitor<'a>,
     buffer_android: &'a [u8],
@@ -49,12 +65,12 @@ impl<'a> Decoder<'a> {
                             .chain_err(|| "Could note encode XML");
                     }
                     None => {
-                        println!("No string table found");
+                        warn!("No string table found");
                     }
                 }
             }
             None => {
-                println!("No root on target XML");
+                warn!("No root on target XML");
             }
         }
 
@@ -149,3 +165,21 @@ impl Apk {
     }
 }
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_can_not_decode_an_empty_binary_xml() {
+        // Empty resources.arsc file
+        let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+
+        let owned = OwnedDecoder::new(buffer);
+        let decoder = owned.get_decoder().unwrap();
+
+        // Empty binary XML file
+        let another = vec![0,0, 0, 0, 0, 0, 0, 0];
+        assert!(decoder.as_xml(&another).is_err());
+    }
+}
