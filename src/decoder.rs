@@ -5,14 +5,24 @@ use errors::*;
 use visitor::*;
 use encoder::Xml;
 use STR_ARSC;
+use std::io::Read;
 
-pub struct OwnedDecoder {
+pub struct BufferedDecoder {
     buffer: Vec<u8>,
 }
 
-impl OwnedDecoder {
-    pub fn new(buffer: Vec<u8>) -> OwnedDecoder {
-        OwnedDecoder {
+impl BufferedDecoder {
+    pub fn from_vec(buffer: Vec<u8>) -> BufferedDecoder {
+        BufferedDecoder {
+            buffer: buffer,
+        }
+    }
+
+    pub fn from_read<R: Read>(mut read: R) -> BufferedDecoder {
+        let mut buffer = Vec::new();
+        read.read_to_end(&mut buffer);
+
+        BufferedDecoder {
             buffer: buffer,
         }
     }
@@ -169,17 +179,26 @@ impl Apk {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn it_can_not_decode_an_empty_binary_xml() {
         // Empty resources.arsc file
         let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
 
-        let owned = OwnedDecoder::new(buffer);
+        let owned = BufferedDecoder::from_vec(buffer);
         let decoder = owned.get_decoder().unwrap();
 
         // Empty binary XML file
         let another = vec![0,0, 0, 0, 0, 0, 0, 0];
         assert!(decoder.as_xml(&another).is_err());
+    }
+
+    #[test]
+    fn it_can_create_a_buffer_decoder_from_read() {
+        let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+
+        let owned = BufferedDecoder::from_read(Cursor::new(buffer));
+        let decoder = owned.get_decoder().unwrap();
     }
 }
