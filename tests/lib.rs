@@ -27,8 +27,7 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     xml.push_owned(Box::new(XmlTagEndBuf::new(90)));
 
     let xml_content = xml.into_vec().unwrap();
-    let cow_arsc = Cow::from(arsc);
-    let decoder = Decoder::new(cow_arsc).unwrap();
+    let decoder = Decoder::new(&arsc).unwrap();
     let out = decoder.as_xml(&xml_content).unwrap();
 
     let inner_expected = "<start_tag></start_tag>";

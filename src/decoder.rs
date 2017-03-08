@@ -1,28 +1,19 @@
 use visitor::ModelVisitor;
-use std::path::Path;
 use std::io::Cursor;
 use visitor::Executor;
 use errors::*;
-use std::io::Read;
-use std::fs;
-use zip::ZipArchive;
 use visitor::*;
 use encoder::Xml;
-use std::io::Write;
 use STR_ARSC;
-use std;
-use zip;
-use std::borrow::Cow;
-use std::borrow::Borrow;
 
 pub struct Decoder<'a> {
     visitor: ModelVisitor<'a>,
     buffer_android: &'a [u8],
-    buffer_apk: Cow<'a, [u8]>,
+    buffer_apk: &'a [u8],
 }
 
 impl<'a> Decoder<'a> {
-    pub fn new(data: Cow<'a, [u8]>) -> Result<Decoder<'a>> {
+    pub fn new(data: &'a [u8]) -> Result<Decoder<'a>> {
         let visitor = ModelVisitor::default();
 
         let mut decoder = Decoder {
@@ -30,13 +21,10 @@ impl<'a> Decoder<'a> {
             buffer_android: STR_ARSC,
             buffer_apk: data,
         };
-/*
-        let android_resources_cursor = Cursor::new(decoder.buffer_android);
-        Executor::arsc(android_resources_cursor, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
 
-        let cursor = Cursor::new(decoder.get_buffer());
-        Executor::arsc(cursor, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
-*/
+        Executor::arsc(decoder.buffer_android, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
+        Executor::arsc(decoder.buffer_apk, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
+
         Ok(decoder)
     }
 
@@ -74,25 +62,23 @@ impl<'a> Decoder<'a> {
     }
 }
 
-pub struct Apk<'a> {
+// TODO: Create a function to export a full APK to a target folder
+/*
+pub struct Apk {
     handler: ZipArchive<std::fs::File>,
-    decoder: Decoder<'a>,
-    cow: Cow<'a, [u8]>
+    cow: Vec<u8>,
 }
 
-impl<'a> Apk<'a> {
+impl Apk {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mut buffer = Vec::new();
         let file = std::fs::File::open(&path)?;
         let mut zip_handler = zip::ZipArchive::new(file)?;
-        zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;
-        let cow = Cow::from(buffer);
-        let decoder = Decoder::new(cow.clone())?;
+        zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;;
 
         let apk = Apk {
             handler: zip_handler,
-            decoder: decoder,
-            cow: cow,
+            cow: buffer,
         };
 
         Ok(apk)
@@ -101,6 +87,8 @@ impl<'a> Apk<'a> {
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
+        let decoder = self.get_decoder()?;
+
         if fs::create_dir(&output_path).is_err() && force {
             fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
             fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
@@ -122,7 +110,7 @@ impl<'a> Apk<'a> {
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
                               file_name == "AndroidManifest.xml" {
                 let new_content = contents.clone();
-                let out = self.decoder
+                let out = decoder
                     .as_xml(&new_content)
                     .chain_err(|| format!("Could not decode: {}", file_name))?;
 
@@ -155,4 +143,9 @@ impl<'a> Apk<'a> {
 
         Ok(())
     }
+
+    fn get_decoder(&self) -> Result<Decoder> {
+        Decoder::new(&self.cow)
+    }
 }
+*/
