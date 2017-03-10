@@ -12,6 +12,7 @@ mod resources;
 mod string_table;
 mod xml;
 mod package;
+mod table_type_spec;
 
 pub trait OwnedBuf {
     fn get_token(&self) -> u16;

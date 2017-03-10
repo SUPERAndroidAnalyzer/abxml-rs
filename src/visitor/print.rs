@@ -1,6 +1,7 @@
 use chunks::*;
 use model::StringTable as StringTableTrait;
 use model::Package;
+use model::TypeSpec as TypeSpecTrait;
 
 use super::ChunkVisitor;
 use super::Origin;

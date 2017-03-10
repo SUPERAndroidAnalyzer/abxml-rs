@@ -15,7 +15,6 @@ pub use self::value::Value;
 pub use self::attribute::Attribute;
 
 use visitor::Origin;
-use chunks::TypeSpec;
 
 pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
 pub type Entries = HashMap<u32, Entry>;
@@ -76,10 +75,11 @@ pub trait Library {
 
 pub trait LibraryBuilder<'a> {
     type StringTable: StringTable;
+    type TypeSpec: TypeSpec;
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin);
     fn add_entries(&mut self, entries: Entries);
-    fn add_type_spec(&mut self, type_spec: TypeSpec<'a>);
+    fn add_type_spec(&mut self, type_spec: Self::TypeSpec);
 }
 
 pub trait Resources<'a> {
@@ -97,6 +97,10 @@ pub trait TagStart {
 
 pub trait TagEnd {
     fn get_id(&self) -> Result<u32>;
+}
+
+pub trait TypeSpec {
+    fn get_id(&self) -> Result<u16>;
 }
 
 #[cfg(test)]

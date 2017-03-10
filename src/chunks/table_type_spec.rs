@@ -2,6 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
+use model::TypeSpec as TypeSpecTrait;
 
 pub struct TableTypeSpecDecoder;
 
@@ -43,8 +44,10 @@ impl<'a> TypeSpec<'a> {
     pub fn new(wrapper: TypeSpecWrapper<'a>) -> Self {
         TypeSpec { wrapper: wrapper }
     }
+}
 
-    pub fn get_id(&self) -> Result<u16> {
+impl<'a> TypeSpecTrait for TypeSpec<'a> {
+    fn get_id(&self) -> Result<u16> {
         Ok((self.wrapper.get_id()? & 0xFF) as u16)
     }
 }
