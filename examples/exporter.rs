@@ -8,7 +8,7 @@ extern crate env_logger;
 use std::env;
 use abxml::errors::*;
 use std::path::Path;
-use abxml::decoder::Apk;
+use abxml::apk::Apk;
 
 fn main() {
     env_logger::init().unwrap();
