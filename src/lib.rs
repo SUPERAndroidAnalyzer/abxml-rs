@@ -17,6 +17,8 @@ pub mod model;
 pub mod decoder;
 #[cfg(test)]
 pub mod test;
+#[cfg(test)]
+pub mod raw_chunks;
 #[cfg(feature = "zip_decode")]
 pub mod apk;
 

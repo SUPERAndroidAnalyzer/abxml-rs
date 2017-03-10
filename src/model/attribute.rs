@@ -337,6 +337,15 @@ mod tests {
         fn get_id(&self) -> Result<u16> {
             Ok(82)
         }
+        fn get_amount(&self) -> Result<u32> {
+            Ok(3)
+        }
+
+        fn get_flag(&self, index: u32) -> Result<u32> {
+            let flags = vec![0, 4, 16];
+
+            flags.get(index as usize).map(|x| *x).ok_or("Flag out of bounds".into())
+        }
     }
 
     struct FakeResources {

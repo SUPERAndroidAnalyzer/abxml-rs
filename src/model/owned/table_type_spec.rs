@@ -1,16 +1,23 @@
 use model::owned::OwnedBuf;
 use errors::*;
 use model::TypeSpec;
+use byteorder::{LittleEndian, WriteBytesExt};
 
 pub struct TableTypeSpecBuf {
     id: u16,
+    flags: Vec<u32>,
 }
 
 impl TableTypeSpecBuf {
     pub fn new(id: u16) -> Self {
         TableTypeSpecBuf {
             id: id,
+            flags: Vec::new(),
         }
+    }
+
+    pub fn push_flag(&mut self, flag: u32) {
+        self.flags.push(flag)
     }
 }
 
@@ -22,17 +29,31 @@ impl OwnedBuf for TableTypeSpecBuf {
     fn get_body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
+        out.write_u32::<LittleEndian>(self.id as u32)?;
+        out.write_u32::<LittleEndian>(self.flags.len() as u32)?;
+
+        for flag in &self.flags {
+            out.write_u32::<LittleEndian>(*flag)?;
+        }
+
         Ok(out)
     }
 
     fn get_header_size(&self) -> u16 {
-        8
+        16
     }
 }
 
 impl TypeSpec for TableTypeSpecBuf {
     fn get_id(&self) -> Result<u16> {
         Ok(self.id)
+    }
+    fn get_amount(&self) -> Result<u32> {
+        Ok(self.flags.len() as u32)
+    }
+
+    fn get_flag(&self, index: u32) -> Result<u32> {
+        self.flags.get(index as usize).map(|x| *x).ok_or("Flag out of bounds".into())
     }
 }
 
@@ -46,11 +67,5 @@ mod tests {
         let type_spec = TableTypeSpecBuf::new(14);
 
         assert_eq!(14, type_spec.get_id().unwrap());
-    }
-
-
-    #[test]
-    fn identity() {
-
     }
 }

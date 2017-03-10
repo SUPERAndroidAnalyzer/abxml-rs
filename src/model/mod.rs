@@ -101,6 +101,8 @@ pub trait TagEnd {
 
 pub trait TypeSpec {
     fn get_id(&self) -> Result<u16>;
+    fn get_amount(&self) -> Result<u32>;
+    fn get_flag(&self, index: u32) -> Result<u32>;
 }
 
 #[cfg(test)]
