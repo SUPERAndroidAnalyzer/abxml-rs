@@ -28,9 +28,10 @@ pub trait ChunkVisitor<'a> {
 pub struct Executor;
 
 impl Executor {
-    pub fn arsc<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>,
+    pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8],
                                          mut visitor: &mut V)
                                          -> Result<()> {
+        let mut cursor = Cursor::new(buffer);
         let _token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
         let _header_size = cursor.read_u16::<LittleEndian>()
             .chain_err(|| "Error reading header size")?;
@@ -38,6 +39,7 @@ impl Executor {
             .chain_err(|| "Error reading chunk size")?;
         let _package_amount = cursor.read_u32::<LittleEndian>()
             .chain_err(|| "Error reading package amount")?;
+        // TODO: Avoid infinite loop
         cursor.set_position(_header_size as u64);
 
         let stream = ChunkLoaderStream::new(cursor);

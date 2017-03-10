@@ -83,8 +83,6 @@ impl<'a> ChunkLoaderStream<'a> {
         let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
         let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
 
-        println!("Token: {:X}", token);
-
         let chunk = match token {
             TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
@@ -122,7 +120,7 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
     type Item = Result<Chunk<'a>>;
 
     fn next(&mut self) -> Option<Result<Chunk<'a>>> {
-        if self.cursor.position() == self.cursor.get_ref().len() as u64 {
+        if self.cursor.position() >= self.cursor.get_ref().len() as u64 {
             return None;
         }
 
