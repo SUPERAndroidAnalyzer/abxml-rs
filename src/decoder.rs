@@ -59,33 +59,13 @@ impl<'a> Decoder<'a> {
         self.visitor.get_resources()
     }
 
-    pub fn as_xml(&self, content: &[u8]) -> Result<String> {
-        let cursor = Cursor::new(content);
-        let mut visitor = XmlVisitor::default();
+    pub fn visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor> {
+        let cursor = Cursor::new(content.as_ref());
+        let mut visitor = XmlVisitor::new(self.get_resources());
 
         Executor::xml(cursor, &mut visitor)?;
 
-        match *visitor.get_root() {
-            Some(ref root) => {
-                match *visitor.get_string_table() {
-                    Some(_) => {
-                        return Xml::encode(visitor.get_namespaces(),
-                                           root,
-                                           visitor.get_resources(),
-                                           self.get_resources())
-                            .chain_err(|| "Could note encode XML");
-                    }
-                    None => {
-                        warn!("No string table found");
-                    }
-                }
-            }
-            None => {
-                warn!("No root on target XML");
-            }
-        }
-
-        Err("Could not decode XML".into())
+        Ok(visitor)
     }
 }
 
@@ -104,7 +84,8 @@ mod tests {
 
         // Empty binary XML file
         let another = vec![0,0, 0, 0, 0, 0, 0, 0];
-        assert!(decoder.as_xml(&another).is_err());
+        let xml_result = decoder.visitor(&another).unwrap().into_string();
+        assert!(xml_result.is_err());
     }
 
     #[test]
