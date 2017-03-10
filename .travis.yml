@@ -28,7 +28,7 @@ rust:
 
 before_script:
   - |
-      cargo install cargo-travis &&
+      cargo install cargo-travis --force &&
       export PATH=$HOME/.cargo/bin:$PATH
 
 script:
