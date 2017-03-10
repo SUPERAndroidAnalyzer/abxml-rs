@@ -15,9 +15,10 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-      - cmake
-      - gcc
       - binutils-dev
+      - cmake
+    sources:
+      - kalakris-cmake
 
 rust:
   - nightly
@@ -25,11 +26,10 @@ rust:
   - stable
   - 1.15.1
 
-# load travis-cargo
 before_script:
   - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
+      cargo install cargo-travis &&
+      export PATH=$HOME/.cargo/bin:$PATH
 
 script:
   - |
@@ -37,7 +37,7 @@ script:
     travis-cargo test
 
 after_success:
-  - travis-cargo coveralls --no-sudo
+  - cargo coveralls
 
 notifications:
   email:
