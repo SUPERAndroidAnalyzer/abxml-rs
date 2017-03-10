@@ -37,7 +37,7 @@ script:
     travis-cargo test
 
 after_success:
-  - travis-cargo coveralls --no-sudo --verify
+  - travis-cargo coveralls --no-sudo
 
 notifications:
   email:
