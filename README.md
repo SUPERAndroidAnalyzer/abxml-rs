@@ -1,3 +1,6 @@
+[![Coverage Status](https://coveralls.io/repos/github/gnieto/abxml-rs/badge.svg?branch=develop)](https://coveralls.io/github/gnieto/abxml-rs?branch=develop)
+[![Build Status](https://travis-ci.org/gnieto/abxml-rs.svg?branch=develop)](https://travis-ci.org/gnieto/abxml-rs)
+
 # ABXML
 
 ABXML is a library that is able to decode APK files in Rust.
