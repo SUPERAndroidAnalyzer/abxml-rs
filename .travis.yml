@@ -33,8 +33,8 @@ before_script:
 
 script:
   - |
-    travis-cargo build &&
-    travis-cargo test
+    cargo build &&
+    cargo test
 
 after_success:
   - cargo coveralls
