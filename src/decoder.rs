@@ -59,7 +59,7 @@ impl<'a> Decoder<'a> {
         self.visitor.get_resources()
     }
 
-    pub fn visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor> {
+    pub fn xml_visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor> {
         let cursor = Cursor::new(content.as_ref());
         let mut visitor = XmlVisitor::new(self.get_resources());
 
@@ -84,7 +84,7 @@ mod tests {
 
         // Empty binary XML file
         let another = vec![0,0, 0, 0, 0, 0, 0, 0];
-        let xml_result = decoder.visitor(&another).unwrap().into_string();
+        let xml_result = decoder.xml_visitor(&another).unwrap().into_string();
         assert!(xml_result.is_err());
     }
 
