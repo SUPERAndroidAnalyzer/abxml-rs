@@ -1,17 +1,42 @@
 use visitor::ModelVisitor;
-use std::path::Path;
 use std::io::Cursor;
 use visitor::Executor;
 use errors::*;
-use std::io::Read;
-use std::fs;
-use zip::ZipArchive;
 use visitor::*;
 use encoder::Xml;
-use std::io::Write;
 use STR_ARSC;
+use std::io::Read;
+use zip::read::ZipArchive;
+use std::fs;
 use std;
-use zip;
+use std::path::Path;
+use std::io::Write;
+
+pub struct BufferedDecoder {
+    buffer: Vec<u8>,
+}
+
+// TODO: Implement this methods with Into/From
+impl BufferedDecoder {
+    pub fn from_vec(buffer: Vec<u8>) -> BufferedDecoder {
+        BufferedDecoder {
+            buffer: buffer,
+        }
+    }
+
+    pub fn from_read<R: Read>(mut read: R) -> BufferedDecoder {
+        let mut buffer = Vec::new();
+        let _ = read.read_to_end(&mut buffer);
+
+        BufferedDecoder {
+            buffer: buffer,
+        }
+    }
+
+    pub fn get_decoder(&self) -> Result<Decoder> {
+        Decoder::new(&self.buffer)
+    }
+}
 
 pub struct Decoder<'a> {
     visitor: ModelVisitor<'a>,
@@ -20,7 +45,7 @@ pub struct Decoder<'a> {
 }
 
 impl<'a> Decoder<'a> {
-    pub fn new(data: &'a [u8]) -> Result<Self> {
+    pub fn new(data: &'a [u8]) -> Result<Decoder<'a>> {
         let visitor = ModelVisitor::default();
 
         let mut decoder = Decoder {
@@ -29,11 +54,8 @@ impl<'a> Decoder<'a> {
             buffer_apk: data,
         };
 
-        let android_resources_cursor = Cursor::new(decoder.buffer_android);
-        Executor::arsc(android_resources_cursor, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
-
-        let cursor = Cursor::new(decoder.buffer_apk);
-        Executor::arsc(cursor, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
+        Executor::arsc(decoder.buffer_android, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
+        Executor::arsc(decoder.buffer_apk, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
 
         Ok(decoder)
     }
@@ -59,12 +81,12 @@ impl<'a> Decoder<'a> {
                             .chain_err(|| "Could note encode XML");
                     }
                     None => {
-                        println!("No string table found");
+                        warn!("No string table found");
                     }
                 }
             }
             None => {
-                println!("No root on target XML");
+                warn!("No root on target XML");
             }
         }
 
@@ -72,23 +94,21 @@ impl<'a> Decoder<'a> {
     }
 }
 
-pub struct Apk<'a> {
+pub struct Apk {
     handler: ZipArchive<std::fs::File>,
-    decoder: Decoder<'a>,
+    decoder: BufferedDecoder,
 }
 
-impl<'a> Apk<'a> {
-    pub fn new<P: AsRef<Path>>(path: P, mut buffer: &'a mut Vec<u8>) -> Result<Self> {
+impl Apk {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let mut buffer = Vec::new();
         let file = std::fs::File::open(&path)?;
-        let mut zip_handler = zip::ZipArchive::new(file)?;
-
+        let mut zip_handler = ZipArchive::new(file)?;
         zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;
-
-        let decoder = Decoder::new(buffer.as_slice())?;
 
         let apk = Apk {
             handler: zip_handler,
-            decoder: decoder,
+            decoder: BufferedDecoder::from_vec(buffer),
         };
 
         Ok(apk)
@@ -97,6 +117,8 @@ impl<'a> Apk<'a> {
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
+        let decoder = self.decoder.get_decoder().chain_err(|| "Could not get the decoder")?;
+
         if fs::create_dir(&output_path).is_err() && force {
             fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
             fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
@@ -118,7 +140,7 @@ impl<'a> Apk<'a> {
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
                               file_name == "AndroidManifest.xml" {
                 let new_content = contents.clone();
-                let out = self.decoder
+                let out = decoder
                     .as_xml(&new_content)
                     .chain_err(|| format!("Could not decode: {}", file_name))?;
 
@@ -150,5 +172,32 @@ impl<'a> Apk<'a> {
         descriptor.sync_all().chain_err(|| "Could not flush")?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn it_can_not_decode_an_empty_binary_xml() {
+        // Empty resources.arsc file
+        let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+
+        let owned = BufferedDecoder::from_vec(buffer);
+        let decoder = owned.get_decoder().unwrap();
+
+        // Empty binary XML file
+        let another = vec![0,0, 0, 0, 0, 0, 0, 0];
+        assert!(decoder.as_xml(&another).is_err());
+    }
+
+    #[test]
+    fn it_can_create_a_buffer_decoder_from_read() {
+        let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+
+        let owned = BufferedDecoder::from_read(Cursor::new(buffer));
+        let _ = owned.get_decoder().unwrap();
     }
 }
