@@ -19,7 +19,7 @@ fn it_can_generate_a_decoder_from_a_buffer() {
 
     let xml_content = xml.into_vec().unwrap();
     let decoder = Decoder::new(&arsc).unwrap();
-    let xml_visitor = decoder.visitor(&xml_content).unwrap();
+    let xml_visitor = decoder.xml_visitor(&xml_content).unwrap();
     let out = xml_visitor.into_string().unwrap();
 
     let inner_expected = "<start_tag></start_tag>";

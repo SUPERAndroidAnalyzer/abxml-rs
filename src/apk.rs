@@ -52,9 +52,10 @@ impl Apk {
 
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
                 file_name == "AndroidManifest.xml" {
-                let new_content = contents.clone();
-                let out = decoder
-                    .as_xml(&new_content)
+
+                let xml_visitor = decoder.xml_visitor(&contents).chain_err(|| "Could not decode the target file")?;
+                let out = xml_visitor
+                    .into_string()
                     .chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()
