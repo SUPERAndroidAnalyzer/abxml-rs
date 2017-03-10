@@ -7,8 +7,8 @@ extern crate env_logger;
 
 use std::env;
 use abxml::errors::*;
-use abxml::decoder::Apk;
 use std::path::Path;
+use abxml::decoder::Apk;
 
 fn main() {
     env_logger::init().unwrap();
@@ -51,9 +51,7 @@ fn run() -> Result<()> {
     };
 
     let path = Path::new(&apk_path);
-    let mut buffer = Vec::new();
-
-    let mut apk = Apk::new(path, &mut buffer).chain_err(|| "Error loading APK")?;
+    let mut apk = Apk::new(path).chain_err(|| "Error loading APK")?;
     apk.export(Path::new(&output), true).chain_err(|| "APK could not be exported")?;
 
     Ok(())
