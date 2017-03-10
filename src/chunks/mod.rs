@@ -69,11 +69,12 @@ pub enum Chunk<'a> {
 
 pub struct ChunkLoaderStream<'a> {
     cursor: Cursor<&'a [u8]>,
+    previous: Option<u64>,
 }
 
 impl<'a> ChunkLoaderStream<'a> {
     pub fn new(cursor: Cursor<&'a [u8]>) -> Self {
-        ChunkLoaderStream { cursor: cursor }
+        ChunkLoaderStream { cursor: cursor, previous: None }
     }
 
     fn read_one(&mut self) -> Result<Chunk<'a>> {
@@ -120,10 +121,66 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
     type Item = Result<Chunk<'a>>;
 
     fn next(&mut self) -> Option<Result<Chunk<'a>>> {
+        if let Some(prev) = self.previous {
+            if prev == self.cursor.position() {
+                return None;
+            }
+        }
+
         if self.cursor.position() >= self.cursor.get_ref().len() as u64 {
             return None;
         }
 
-        Some(self.read_one())
+        self.previous = Some(self.cursor.position());
+        let chunk = self.read_one();
+
+        Some(chunk)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+    use model::owned::{StringTableBuf, ResourcesBuf, OwnedBuf};
+
+    #[test]
+    fn it_can_detect_loops() {
+        let data = vec![0,0, 0,0, 0,0,0,0, 0,0,0,0];
+        let cursor: Cursor<&[u8]> = Cursor::new(&data);
+        let mut stream = ChunkLoaderStream::new(cursor);
+
+        let chunk_one = stream.next().unwrap();
+        assert!(stream.next().is_none());
+    }
+
+    #[test]
+    fn it_stops_the_iteration_if_out_of_bounds() {
+        let data = vec![0,0, 0,0, 0,0,0,0, 0,0,0,0];
+        let mut cursor: Cursor<&[u8]> = Cursor::new(&data);
+        cursor.set_position(30);
+        let mut stream = ChunkLoaderStream::new(cursor);
+
+        assert!(stream.next().is_none());
+    }
+
+    #[test]
+    fn it_can_iterate_over_chunks() {
+        let mut data = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+        let st = StringTableBuf::default();
+        data.extend(st.to_vec().unwrap());
+        let res = ResourcesBuf::default();
+        data.extend(res.to_vec().unwrap());
+
+        let mut cursor: Cursor<&[u8]> = Cursor::new(&data);
+        // Skip header
+        cursor.set_position(12);
+        let mut stream = ChunkLoaderStream::new(cursor);
+
+        // Assert string table
+        let chunk_one = stream.next().unwrap();
+        let chunk_sec = stream.next().unwrap();
+
+        assert!(stream.next().is_none());
     }
 }
