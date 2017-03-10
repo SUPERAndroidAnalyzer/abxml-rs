@@ -1,10 +1,8 @@
 extern crate abxml;
 
-use std::path::Path;
 use abxml::decoder::Decoder;
 use abxml::model::builder::Xml;
 use abxml::model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf};
-use std::borrow::Cow;
 
 #[test]
 fn it_can_generate_a_decoder_from_a_buffer() {

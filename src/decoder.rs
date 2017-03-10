@@ -6,11 +6,17 @@ use visitor::*;
 use encoder::Xml;
 use STR_ARSC;
 use std::io::Read;
+use zip::read::ZipArchive;
+use std::fs;
+use std;
+use std::path::Path;
+use std::io::Write;
 
 pub struct BufferedDecoder {
     buffer: Vec<u8>,
 }
 
+// TODO: Implement this methods with Into/From
 impl BufferedDecoder {
     pub fn from_vec(buffer: Vec<u8>) -> BufferedDecoder {
         BufferedDecoder {
@@ -20,7 +26,7 @@ impl BufferedDecoder {
 
     pub fn from_read<R: Read>(mut read: R) -> BufferedDecoder {
         let mut buffer = Vec::new();
-        read.read_to_end(&mut buffer);
+        let _ = read.read_to_end(&mut buffer);
 
         BufferedDecoder {
             buffer: buffer,
@@ -88,23 +94,21 @@ impl<'a> Decoder<'a> {
     }
 }
 
-// TODO: Create a function to export a full APK to a target folder
-/*
 pub struct Apk {
     handler: ZipArchive<std::fs::File>,
-    cow: Vec<u8>,
+    decoder: BufferedDecoder,
 }
 
 impl Apk {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mut buffer = Vec::new();
         let file = std::fs::File::open(&path)?;
-        let mut zip_handler = zip::ZipArchive::new(file)?;
-        zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;;
+        let mut zip_handler = ZipArchive::new(file)?;
+        zip_handler.by_name("resources.arsc")?.read_to_end(&mut buffer)?;
 
         let apk = Apk {
             handler: zip_handler,
-            cow: buffer,
+            decoder: BufferedDecoder::from_vec(buffer),
         };
 
         Ok(apk)
@@ -113,7 +117,7 @@ impl Apk {
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
-        let decoder = self.get_decoder()?;
+        let decoder = self.decoder.get_decoder().chain_err(|| "Could not get the decoder")?;
 
         if fs::create_dir(&output_path).is_err() && force {
             fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
@@ -169,12 +173,7 @@ impl Apk {
 
         Ok(())
     }
-
-    fn get_decoder(&self) -> Result<Decoder> {
-        Decoder::new(&self.cow)
-    }
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -199,6 +198,6 @@ mod tests {
         let buffer = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
 
         let owned = BufferedDecoder::from_read(Cursor::new(buffer));
-        let decoder = owned.get_decoder().unwrap();
+        let _ = owned.get_decoder().unwrap();
     }
 }
