@@ -5,14 +5,39 @@ sudo: false
 os:
   - linux
 
+env:
+  global:
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - cmake
+    sources:
+      - kalakris-cmake
+
 rust:
   - nightly
   - beta
   - stable
   - 1.15.1
 
+before_script:
+  - |
+      cargo install cargo-travis || true  &&
+      export PATH=$HOME/.cargo/bin:$PATH
+
 script:
-  - cargo test
+  - |
+    cargo build &&
+    cargo test
+
+after_success:
+  - cargo coveralls
 
 notifications:
   email:
