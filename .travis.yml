@@ -33,6 +33,7 @@ before_script:
 
 script:
   - |
+    travis-cargo build &&
     travis-cargo test
 
 after_success:
