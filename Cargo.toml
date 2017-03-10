@@ -20,7 +20,7 @@ zip = { version = "0.2", optional = true}
 encoding = "0.2"
 
 [features]
-default = []
+default = ["zip_decode"]
 zip_decode = ["zip"]
 
 [[example]]
