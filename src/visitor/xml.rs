@@ -1,18 +1,31 @@
 use chunks::*;
 use model::{Element, ElementContainer, Namespaces};
+use encoder::Xml;
+use visitor::model::Resources;
+use errors::*;
 
 use super::ChunkVisitor;
 use super::Origin;
 
-#[derive(Default)]
 pub struct XmlVisitor<'a> {
     main_string_table: Option<StringTable<'a>>,
     namespaces: Namespaces,
     container: ElementContainer,
     res: Vec<u32>,
+    resources: &'a Resources<'a>,
 }
 
 impl<'a> XmlVisitor<'a> {
+    pub fn new(resources: &'a Resources<'a>) -> Self {
+        XmlVisitor {
+            main_string_table: None,
+            namespaces: Namespaces::default(),
+            container: ElementContainer::default(),
+            res: Vec::new(),
+            resources: resources,
+        }
+    }
+
     pub fn get_namespaces(&self) -> &Namespaces {
         &self.namespaces
     }
@@ -27,6 +40,35 @@ impl<'a> XmlVisitor<'a> {
 
     pub fn get_resources(&self) -> &Vec<u32> {
         &self.res
+    }
+
+    pub fn arsc(&self) -> &Resources {
+        self.resources
+    }
+
+    // TODO: Convert to TryInto once it will be stable
+    pub fn into_string(self) -> Result<String> {
+        match *self.get_root() {
+            Some(ref root) => {
+                match *self.get_string_table() {
+                    Some(_) => {
+                        return Xml::encode(self.get_namespaces(),
+                                           root,
+                                           self.get_resources(),
+                                           self.arsc())
+                           .chain_err(|| "Could note encode XML");
+                    }
+                    None => {
+                        warn!("No string table found");
+                    }
+                }
+            }
+            None => {
+                warn!("No root on target XML");
+            }
+        }
+
+        Err("Could not decode XML".into())
     }
 }
 
