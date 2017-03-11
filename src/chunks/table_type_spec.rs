@@ -98,7 +98,6 @@ mod tests {
     use super::*;
     use raw_chunks;
     use chunks::ChunkHeader;
-    use model::owned::OwnedBuf;
 
     #[test]
     fn it_can_decode_a_type_spec() {
