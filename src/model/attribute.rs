@@ -217,8 +217,8 @@ mod tests {
     use model::Entries;
     use chunks::table_type::{Entry, SimpleEntry, ComplexEntry};
     use visitor::Origin;
-    use chunks::TypeSpec;
     use std::rc::Rc;
+    use model::TypeSpec;
 
     struct FakeStringTable;
     impl StringTable for FakeStringTable {
@@ -322,12 +322,30 @@ mod tests {
 
     impl<'a> LibraryBuilder<'a> for FakeLibrary {
         type StringTable = FakeStringTable;
+        type TypeSpec = FakeTypeSpec;
 
         fn set_string_table(&mut self, _: Self::StringTable, _: Origin) {}
 
         fn add_entries(&mut self, _: Entries) {}
 
-        fn add_type_spec(&mut self, _: TypeSpec<'a>) {}
+        fn add_type_spec(&mut self, _: Self::TypeSpec) {}
+    }
+
+    struct FakeTypeSpec;
+
+    impl TypeSpec for FakeTypeSpec {
+        fn get_id(&self) -> Result<u16> {
+            Ok(82)
+        }
+        fn get_amount(&self) -> Result<u32> {
+            Ok(3)
+        }
+
+        fn get_flag(&self, index: u32) -> Result<u32> {
+            let flags = vec![0, 4, 16];
+
+            flags.get(index as usize).map(|x| *x).ok_or("Flag out of bounds".into())
+        }
     }
 
     struct FakeResources {

@@ -52,6 +52,8 @@ impl TagEnd for XmlTagEndBuf {
 mod tests {
     use super::*;
     use chunks::*;
+    use test::compare_chunks;
+    use raw_chunks;
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
@@ -64,13 +66,13 @@ mod tests {
 
     #[test]
     fn identity() {
-        let raw = [3, 1, 16, 0, 24, 0, 0, 0, 3, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 44, 0, 0, 0];
+        let raw = raw_chunks::EXAMPLE_TAG_END;
         let chunk_header = ChunkHeader::new(0, 8, 24, 0x103);
         let wrapper = XmlTagEndWrapper::new(&raw, chunk_header);
 
         let owned = wrapper.to_owned().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
-        assert_eq!(new_raw, raw);
+        compare_chunks(&raw, &new_raw);
     }
 }
