@@ -3,7 +3,6 @@ use std::io::Cursor;
 use visitor::Executor;
 use errors::*;
 use visitor::*;
-use encoder::Xml;
 use STR_ARSC;
 use std::io::Read;
 

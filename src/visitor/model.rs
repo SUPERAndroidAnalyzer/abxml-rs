@@ -9,6 +9,7 @@ use model::Resources as ResourcesTrait;
 use model::Library as LibraryTrait;
 use model::StringTable as StringTableTrait;
 use model::LibraryBuilder;
+use model::TypeSpec as TypeSpecTrait;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -262,6 +263,7 @@ impl<'a> LibraryTrait for Library<'a> {
 
 impl<'a> LibraryBuilder<'a> for Library<'a> {
     type StringTable = StringTable<'a>;
+    type TypeSpec = TypeSpec<'a>;
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
         match origin {
@@ -279,7 +281,7 @@ impl<'a> LibraryBuilder<'a> for Library<'a> {
         self.entries.extend(entries);
     }
 
-    fn add_type_spec(&mut self, type_spec: TypeSpec<'a>) {
+    fn add_type_spec(&mut self, type_spec: Self::TypeSpec) {
         self.specs.push(type_spec);
     }
 }
