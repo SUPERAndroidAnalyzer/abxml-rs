@@ -48,3 +48,26 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
         self.count += 1
     }
 }
+
+pub fn compare_chunks(expected: &[u8], data: &[u8]) {
+    if expected.len() != data.len() {
+        println!("Expected len: {}; Data len: {}", expected.len(), data.len());
+    }
+
+    let mut is_equal = true;
+
+    let len = if expected.len() < data.len() {
+        expected.len()
+    } else {
+        data.len()
+    };
+
+    for i in 0..len {
+        if expected[i] != data[i] {
+            println!("Difference @{}: {} <-> {}", i, expected[i], data[i]);
+            is_equal = false;
+        }
+    }
+
+    assert!(is_equal);
+}

@@ -150,7 +150,7 @@ mod tests {
         let cursor: Cursor<&[u8]> = Cursor::new(&data);
         let mut stream = ChunkLoaderStream::new(cursor);
 
-        let chunk_one = stream.next().unwrap();
+        let _ = stream.next().unwrap();
         assert!(stream.next().is_none());
     }
 
@@ -178,8 +178,8 @@ mod tests {
         let mut stream = ChunkLoaderStream::new(cursor);
 
         // Assert string table
-        let chunk_one = stream.next().unwrap();
-        let chunk_sec = stream.next().unwrap();
+        let _ = stream.next().unwrap();
+        let _ = stream.next().unwrap();
 
         assert!(stream.next().is_none());
     }
