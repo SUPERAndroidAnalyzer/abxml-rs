@@ -54,6 +54,8 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
         println!("Expected len: {}; Data len: {}", expected.len(), data.len());
     }
 
+    let mut is_equal = true;
+
     let len = if expected.len() < data.len() {
         expected.len()
     } else {
@@ -62,7 +64,10 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
 
     for i in 0..len {
         if expected[i] != data[i] {
-            println!("Difference @{}: {} <-> {}", i, expected[i], data[i])
+            println!("Difference @{}: {} <-> {}", i, expected[i], data[i]);
+            is_equal = false;
         }
     }
+
+    assert!(is_equal);
 }

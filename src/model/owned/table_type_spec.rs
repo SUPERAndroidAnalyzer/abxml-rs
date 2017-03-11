@@ -61,11 +61,26 @@ impl TypeSpec for TableTypeSpecBuf {
 mod tests {
     use super::*;
     use model::owned::OwnedBuf;
+    use test::compare_chunks;
+    use raw_chunks;
+    use chunks::*;
+    use model::TypeSpec as TypeSpecTrait;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
         let type_spec = TableTypeSpecBuf::new(14);
 
         assert_eq!(14, type_spec.get_id().unwrap());
+    }
+
+    #[test]
+    fn identity() {
+        let header = ChunkHeader::new(0, 16, raw_chunks::EXAMPLE_TYPE_SPEC.len() as u32, 0x202);
+        let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC, header);
+
+        let owned = wrapper.to_owned().unwrap();
+        let new_raw = owned.to_vec().unwrap();
+
+        compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TYPE_SPEC);
     }
 }

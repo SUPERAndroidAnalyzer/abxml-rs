@@ -116,15 +116,4 @@ mod tests {
         assert!(errored_flag.is_err());
         assert_eq!("Invalid flag on index 1541 out of 1541", errored_flag.err().unwrap().to_string());
     }
-
-    #[test]
-    fn identity() {
-        let header = ChunkHeader::new(0, 16, raw_chunks::EXAMPLE_TYPE_SPEC.len() as u32, 0x202);
-        let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC, header);
-
-        let owned = wrapper.to_owned().unwrap();
-        let new_raw = owned.to_vec().unwrap();
-
-        assert_eq!(&new_raw, &raw_chunks::EXAMPLE_TYPE_SPEC);
-    }
 }

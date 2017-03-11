@@ -41,6 +41,8 @@ impl OwnedBuf for ResourcesBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test::compare_chunks;
+    use raw_chunks;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
@@ -73,14 +75,13 @@ mod tests {
 
     #[test]
     fn identity() {
-        let raw = vec![128, 1, 8, 0, 24, 0, 0, 0, 160, 0, 1, 1, 158, 0, 1, 1, 31, 3, 1, 1, 165, 1,
-                       1, 1];
+        let raw = raw_chunks::EXAMPLE_RESOURCES;
         let chunk_header = ChunkHeader::new(0, 8, 24, 0x180);
 
         let wrapper = ResourceWrapper::new(&raw, chunk_header);
         let owned = wrapper.to_owned().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
-        assert_eq!(&raw, &new_raw);
+        compare_chunks(&raw, &new_raw);
     }
 }
