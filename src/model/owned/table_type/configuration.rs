@@ -7,6 +7,7 @@ use std::io::Cursor;
 #[derive(Clone, Default)]
 pub struct ConfigurationBuf {
     size: u32,
+    original_size: u32,
     mcc: u16,
     mnc: u16,
     language: String,
@@ -67,7 +68,7 @@ impl ConfigurationBuf {
         let current = buffer.len();
 
         // Fill with 0 up to target size
-        for _ in current..self.size as usize {
+        for _ in current..self.original_size as usize {
             buffer.write_u8(0)?;
         }
 
@@ -75,6 +76,7 @@ impl ConfigurationBuf {
     }
 
     pub fn from_cursor(buffer: Vec<u8>) -> Result<Self> {
+        let original_size = buffer.len() as u32;
         let mut cursor = Cursor::new(buffer);
         let size = cursor.read_u32::<LittleEndian>()?;
         let mcc = cursor.read_u16::<LittleEndian>()?;
@@ -138,6 +140,7 @@ impl ConfigurationBuf {
 
         let rc = ConfigurationBuf {
             size: size,
+            original_size: original_size,
             mcc: mcc,
             mnc: mnc,
             language: str_lang,
