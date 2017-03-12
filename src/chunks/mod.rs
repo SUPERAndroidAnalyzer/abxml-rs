@@ -19,9 +19,6 @@ pub use self::table_type_spec::TypeSpecWrapper;
 pub use self::table_type_spec::TypeSpec;
 pub use self::table_type::TableTypeWrapper;
 pub use self::table_type::TableType;
-pub use self::table_type::Entry;
-pub use self::table_type::SimpleEntry;
-pub use self::table_type::ComplexEntry;
 pub use self::table_type::ConfigurationWrapper;
 
 pub use self::resource::ResourceWrapper;
