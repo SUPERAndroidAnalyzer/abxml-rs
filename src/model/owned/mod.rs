@@ -9,6 +9,8 @@ pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;
 pub use self::package::PackageBuf;
 pub use self::table_type_spec::TableTypeSpecBuf;
 pub use self::table_type::ConfigurationBuf;
+pub use self::table_type::TableTypeBuf;
+pub use self::table_type::{Entry, EntryHeader, ComplexEntry, SimpleEntry};
 
 mod resources;
 mod string_table;

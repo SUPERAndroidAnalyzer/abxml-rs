@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
-use chunks::table_type::{Entry};
+use model::owned::Entry;
 use errors::*;
 
 mod element;
