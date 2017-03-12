@@ -10,6 +10,7 @@ use model::Library as LibraryTrait;
 use model::StringTable as StringTableTrait;
 use model::LibraryBuilder;
 use model::TypeSpec as TypeSpecTrait;
+use model::owned::Entry;
 
 use super::ChunkVisitor;
 use super::Origin;
