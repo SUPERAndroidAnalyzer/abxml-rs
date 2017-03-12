@@ -26,3 +26,7 @@ zip_decode = ["zip"]
 [[example]]
 name = "exporter"
 required-features = ["zip_decode"]
+
+[[example]]
+name = "converter"
+required-features = ["zip_decode"]
