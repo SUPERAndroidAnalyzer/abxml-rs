@@ -1,10 +1,12 @@
-use chunks::{Chunk, ChunkHeader, TypeSpec};
+use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use std::collections::HashMap;
 use model::TableType as TableTypeTrait;
 use model::Configuration;
+use model::owned::TableTypeBuf;
+use model::owned::{Entry, SimpleEntry, ComplexEntry, EntryHeader};
 
 pub use self::configuration::ConfigurationWrapper;
 pub use self::configuration::Region;
@@ -13,16 +15,12 @@ pub struct TableTypeDecoder;
 
 mod configuration;
 
-const MASK_COMPLEX: u16 = 0x0001;
-
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
         let configuration = ttw.get_configuration().unwrap();
         let language = configuration.get_language().unwrap();
         let region = configuration.get_language().unwrap();
-
-        println!("Language: {}; Region: {}", language, region);
 
         Ok(Chunk::TableType(ttw))
     }
@@ -41,6 +39,20 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
+    pub fn to_owned(&self) -> Result<TableTypeBuf> {
+        let id = self.get_id()?;
+        let amount = self.get_amount()?;
+        let config = self.get_configuration()?.to_owned()?;
+        let mut owned = TableTypeBuf::new((id & 0xF) as u8, config);
+
+        for i in 0..amount {
+            let entry = self.get_entry(i)?;
+            owned.add_entry(entry);
+        }
+
+        Ok(owned)
+    }
+
     pub fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));
@@ -57,7 +69,7 @@ impl<'a> TableTypeWrapper<'a> {
 
     pub fn get_configuration(&self) -> Result<ConfigurationWrapper<'a>> {
         let ini = self.header.absolute(20) as usize;
-        let end = self.header.get_data_offset() as usize;
+        let end = (self.header.get_data_offset() as usize);
 
         if ini > end || (end-ini) <= 28 {
             return Err("Configuration slice is not valid".into());
@@ -69,17 +81,15 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(wrapper)
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
+    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.get_data_offset());
-        // println!("-> {}", self.get_amount());
 
-        self.decode_entries(&mut cursor, type_spec, mask)
+        self.decode_entries(&mut cursor, mask)
     }
 
     fn decode_entries(&self,
                       mut cursor: &mut Cursor<&[u8]>,
-                      _: &TypeSpec<'a>,
                       mask: u32)
                       -> Result<HashMap<u32, Entry>> {
         let mut offsets = Vec::new();
@@ -103,6 +113,8 @@ impl<'a> TableTypeWrapper<'a> {
                         debug!("Entry with a negative count");
                     }
                 }
+            } else {
+                entries.insert(id, Entry::Empty(id, id));
             }
         }
 
@@ -172,6 +184,16 @@ impl<'a> TableTypeWrapper<'a> {
 
         Ok(Some(entry))
     }
+
+    fn get_entry(&self, index: u32) -> Result<Entry> {
+        // TODO: Undo this
+        let mask: u32 = (127 << 24) as u32 |
+            ((self.get_id()? as u32) << 16);
+        let entries = self.get_entries(mask)?;
+        let id = mask | index;
+
+        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
+    }
 }
 
 pub struct TableType<'a> {
@@ -183,8 +205,8 @@ impl<'a> TableType<'a> {
         TableType { wrapper: wrapper }
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
-        self.wrapper.get_entries(type_spec, mask)
+    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
+        self.wrapper.get_entries(mask)
     }
 }
 
@@ -203,142 +225,12 @@ impl<'a> TableTypeTrait for TableType<'a> {
         self.wrapper.get_configuration()
     }
 
-    fn get_entry(&self, _: u32) -> Result<Entry> {
-        // let entries = self.wrapper.get_entries(type_spec, mask);
-        let simple = SimpleEntry::new(1, 1, 1, 1);
-        Ok(Entry::Simple(simple))
-    }
-}
+    fn get_entry(&self, index: u32) -> Result<Entry> {
+        let mask: u32 = (127 << 24) as u32 |
+            ((self.get_id()? as u32) << 16);
+        let entries = self.wrapper.get_entries(mask)?;
+        let id = mask | index;
 
-#[allow(dead_code)]
-pub struct EntryHeader {
-    header_size: u16,
-    flags: u16,
-    key_index: u32,
-}
-
-impl EntryHeader {
-    pub fn new(header_size: u16, flags: u16, key_index: u32) -> Self {
-        EntryHeader {
-            header_size: header_size,
-            flags: flags,
-            key_index: key_index,
-        }
-    }
-
-    pub fn is_complex(&self) -> bool {
-        (self.flags & MASK_COMPLEX) == MASK_COMPLEX
-    }
-
-    pub fn get_key_index(&self) -> u32 {
-        self.key_index
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SimpleEntry {
-    id: u32,
-    key_index: u32,
-    value_type: u8,
-    value_data: u32,
-}
-
-impl SimpleEntry {
-    pub fn new(id: u32, key_index: u32, value_type: u8, value_data: u32) -> Self {
-        SimpleEntry {
-            id: id,
-            key_index: key_index,
-            value_type: value_type,
-            value_data: value_data,
-        }
-    }
-
-    pub fn get_id(&self) -> u32 {
-        self.id
-    }
-
-    pub fn get_key(&self) -> u32 {
-        self.key_index
-    }
-
-    pub fn get_value(&self) -> u32 {
-        self.value_data
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ComplexEntry {
-    id: u32,
-    key_index: u32,
-    parent_entry_id: u32,
-    entries: Vec<SimpleEntry>,
-}
-
-impl ComplexEntry {
-    pub fn new(id: u32, key_index: u32, parent_entry_id: u32, entries: Vec<SimpleEntry>) -> Self {
-        ComplexEntry {
-            id: id,
-            key_index: key_index,
-            parent_entry_id: parent_entry_id,
-            entries: entries,
-        }
-    }
-
-    pub fn get_id(&self) -> u32 {
-        self.id
-    }
-
-    pub fn get_key(&self) -> u32 {
-        self.key_index
-    }
-
-    pub fn get_referent_id(&self, value: u32) -> Option<u32> {
-        for e in &self.entries {
-            if e.get_value() == value {
-                return Some(e.get_id());
-            }
-        }
-
-        None
-    }
-
-    pub fn get_entries(&self) -> &Vec<SimpleEntry> {
-        &self.entries
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum Entry {
-    Simple(SimpleEntry),
-    Complex(ComplexEntry),
-}
-
-impl Entry {
-    pub fn simple(&self) -> Result<&SimpleEntry> {
-        match *self {
-            Entry::Simple(ref simple) => Ok(simple),
-            Entry::Complex(_) => Err("Asked for a complex entry on a simple one".into()),
-        }
-    }
-
-    pub fn complex(&self) -> Result<&ComplexEntry> {
-        match *self {
-            Entry::Complex(ref complex) => Ok(complex),
-            Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into()),
-        }
-    }
-
-    pub fn get_id(&self) -> u32 {
-        match *self {
-            Entry::Complex(ref complex) => complex.get_id(),
-            Entry::Simple(ref simple) => simple.get_id(),
-        }
-    }
-
-    pub fn get_key(&self) -> u32 {
-        match *self {
-            Entry::Complex(ref complex) => complex.get_key(),
-            Entry::Simple(ref simple) => simple.get_key(),
-        }
+        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
     }
 }

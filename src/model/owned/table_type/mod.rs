@@ -1,18 +1,18 @@
 use model::owned::OwnedBuf;
 use errors::*;
 use model::TableType;
-use model::Entries;
-use chunks::table_type::Entry;
 use byteorder::{LittleEndian, WriteBytesExt};
 
 mod configuration;
+mod entry;
 
 pub use self::configuration::ConfigurationBuf;
+pub use self::entry::{Entry, ComplexEntry, SimpleEntry, EntryHeader};
 
 pub struct TableTypeBuf {
     id: u8,
     config: ConfigurationBuf,
-    entries: Entries,
+    entries: Vec<Entry>,
 }
 
 impl TableTypeBuf {
@@ -20,13 +20,12 @@ impl TableTypeBuf {
         TableTypeBuf {
             id: id,
             config: config,
-            entries: Entries::new(),
+            entries: Vec::new(),
         }
     }
 
     pub fn add_entry(&mut self, entry: Entry) {
-        // TODO: Check that parent is already on the entries hash table?
-        self.entries.insert(entry.get_id(), entry);
+        self.entries.push(entry);
     }
 }
 
@@ -40,6 +39,43 @@ impl OwnedBuf for TableTypeBuf {
 
         out.write_u32::<LittleEndian>(self.id as u32)?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
+        out.write_u32::<LittleEndian>(self.get_header_size() as u32 + (self.entries.len() as u32 * 4))?;
+        out.extend(&self.config.to_vec()?);
+
+        let mut i = 0;
+        // Entries offsets
+        for e in &self.entries {
+            if e.is_empty() {
+                out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+            } else {
+                out.write_u32::<LittleEndian>(i)?;
+                i += 16; // It depends on is xompex or simlple!
+            }
+        }
+
+        // Entries
+        for e in &self.entries {
+            match *e {
+                Entry::Complex(ref complex) => {
+
+                },
+                Entry::Simple(ref simple) => {
+                    // Header size
+                    out.write_u16::<LittleEndian>(8)?;
+                    // Flags => Simple entry
+                    out.write_u16::<LittleEndian>(0)?;
+                    // Key index
+                    out.write_u32::<LittleEndian>(simple.get_key() as u32)?;
+                    // Value type
+                    out.write_u16::<LittleEndian>(8)?;
+                    out.write_u8(0)?;
+                    out.write_u8(simple.get_type())?;
+                    // Value
+                    out.write_u32::<LittleEndian>(simple.get_value() as u32)?;
+                },
+                Entry::Empty(_, _) => (),
+            }
+        }
 
         Ok(out)
     }
@@ -66,7 +102,7 @@ impl TableType for TableTypeBuf {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        self.entries.get(&index).map(|x| x.clone()).ok_or("Entry not found".into())
+        self.entries.get(index as usize).map(|e| e.clone()).ok_or("Entry out of bound".into())
     }
 }
 
@@ -75,6 +111,9 @@ mod tests {
     use super::*;
     use chunks::*;
     use model::TableType;
+    use raw_chunks;
+    use test::compare_chunks;
+    use model::owned::OwnedBuf;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
@@ -93,17 +132,18 @@ mod tests {
 
         assert_eq!(5, table_type.get_id().unwrap());
         assert_eq!(3, table_type.get_amount().unwrap());
-        assert_eq!(10, table_type.get_entry(10).unwrap().complex().unwrap().get_id())
+        assert_eq!(10, table_type.get_entry(1).unwrap().complex().unwrap().get_id())
     }
 
     #[test]
     fn identity() {
-        /*let header = ChunkHeader::new(0, 16, raw_chunks::EXAMPLE_TYPE_SPEC.len() as u32, 0x202);
-        let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC, header);
+        let header = ChunkHeader::new(0, 68, raw_chunks::EXAMPLE_TABLE_TYPE.len() as u32, 0x201);
+        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE, header);
+        let _ = wrapper.get_entries(0);
 
         let owned = wrapper.to_owned().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
-        compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TYPE_SPEC);*/
+        compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TABLE_TYPE);
     }
 }
