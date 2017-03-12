@@ -88,7 +88,7 @@ fn run() -> Result<()> {
 
 fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String> {
     let cursor = Cursor::new(content);
-    let mut visitor = XmlVisitor::default();
+    let mut visitor = XmlVisitor::new(resources);
 
     Executor::xml(cursor, &mut visitor)?;
 
