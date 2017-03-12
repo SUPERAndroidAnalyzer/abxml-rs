@@ -3,15 +3,27 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use std::collections::HashMap;
-// use parser::Decoder;
+use model::TableType as TableTypeTrait;
+use model::Configuration;
+
+pub use self::configuration::ConfigurationWrapper;
+pub use self::configuration::Region;
 
 pub struct TableTypeDecoder;
+
+mod configuration;
 
 const MASK_COMPLEX: u16 = 0x0001;
 
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
+        let configuration = ttw.get_configuration().unwrap();
+        let language = configuration.get_language().unwrap();
+        let region = configuration.get_language().unwrap();
+
+        println!("Language: {}; Region: {}", language, region);
+
         Ok(Chunk::TableType(ttw))
     }
 }
@@ -43,11 +55,18 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_configuration(&self) -> Result<ResourceConfiguration> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+    pub fn get_configuration(&self) -> Result<ConfigurationWrapper<'a>> {
+        let ini = self.header.absolute(20) as usize;
+        let end = self.header.get_data_offset() as usize;
 
-        ResourceConfiguration::from_cursor(&mut cursor)
+        if ini > end || (end-ini) <= 28 {
+            return Err("Configuration slice is not valid".into());
+        }
+
+        let slice = &self.raw_data[ini..end];
+        let wrapper = ConfigurationWrapper::new(slice);
+
+        Ok(wrapper)
     }
 
     pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
@@ -133,9 +152,9 @@ impl<'a> TableTypeWrapper<'a> {
 
         for j in 0..value_count {
             debug!("Parsing value: {}/{} (@{})",
-                   j,
-                   value_count - 1,
-                   cursor.position());
+            j,
+            value_count - 1,
+            cursor.position());
             let val_id = cursor.read_u32::<LittleEndian>()?;
             cursor.read_u16::<LittleEndian>()?;
             // Padding
@@ -164,20 +183,30 @@ impl<'a> TableType<'a> {
         TableType { wrapper: wrapper }
     }
 
-    pub fn get_id(&self) -> Result<u8> {
+    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
+        self.wrapper.get_entries(type_spec, mask)
+    }
+}
+
+impl<'a> TableTypeTrait for TableType<'a> {
+    type Configuration = ConfigurationWrapper<'a>;
+
+    fn get_id(&self) -> Result<u8> {
         Ok((self.wrapper.get_id()? & 0xF) as u8)
     }
 
-    pub fn get_amount(&self) -> Result<u32> {
+    fn get_amount(&self) -> Result<u32> {
         self.wrapper.get_amount()
     }
 
-    pub fn get_configuration(&self) -> Result<ResourceConfiguration> {
+    fn get_configuration(&self) -> Result<Self::Configuration> {
         self.wrapper.get_configuration()
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
-        self.wrapper.get_entries(type_spec, mask)
+    fn get_entry(&self, _: u32) -> Result<Entry> {
+        // let entries = self.wrapper.get_entries(type_spec, mask);
+        let simple = SimpleEntry::new(1, 1, 1, 1);
+        Ok(Entry::Simple(simple))
     }
 }
 
@@ -299,159 +328,17 @@ impl Entry {
         }
     }
 
+    pub fn get_id(&self) -> u32 {
+        match *self {
+            Entry::Complex(ref complex) => complex.get_id(),
+            Entry::Simple(ref simple) => simple.get_id(),
+        }
+    }
+
     pub fn get_key(&self) -> u32 {
         match *self {
             Entry::Complex(ref complex) => complex.get_key(),
             Entry::Simple(ref simple) => simple.get_key(),
         }
-    }
-}
-
-pub struct Region {
-    low: u8,
-    high: u8,
-}
-
-impl Region {
-    pub fn new(low: u8, high: u8) -> Self {
-        Region {
-            low: low,
-            high: high,
-        }
-    }
-
-    pub fn to_string(&self) -> Result<String> {
-        let mut chrs = Vec::new();
-
-        if ((self.low >> 7) & 1) == 1 {
-            chrs.push(self.high & 0x1F);
-            chrs.push(((self.high & 0xE0) >> 5) + ((self.low & 0x03) << 3));
-            chrs.push((self.low & 0x7C) >> 2);
-        } else {
-            chrs.push(self.low);
-            chrs.push(self.high);
-        }
-
-        String::from_utf8(chrs).chain_err(|| "Could not UTF-8 encode string")
-    }
-}
-
-#[derive(Debug)]
-pub struct ResourceConfiguration {
-    size: u32,
-    mcc: u16,
-    mnc: u16,
-    language: String,
-    region: String,
-    orientation: u8,
-    touchscreen: u8,
-    density: u16,
-    keyboard: u8,
-    navigation: u8,
-    input_flags: u8,
-    width: u16,
-    height: u16,
-    sdk_version: u16,
-    min_sdk_version: u16,
-    screen_layout: u8,
-    ui_mode: u8,
-    smallest_screen: u16,
-    screen_width_dp: u16,
-    screen_height_dp: u16,
-    locale_script: Option<String>,
-    locale_variant: Option<String>,
-    secondary_screen_layout: Option<u8>,
-}
-
-impl ResourceConfiguration {
-    pub fn from_cursor(mut cursor: &mut Cursor<&[u8]>) -> Result<Self> {
-        let _initial_position = cursor.position();
-        let size = cursor.read_u32::<LittleEndian>()?;
-        let mcc = cursor.read_u16::<LittleEndian>()?;
-        let mnc = cursor.read_u16::<LittleEndian>()?;
-
-        let lang1 = cursor.read_u8()?;
-        let lang2 = cursor.read_u8()?;
-
-        let lang = Region::new(lang1, lang2);
-        let str_lang = lang.to_string()?;
-
-        let reg1 = cursor.read_u8()?;
-        let reg2 = cursor.read_u8()?;
-
-        let reg = Region::new(reg1, reg2);
-        let str_reg = reg.to_string()?;
-
-        let orientation = cursor.read_u8()?;
-        let touchscreen = cursor.read_u8()?;
-
-        let density = cursor.read_u16::<LittleEndian>()?;
-
-        let keyboard = cursor.read_u8()?;
-        let navigation = cursor.read_u8()?;
-        let input_flags = cursor.read_u8()?;
-
-        cursor.read_u8()?; // Padding
-
-        let width = cursor.read_u16::<LittleEndian>()?;
-        let height = cursor.read_u16::<LittleEndian>()?;
-        let sdk_version = cursor.read_u16::<LittleEndian>()?;
-        let min_sdk_version = cursor.read_u16::<LittleEndian>()?;
-
-        let mut screen_layout = 0;
-        let mut ui_mode = 0;
-        let mut smallest_screen = 0;
-        let mut screen_width_dp = 0;
-        let mut screen_height_dp = 0;
-
-        if size >= 32 {
-            screen_layout = cursor.read_u8()?;
-            ui_mode = cursor.read_u8()?;
-            smallest_screen = cursor.read_u16::<LittleEndian>()?;
-        }
-
-        if size >= 36 {
-            screen_width_dp = cursor.read_u16::<LittleEndian>()?;
-            screen_height_dp = cursor.read_u16::<LittleEndian>()?;
-        }
-
-        if size >= 48 {
-            // TODO: Read following bytes
-            cursor.read_u32::<LittleEndian>()?;
-            cursor.read_u32::<LittleEndian>()?;
-            cursor.read_u32::<LittleEndian>()?;
-        }
-
-        if size >= 52 {
-            // TODO: Read bytes
-        }
-
-        let rc = ResourceConfiguration {
-            size: size,
-            mcc: mcc,
-            mnc: mnc,
-            language: str_lang,
-            region: str_reg,
-            orientation: orientation,
-            touchscreen: touchscreen,
-            density: density,
-            keyboard: keyboard,
-            navigation: navigation,
-            input_flags: input_flags,
-            width: width,
-            height: height,
-            sdk_version: sdk_version,
-            min_sdk_version: min_sdk_version,
-            screen_layout: screen_layout,
-            ui_mode: ui_mode,
-            smallest_screen: smallest_screen,
-            screen_width_dp: screen_width_dp,
-            screen_height_dp: screen_height_dp,
-            locale_script: None,
-            locale_variant: None,
-            secondary_screen_layout: None,
-        };
-
-        Ok(rc)
     }
 }
