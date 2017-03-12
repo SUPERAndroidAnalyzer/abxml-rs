@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
-use chunks::table_type::Entry;
+use chunks::table_type::{Entry};
 use errors::*;
 
 mod element;
@@ -103,6 +103,41 @@ pub trait TypeSpec {
     fn get_id(&self) -> Result<u16>;
     fn get_amount(&self) -> Result<u32>;
     fn get_flag(&self, index: u32) -> Result<u32>;
+}
+
+pub trait TableType {
+    type Configuration: Configuration;
+
+    fn get_id(&self) -> Result<u8>;
+    fn get_amount(&self) -> Result<u32>;
+    fn get_configuration(&self) -> Result<Self::Configuration>;
+    fn get_entry(&self, index: u32) -> Result<Entry>;
+}
+
+pub trait Configuration {
+    fn get_size(&self) -> Result<u32>;
+    fn get_mcc(&self) -> Result<u16>;
+    fn get_mnc(&self) -> Result<u16>;
+    fn get_language(&self) -> Result<String>;
+    fn get_region(&self) -> Result<String>;
+    fn get_orientation(&self) -> Result<u8>;
+    fn get_touchscreen(&self) -> Result<u8>;
+    fn get_density(&self) -> Result<u16>;
+    fn get_keyboard(&self) -> Result<u8>;
+    fn get_navigation(&self) -> Result<u8>;
+    fn get_input_flags(&self) -> Result<u8>;
+    fn get_width(&self) -> Result<u16>;
+    fn get_height(&self) -> Result<u16>;
+    fn get_sdk_version(&self) -> Result<u16>;
+    fn get_min_sdk_version(&self) -> Result<u16>;
+    fn get_screen_layout(&self) -> Result<u8>;
+    fn get_ui_mode(&self) -> Result<u8>;
+    fn get_smallest_screen(&self) -> Result<u16>;
+    fn get_screen_width(&self) -> Result<u16>;
+    fn get_screen_height(&self) -> Result<u16>;
+    fn get_locale_script(&self) -> Result<Option<String>>;
+    fn get_locale_variant(&self) -> Result<Option<String>>;
+    fn get_secondary_layout(&self) -> Result<Option<u8>>;
 }
 
 #[cfg(test)]
