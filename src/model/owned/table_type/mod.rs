@@ -139,7 +139,7 @@ mod tests {
     fn identity() {
         let header = ChunkHeader::new(0, 68, raw_chunks::EXAMPLE_TABLE_TYPE.len() as u32, 0x201);
         let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE, header);
-        let _ = wrapper.get_entries(0);
+        let _ = wrapper.get_entries();
 
         let owned = wrapper.to_owned().unwrap();
         let new_raw = owned.to_vec().unwrap();
