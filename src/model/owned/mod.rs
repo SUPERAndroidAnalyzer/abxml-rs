@@ -8,12 +8,14 @@ pub use self::xml::XmlTagStartBuf as XmlTagStartBuf;
 pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;
 pub use self::package::PackageBuf;
 pub use self::table_type_spec::TableTypeSpecBuf;
+pub use self::table_type::ConfigurationBuf;
 
 mod resources;
 mod string_table;
 mod xml;
 mod package;
 mod table_type_spec;
+mod table_type;
 
 pub trait OwnedBuf {
     fn get_token(&self) -> u16;
