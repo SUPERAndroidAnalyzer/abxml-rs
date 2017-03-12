@@ -1,4 +1,4 @@
-use chunks::{Chunk, ChunkHeader, TypeSpec};
+use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
@@ -21,8 +21,6 @@ impl TableTypeDecoder {
         let configuration = ttw.get_configuration().unwrap();
         let language = configuration.get_language().unwrap();
         let region = configuration.get_language().unwrap();
-
-        println!("Language: {}; Region: {}", language, region);
 
         Ok(Chunk::TableType(ttw))
     }
@@ -47,10 +45,9 @@ impl<'a> TableTypeWrapper<'a> {
         let config = self.get_configuration()?.to_owned()?;
         let mut owned = TableTypeBuf::new((id & 0xF) as u8, config);
 
-        for _ in 0..amount {
-            let simple = SimpleEntry::new(1, 2, 3, 4);
-            let entry = Entry::Simple(simple);
-            owned.add_entry(entry)
+        for i in 0..amount {
+            let entry = self.get_entry(i)?;
+            owned.add_entry(entry);
         }
 
         Ok(owned)
@@ -72,7 +69,7 @@ impl<'a> TableTypeWrapper<'a> {
 
     pub fn get_configuration(&self) -> Result<ConfigurationWrapper<'a>> {
         let ini = self.header.absolute(20) as usize;
-        let end = self.header.get_data_offset() as usize;
+        let end = (self.header.get_data_offset() as usize);
 
         if ini > end || (end-ini) <= 28 {
             return Err("Configuration slice is not valid".into());
@@ -84,17 +81,15 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(wrapper)
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
+    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.get_data_offset());
-        // println!("-> {}", self.get_amount());
 
-        self.decode_entries(&mut cursor, type_spec, mask)
+        self.decode_entries(&mut cursor, mask)
     }
 
     fn decode_entries(&self,
                       mut cursor: &mut Cursor<&[u8]>,
-                      _: &TypeSpec<'a>,
                       mask: u32)
                       -> Result<HashMap<u32, Entry>> {
         let mut offsets = Vec::new();
@@ -118,6 +113,8 @@ impl<'a> TableTypeWrapper<'a> {
                         debug!("Entry with a negative count");
                     }
                 }
+            } else {
+                entries.insert(id, Entry::Empty(id, id));
             }
         }
 
@@ -187,6 +184,16 @@ impl<'a> TableTypeWrapper<'a> {
 
         Ok(Some(entry))
     }
+
+    fn get_entry(&self, index: u32) -> Result<Entry> {
+        // TODO: Undo this
+        let mask: u32 = (127 << 24) as u32 |
+            ((self.get_id()? as u32) << 16);
+        let entries = self.get_entries(mask)?;
+        let id = mask | index;
+
+        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
+    }
 }
 
 pub struct TableType<'a> {
@@ -198,8 +205,8 @@ impl<'a> TableType<'a> {
         TableType { wrapper: wrapper }
     }
 
-    pub fn get_entries(&self, type_spec: &TypeSpec<'a>, mask: u32) -> Result<HashMap<u32, Entry>> {
-        self.wrapper.get_entries(type_spec, mask)
+    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
+        self.wrapper.get_entries(mask)
     }
 }
 
@@ -218,9 +225,12 @@ impl<'a> TableTypeTrait for TableType<'a> {
         self.wrapper.get_configuration()
     }
 
-    fn get_entry(&self, _: u32) -> Result<Entry> {
-        // let entries = self.wrapper.get_entries(type_spec, mask);
-        let simple = SimpleEntry::new(1, 1, 1, 1);
-        Ok(Entry::Simple(simple))
+    fn get_entry(&self, index: u32) -> Result<Entry> {
+        let mask: u32 = (127 << 24) as u32 |
+            ((self.get_id()? as u32) << 16);
+        let entries = self.wrapper.get_entries(mask)?;
+        let id = mask | index;
+
+        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
     }
 }

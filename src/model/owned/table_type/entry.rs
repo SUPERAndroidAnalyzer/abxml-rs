@@ -53,6 +53,10 @@ impl SimpleEntry {
         self.key_index
     }
 
+    pub fn get_type(&self) -> u8 {
+        self.value_type
+    }
+
     pub fn get_value(&self) -> u32 {
         self.value_data
     }
@@ -101,6 +105,7 @@ impl ComplexEntry {
 
 #[derive(Debug, Clone)]
 pub enum Entry {
+    Empty(u32, u32),
     Simple(SimpleEntry),
     Complex(ComplexEntry),
 }
@@ -109,14 +114,21 @@ impl Entry {
     pub fn simple(&self) -> Result<&SimpleEntry> {
         match *self {
             Entry::Simple(ref simple) => Ok(simple),
-            Entry::Complex(_) => Err("Asked for a complex entry on a simple one".into()),
+            _ => Err("Asked for a complex entry on a simple one".into()),
         }
     }
 
     pub fn complex(&self) -> Result<&ComplexEntry> {
         match *self {
             Entry::Complex(ref complex) => Ok(complex),
-            Entry::Simple(_) => Err("Asked for a simple entry on a complex one".into()),
+            _ => Err("Asked for a simple entry on a complex one".into()),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match *self {
+            Entry::Empty(_, _) => true,
+            _ => false,
         }
     }
 
@@ -124,6 +136,7 @@ impl Entry {
         match *self {
             Entry::Complex(ref complex) => complex.get_id(),
             Entry::Simple(ref simple) => simple.get_id(),
+            Entry::Empty(id, _) => id,
         }
     }
 
@@ -131,6 +144,7 @@ impl Entry {
         match *self {
             Entry::Complex(ref complex) => complex.get_key(),
             Entry::Simple(ref simple) => simple.get_key(),
+            Entry::Empty(_, key) => key,
         }
     }
 }
