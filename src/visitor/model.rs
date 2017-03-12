@@ -90,7 +90,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         if let Some(ref ts) = self.current_spec {
             let result = ts.get_id()
                 .and_then(|id| Ok(self.package_mask | ((id as u32) << 16)))
-                .and_then(|mask| table_type.get_entries(ts, mask));
+                .and_then(|mask| table_type.get_entries(mask));
 
             if result.is_err() {
                 error!("Error visiting table_type");
