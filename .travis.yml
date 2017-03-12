@@ -34,6 +34,8 @@ before_script:
 script:
   - |
     cargo build &&
+    cargo build --example converter &&
+    cargo build --example exporter
     cargo test
 
 after_success:
