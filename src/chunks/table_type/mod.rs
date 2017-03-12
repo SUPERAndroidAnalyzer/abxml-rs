@@ -81,40 +81,39 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(wrapper)
     }
 
-    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
+    pub fn get_entries(&self) -> Result<Vec<Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.get_data_offset());
 
-        self.decode_entries(&mut cursor, mask)
+        self.decode_entries(&mut cursor)
     }
 
     fn decode_entries(&self,
-                      mut cursor: &mut Cursor<&[u8]>,
-                      mask: u32)
-                      -> Result<HashMap<u32, Entry>> {
+                      mut cursor: &mut Cursor<&[u8]>)
+                      -> Result<Vec<Entry>> {
         let mut offsets = Vec::new();
-        let mut entries = HashMap::new();
+        let mut entries = Vec::new();
 
         for _ in 0..self.get_amount()? {
             offsets.push(cursor.read_u32::<LittleEndian>()?);
         }
 
         for i in 0..self.get_amount()? {
-            let id = mask | (i & 0xFFFF);
+            let id = (i & 0xFFFF);
 
             if offsets[i as usize] != 0xFFFFFFFF {
                 let maybe_entry = Self::decode_entry(cursor, id)?;
 
                 match maybe_entry {
                     Some(e) => {
-                        entries.insert(id, e);
+                        entries.push(e);
                     }
                     None => {
                         debug!("Entry with a negative count");
                     }
                 }
             } else {
-                entries.insert(id, Entry::Empty(id, id));
+                entries.push(Entry::Empty(id, id));
             }
         }
 
@@ -186,13 +185,9 @@ impl<'a> TableTypeWrapper<'a> {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        // TODO: Undo this
-        let mask: u32 = (127 << 24) as u32 |
-            ((self.get_id()? as u32) << 16);
-        let entries = self.get_entries(mask)?;
-        let id = mask | index;
+        let entries = self.get_entries()?;
 
-        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
+        entries.get(index as usize).map(|e| e.clone()).ok_or("Entry not found".into())
     }
 }
 
@@ -205,8 +200,8 @@ impl<'a> TableType<'a> {
         TableType { wrapper: wrapper }
     }
 
-    pub fn get_entries(&self, mask: u32) -> Result<HashMap<u32, Entry>> {
-        self.wrapper.get_entries(mask)
+    pub fn get_entries(&self) -> Result<Vec<Entry>> {
+        self.wrapper.get_entries()
     }
 }
 
@@ -226,11 +221,8 @@ impl<'a> TableTypeTrait for TableType<'a> {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        let mask: u32 = (127 << 24) as u32 |
-            ((self.get_id()? as u32) << 16);
-        let entries = self.wrapper.get_entries(mask)?;
-        let id = mask | index;
+        let entries = self.get_entries()?;
 
-        entries.get(&id).map(|e| e.clone()).ok_or("Entry not found".into())
+        entries.get(index as usize).map(|e| e.clone()).ok_or("Entry not found".into())
     }
 }
