@@ -215,7 +215,7 @@ mod tests {
     use model::Value;
     use model::{StringTable, Resources, Library, LibraryBuilder};
     use model::Entries;
-    use chunks::table_type::{Entry, SimpleEntry, ComplexEntry};
+    use model::owned::{Entry, SimpleEntry, ComplexEntry};
     use visitor::Origin;
     use std::rc::Rc;
     use model::TypeSpec;
