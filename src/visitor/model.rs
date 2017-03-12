@@ -88,14 +88,23 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         let mut entries = Entries::new();
 
         if let Some(ref ts) = self.current_spec {
-            let result = ts.get_id()
+            let mask = ts.get_id()
                 .and_then(|id| Ok(self.package_mask | ((id as u32) << 16)))
-                .and_then(|mask| table_type.get_entries(mask));
+                .unwrap_or(0);
 
-            if result.is_err() {
+            let entries_result = table_type.get_entries();
+
+            if entries_result.is_err() {
                 error!("Error visiting table_type");
             } else {
-                entries = result.unwrap();
+                let ventries = entries_result.unwrap();
+                for e in &ventries {
+                    let id = mask | e.get_id();
+
+                    if !e.is_empty() {
+                        entries.insert(id, e.clone());
+                    }
+                }
             }
         }
 
