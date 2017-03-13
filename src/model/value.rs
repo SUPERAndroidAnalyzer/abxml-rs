@@ -59,7 +59,9 @@ impl Value {
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID |
             TOKEN_TYPE_DYN_ATTRIBUTE => Value::AttributeReferenceId(data),
             TOKEN_TYPE_STRING => {
-                let string = str_table.get_string(data).chain_err(|| format!("Could not find string {} on string table", data))?;
+                let string =
+                    str_table.get_string(data)
+                        .chain_err(|| format!("Could not find string {} on string table", data))?;
 
                 Value::String(string.clone())
             }
@@ -73,7 +75,9 @@ impl Value {
                         let formatted = format!("{:.*}{}", 1, value, unit);
                         Value::Dimension(formatted)
                     }
-                    None => return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into()),
+                    None => {
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                    }
                 }
             }
             TOKEN_TYPE_FRACTION => {
@@ -93,7 +97,9 @@ impl Value {
 
                         Value::Fraction(formatted_fraction)
                     }
-                    None => return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into()),
+                    None => {
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                    }
                 }
             }
             TOKEN_TYPE_INTEGER => {
@@ -135,7 +141,10 @@ impl Value {
         let m = ivalue as f32;
         let mm = 1.0 / ((1 << 8) as f32);
 
-        let radix = [1.0 * mm, 1.0 / ((1 << 7) as f32) * mm, 1.0 / ((1 << 15) as f32) * mm, 1.0 / ((1 << 23) as f32) * mm];
+        let radix = [1.0 * mm,
+                     1.0 / ((1 << 7) as f32) * mm,
+                     1.0 / ((1 << 15) as f32) * mm,
+                     1.0 / ((1 << 23) as f32) * mm];
 
         let idx = (data >> 4) & 0x3;
 

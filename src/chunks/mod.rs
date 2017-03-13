@@ -92,9 +92,15 @@ impl<'a> ChunkLoaderStream<'a> {
             TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut self.cursor, &chunk_header)?,
             TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_START_NAMESPACE => XmlDecoder::decode_xml_namespace_start(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_END_NAMESPACE => XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_TAG_START => XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?,
+            TOKEN_XML_START_NAMESPACE => {
+                XmlDecoder::decode_xml_namespace_start(&mut self.cursor, &chunk_header)?
+            }
+            TOKEN_XML_END_NAMESPACE => {
+                XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?
+            }
+            TOKEN_XML_TAG_START => {
+                XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?
+            }
             TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
             TOKEN_XML_TEXT => XmlDecoder::decode_xml_text(&mut self.cursor, &chunk_header)?,
             TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,

@@ -131,7 +131,10 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
-    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
+    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>,
+                           header: &EntryHeader,
+                           id: u32)
+                           -> Result<Option<Entry>> {
         cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
@@ -144,7 +147,10 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(Some(entry))
     }
 
-    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>, header: &EntryHeader, id: u32) -> Result<Option<Entry>> {
+    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>,
+                            header: &EntryHeader,
+                            id: u32)
+                            -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);

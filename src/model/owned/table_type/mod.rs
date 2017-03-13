@@ -39,7 +39,8 @@ impl OwnedBuf for TableTypeBuf {
 
         out.write_u32::<LittleEndian>(self.id as u32)?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
-        out.write_u32::<LittleEndian>(self.get_header_size() as u32 + (self.entries.len() as u32 * 4))?;
+        out.write_u32::<LittleEndian>(self.get_header_size() as u32 +
+                                       (self.entries.len() as u32 * 4))?;
         out.extend(&self.config.to_vec()?);
 
         let mut i = 0;

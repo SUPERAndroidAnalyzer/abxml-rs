@@ -15,7 +15,12 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    pub fn new(name: Rc<String>, value: Value, namespace: Option<Rc<String>>, prefix: Option<Rc<String>>, name_index: u32) -> Self {
+    pub fn new(name: Rc<String>,
+               value: Value,
+               namespace: Option<Rc<String>>,
+               prefix: Option<Rc<String>>,
+               name_index: u32)
+               -> Self {
         Attribute {
             name: name,
             namespace: namespace,
@@ -45,7 +50,11 @@ impl Attribute {
         self.name_index
     }
 
-    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self, flags: u32, xml_resources: &[u32], resources: &R) -> Option<String> {
+    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self,
+                                                    flags: u32,
+                                                    xml_resources: &[u32],
+                                                    resources: &R)
+                                                    -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
         let name_index = self.get_name_index();
@@ -58,7 +67,11 @@ impl Attribute {
         }
     }
 
-    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self, id: u32, resources: &R, prefix: &str) -> Result<String> {
+    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self,
+                                                        id: u32,
+                                                        resources: &R,
+                                                        prefix: &str)
+                                                        -> Result<String> {
         let res_id = id;
         let package_id = id.get_package();
 
@@ -67,7 +80,8 @@ impl Attribute {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id).ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
+        let package = resources.get_package(package_id)
+            .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
         let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
 
@@ -92,7 +106,9 @@ impl Attribute {
         };
 
         let package_id = entry_ref.get_package() as u8;
-        resources.get_package(package_id).and_then(|package| self.search_flags(flags, *entry_ref, package))
+        resources.get_package(package_id).and_then(|package| {
+                                                       self.search_flags(flags, *entry_ref, package)
+                                                   })
     }
 
     fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
@@ -131,7 +147,8 @@ impl Attribute {
             let id_a = a.get_value();
             let id_b = b.get_value();
 
-            // TODO: This code is to create an exact match with Apktool. A simple descending ordering seems to be also ok.
+            // TODO: This code is to create an exact match with Apktool.
+            // A simple descending ordering seems to be also ok.
             let mut i = id_a;
             i -= (i >> 1) & 0x55555555;
             i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
@@ -176,7 +193,7 @@ impl Attribute {
                                               Ok(())
                                           })
                                 .unwrap_or_else(|_| {
-                                                    error!("Value should be added but there was an issue reading \
+                                    error!("Value should be added but there was an issue reading \
                                             the entry");
                                                 });
                         }
@@ -273,7 +290,12 @@ mod tests {
             Some("Package name".to_string())
         }
 
-        fn format_reference(&self, id: u32, _: u32, namespace: Option<String>, _: &str) -> Result<String> {
+        fn format_reference(&self,
+                            id: u32,
+                            _: u32,
+                            namespace: Option<String>,
+                            _: &str)
+                            -> Result<String> {
             if id == (1 << 24) | 1 && namespace.is_none() {
                 Ok("reference#1".to_string())
             } else if id == (2 << 24) | 1 && namespace.is_some() {

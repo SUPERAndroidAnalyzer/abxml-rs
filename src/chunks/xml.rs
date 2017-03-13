@@ -14,27 +14,37 @@ pub struct XmlDecoder;
 const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
 impl XmlDecoder {
-    pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+    pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>,
+                                          header: &ChunkHeader)
+                                          -> Result<Chunk<'a>> {
         let xnsw = XmlNamespaceStartWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlNamespaceStart(xnsw))
     }
 
-    pub fn decode_xml_namespace_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+    pub fn decode_xml_namespace_end<'a>(cursor: &mut Cursor<&'a [u8]>,
+                                        header: &ChunkHeader)
+                                        -> Result<Chunk<'a>> {
         let xnsw = XmlNamespaceEndWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlNamespaceEnd(xnsw))
     }
 
-    pub fn decode_xml_tag_start<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+    pub fn decode_xml_tag_start<'a>(cursor: &mut Cursor<&'a [u8]>,
+                                    header: &ChunkHeader)
+                                    -> Result<Chunk<'a>> {
         let xnsw = XmlTagStartWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlTagStart(xnsw))
     }
 
-    pub fn decode_xml_tag_end<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+    pub fn decode_xml_tag_end<'a>(cursor: &mut Cursor<&'a [u8]>,
+                                  header: &ChunkHeader)
+                                  -> Result<Chunk<'a>> {
         let xnsw = XmlTagEndWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlTagEnd(xnsw))
     }
 
-    pub fn decode_xml_text<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
+    pub fn decode_xml_text<'a>(cursor: &mut Cursor<&'a [u8]>,
+                               header: &ChunkHeader)
+                               -> Result<Chunk<'a>> {
         let xnsw = XmlTextWrapper::new(cursor.get_ref(), *header);
         Ok(Chunk::XmlText(xnsw))
     }
@@ -188,7 +198,10 @@ impl<'a> XmlTagStartWrapper<'a> {
         cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
     }
 
-    pub fn get_tag_start(&self, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
+    pub fn get_tag_start(&self,
+                         namespaces: &Namespaces,
+                         string_table: &mut StringTable)
+                         -> Result<(Vec<Attribute>, Rc<String>)> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(36));
 
@@ -353,7 +366,10 @@ impl<'a> XmlTagStart<'a> {
         Ok((high, low))
     }
 
-    pub fn get_tag(&self, namespaces: &Namespaces, string_table: &mut StringTable) -> Result<(Vec<Attribute>, Rc<String>)> {
+    pub fn get_tag(&self,
+                   namespaces: &Namespaces,
+                   string_table: &mut StringTable)
+                   -> Result<(Vec<Attribute>, Rc<String>)> {
         self.wrapper.get_tag_start(namespaces, string_table)
     }
 

@@ -12,7 +12,11 @@ use model::{Namespaces, Value};
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement, xml_resources: &[u32], resources: &Resources) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces,
+                  element: &AbxmlElement,
+                  xml_resources: &[u32],
+                  resources: &Resources)
+                  -> Result<String> {
         let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
 
         Self::encode_element(&mut writer,
@@ -51,7 +55,9 @@ impl Xml {
 
             let val = match *a.get_value() {
                 Value::ReferenceId(ref id) => a.resolve_reference(*id, resources, "@").ok(),
-                Value::AttributeReferenceId(ref id) => a.resolve_reference(*id, resources, "?").ok(),
+                Value::AttributeReferenceId(ref id) => {
+                    a.resolve_reference(*id, resources, "?").ok()
+                }
                 Value::Integer(ref value) |
                 Value::Flags(ref value) => {
                     // let flag_resolution =
@@ -73,10 +79,12 @@ impl Xml {
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, xml_resources, resources).chain_err(|| "Error while writing a children")?;
+            Self::encode_element(&mut writer, None, child, xml_resources, resources)
+                .chain_err(|| "Error while writing a children")?;
         }
 
-        writer.write(End(Element::new(tag.deref()))).chain_err(|| "Error while writing end element")?;
+        writer.write(End(Element::new(tag.deref())))
+            .chain_err(|| "Error while writing end element")?;
 
         Ok(())
     }

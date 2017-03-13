@@ -61,7 +61,12 @@ pub trait Package {
 
 pub trait Library {
     fn get_name(&self) -> Option<String>;
-    fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String>;
+    fn format_reference(&self,
+                        id: u32,
+                        key: u32,
+                        namespace: Option<String>,
+                        prefix: &str)
+                        -> Result<String>;
     // fn get_entries(&self) -> &Entries;
     fn get_entry(&self, id: u32) -> Result<&Entry>;
     fn get_entries_string(&self, str_id: u32) -> Result<String>;
