@@ -84,7 +84,7 @@ mod tests {
         // Empty resources.arsc file
         let buffer = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        let owned = BufferedDecoder::from_vec(buffer);
+        let owned = BufferedDecoder::from(buffer);
         let decoder = owned.get_decoder().unwrap();
 
         // Empty binary XML file
@@ -97,7 +97,7 @@ mod tests {
     fn it_can_create_a_buffer_decoder_from_read() {
         let buffer = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        let owned = BufferedDecoder::from_read(Cursor::new(buffer));
+        let owned = BufferedDecoder::from_read(Cursor::new(buffer)).unwrap();
         let _ = owned.get_decoder().unwrap();
     }
 }
