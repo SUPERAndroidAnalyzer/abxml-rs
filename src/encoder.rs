@@ -79,9 +79,8 @@ impl Xml {
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, xml_resources, resources).chain_err(|| {
-                "Error while writing a children"
-            })?;
+            Self::encode_element(&mut writer, None, child, xml_resources, resources)
+                .chain_err(|| "Error while writing a children")?;
         }
 
         writer.write(End(Element::new(tag.deref())))

@@ -7,7 +7,7 @@ os:
 
 env:
   global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    -cache: cargo
 
 addons:
   apt:
@@ -30,12 +30,14 @@ before_script:
   - |
       cargo install cargo-travis || true  &&
       export PATH=$HOME/.cargo/bin:$PATH
+  - which rustfmt || cargo install rustfmt
 
 script:
   - |
     cargo build &&
     cargo build --example converter &&
-    cargo build --example exporter
+    cargo build --example exporter &&
+    cargo fmt -- --write-mode=diff &&
     cargo test
 
 after_success:

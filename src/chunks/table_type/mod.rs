@@ -41,7 +41,8 @@ impl<'a> TableTypeWrapper<'a> {
     pub fn to_owned(&self) -> Result<TableTypeBuf> {
         let id = self.get_id()?;
         let amount = self.get_amount()?;
-        let config = self.get_configuration()?.to_owned()?;
+        let config = self.get_configuration()?
+            .to_owned()?;
         let mut owned = TableTypeBuf::new((id & 0xF) as u8, config);
 
         for i in 0..amount {
