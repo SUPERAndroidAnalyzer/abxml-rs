@@ -11,9 +11,7 @@ pub struct ConfigurationWrapper<'a> {
 
 impl<'a> ConfigurationWrapper<'a> {
     pub fn new(slice: &'a [u8]) -> Self {
-        ConfigurationWrapper {
-            slice: slice,
-        }
+        ConfigurationWrapper { slice: slice }
     }
 
     pub fn to_owned(&self) -> Result<ConfigurationBuf> {
@@ -202,10 +200,7 @@ impl Into<(u8, u8)> for Region {
 impl<'a> From<&'a [u8]> for Region {
     fn from(input: &'a [u8]) -> Self {
         if input.len() != 2 {
-            Region {
-                low: 0,
-                high: 0,
-            }
+            Region { low: 0, high: 0 }
         } else {
             let input_ref: &[u8] = input.as_ref();
             Region {
@@ -236,8 +231,7 @@ impl ToString for Region {
         chrs.push(self.low);
         chrs.push(self.high);
 
-
-        String::from_utf8(chrs).unwrap_or("".to_string())
+        String::from_utf8(chrs).unwrap_or_else(|_| String::new())
     }
 }
 
