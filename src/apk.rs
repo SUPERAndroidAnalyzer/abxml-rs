@@ -7,7 +7,7 @@ use std::io::Read;
 use errors::*;
 use decoder::*;
 
-pub struct lApk {
+pub struct Apk {
     handler: ZipArchive<std::fs::File>,
     decoder: BufferedDecoder,
 }
