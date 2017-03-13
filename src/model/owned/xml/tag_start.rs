@@ -81,8 +81,8 @@ mod tests {
     fn it_can_generate_an_empty_chunk() {
         let tag_start = XmlTagStartBuf::new(2, None);
         let out = tag_start.to_vec().unwrap();
-        let expected = vec![2, 1, 8, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let expected = vec![2, 1, 8, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0];
 
         assert_eq!(expected, out);
     }

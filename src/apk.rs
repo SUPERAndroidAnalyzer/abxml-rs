@@ -47,20 +47,16 @@ impl Apk {
                     .by_index(i)
                     .chain_err(|| "Could not read ZIP entry")?;
                 let mut contents = Vec::new();
-                current_file.read_to_end(&mut contents)
-                    .chain_err(|| format!("Could not read: {}", current_file.name()))?;
+                current_file.read_to_end(&mut contents).chain_err(|| format!("Could not read: {}", current_file.name()))?;
                 let is_xml = current_file.name().to_string();
 
                 (is_xml, contents)
             };
 
-            let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
-                              file_name == "AndroidManifest.xml" {
+            let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) || file_name == "AndroidManifest.xml" {
 
-                let xml_visitor = decoder.xml_visitor(&contents)
-                    .chain_err(|| "Could not decode the target file")?;
-                let out = xml_visitor.into_string()
-                    .chain_err(|| format!("Could not decode: {}", file_name))?;
+                let xml_visitor = decoder.xml_visitor(&contents).chain_err(|| "Could not decode the target file")?;
+                let out = xml_visitor.into_string().chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()
             } else {
@@ -73,10 +69,7 @@ impl Apk {
         Ok(())
     }
 
-    fn write_file<B: AsRef<Path>, R: AsRef<Path>>(base_path: B,
-                                                  relative: R,
-                                                  content: &[u8])
-                                                  -> Result<()> {
+    fn write_file<B: AsRef<Path>, R: AsRef<Path>>(base_path: B, relative: R, content: &[u8]) -> Result<()> {
         let full_path = base_path.as_ref().join(&relative);
         // println!("Full path: {}", full_path.display());
         fs::create_dir_all(full_path.parent().unwrap()).chain_err(|| "Could not create the output dir")?;

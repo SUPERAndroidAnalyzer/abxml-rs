@@ -50,12 +50,8 @@ impl<'a> Decoder<'a> {
             buffer_apk: data,
         };
 
-        Executor::arsc(decoder.buffer_android, &mut decoder.visitor).chain_err(|| {
-            "Could not read android lib resources"
-        })?;
-        Executor::arsc(decoder.buffer_apk, &mut decoder.visitor).chain_err(|| {
-            "Could not read target APK resources"
-        })?;
+        Executor::arsc(decoder.buffer_android, &mut decoder.visitor).chain_err(|| "Could not read android lib resources")?;
+        Executor::arsc(decoder.buffer_apk, &mut decoder.visitor).chain_err(|| "Could not read target APK resources")?;
 
         Ok(decoder)
     }

@@ -185,8 +185,7 @@ impl<'a> StringTableWrapper<'a> {
 }
 
 pub struct StringTable<'a> {
-    wrapper: StringTableWrapper<'a>, 
-//    cache: HashMap<u32, Rc<String>>,
+    wrapper: StringTableWrapper<'a>,
 }
 
 impl<'a> Display for StringTable<'a> {
@@ -225,10 +224,7 @@ impl<'a> StringTableTrait for StringTable<'a> {
 
 impl<'a> StringTable<'a> {
     pub fn new(wrapper: StringTableWrapper<'a>) -> Self {
-        StringTable {
-            wrapper: wrapper, 
-//          cache: HashMap::new(),
-        }
+        StringTable { wrapper: wrapper }
     }
 
     /*pub fn get_string(&mut self, idx: u32) -> Result<Rc<String>> {

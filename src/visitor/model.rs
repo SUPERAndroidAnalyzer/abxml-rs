@@ -42,12 +42,10 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             _ => {
                 let package_id = self.package_mask.get_package();
 
-                let st_res = self.resources
-                    .get_mut_package(package_id)
-                    .and_then(|package| {
-                        package.set_string_table(string_table, origin);
-                        Some(())
-                    });
+                let st_res = self.resources.get_mut_package(package_id).and_then(|package| {
+                                                                                     package.set_string_table(string_table, origin);
+                                                                                     Some(())
+                                                                                 });
 
                 if st_res.is_none() {
                     error!("Could not retrieve target package");
@@ -67,13 +65,12 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
             if self.tables.contains_key(&Origin::Global) {
                 if let Some(st) = self.tables.remove(&Origin::Global) {
-                    let set_result = self.resources
-                        .get_mut_package(package_id)
-                        .and_then(|package| {
-                                      package.set_string_table(st, Origin::Global);
+                    let set_result =
+                        self.resources.get_mut_package(package_id).and_then(|package| {
+                                                                                package.set_string_table(st, Origin::Global);
 
-                                      Some(())
-                                  });
+                                                                                Some(())
+                                                                            });
 
                     if set_result.is_none() {
                         error!("Could not set the string table because it refers to a \
@@ -88,8 +85,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         let mut entries = Entries::new();
 
         if let Some(ref ts) = self.current_spec {
-            let mask =
-                ts.get_id().and_then(|id| Ok(self.package_mask | ((id as u32) << 16))).unwrap_or(0);
+            let mask = ts.get_id().and_then(|id| Ok(self.package_mask | ((id as u32) << 16))).unwrap_or(0);
 
             let entries_result = table_type.get_entries();
 
@@ -217,18 +213,10 @@ impl<'a> LibraryTrait for Library<'a> {
         self.package.get_name().ok()
     }
 
-    fn format_reference(&self,
-                        id: u32,
-                        key: u32,
-                        namespace: Option<String>,
-                        prefix: &str)
-                        -> Result<String> {
+    fn format_reference(&self, id: u32, key: u32, namespace: Option<String>, prefix: &str) -> Result<String> {
         let spec_id = id.get_spec() as u32;
-        let spec_str = self.get_spec_as_str(spec_id)
-            .chain_err(|| format!("Could not find spec: {}", spec_id))?;
-        let string =
-            self.get_entries_string(key)
-                .chain_err(|| format!("Could not find key {} on entries string table", key))?;
+        let spec_str = self.get_spec_as_str(spec_id).chain_err(|| format!("Could not find spec: {}", spec_id))?;
+        let string = self.get_entries_string(key).chain_err(|| format!("Could not find key {} on entries string table", key))?;
 
         let ending = if spec_str == "attr" {
             string
@@ -248,12 +236,8 @@ impl<'a> LibraryTrait for Library<'a> {
 
     fn get_entries_string(&self, str_id: u32) -> Result<String> {
         if let Some(ref string_table) = self.entries_string_table {
-            let out_string =
-                string_table.get_string(str_id)
-                    .chain_err(|| {
-                                   format!("Could not find string {} on entries string table",
-                                           str_id)
-                               })?;
+            let out_string = string_table.get_string(str_id)
+                .chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
 
             return Ok((*out_string).clone());
         }

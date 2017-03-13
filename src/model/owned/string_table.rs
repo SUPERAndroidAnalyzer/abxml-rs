@@ -60,8 +60,7 @@ impl OwnedBuf for StringTableBuf {
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;
         out.write_u32::<LittleEndian>(flags)?;
 
-        let string_offset = self.get_header_size() as u32 + (self.get_strings_len() as u32 * 4) +
-                            (self.get_styles_len() as u32 * 4);
+        let string_offset = self.get_header_size() as u32 + (self.get_strings_len() as u32 * 4) + (self.get_styles_len() as u32 * 4);
 
         let mut string_offsets: Vec<u32> = Vec::new();
         let mut style_offsets: Vec<u32> = Vec::new();

@@ -86,8 +86,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
 
     fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStart<'a>) {
         if let Some(ref mut string_table) = self.main_string_table {
-            match (namespace_start.get_namespace(string_table),
-                   namespace_start.get_prefix(string_table)) {
+            match (namespace_start.get_namespace(string_table), namespace_start.get_prefix(string_table)) {
                 (Ok(namespace), Ok(prefix)) => {
                     self.namespaces.insert(namespace, prefix);
                 }
