@@ -2,7 +2,6 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use std::collections::HashMap;
 use model::TableType as TableTypeTrait;
 use model::Configuration;
 use model::owned::TableTypeBuf;
@@ -69,9 +68,9 @@ impl<'a> TableTypeWrapper<'a> {
 
     pub fn get_configuration(&self) -> Result<ConfigurationWrapper<'a>> {
         let ini = self.header.absolute(20) as usize;
-        let end = (self.header.get_data_offset() as usize);
+        let end = self.header.get_data_offset() as usize;
 
-        if ini > end || (end-ini) <= 28 {
+        if ini > end || (end - ini) <= 28 {
             return Err("Configuration slice is not valid".into());
         }
 
@@ -88,9 +87,7 @@ impl<'a> TableTypeWrapper<'a> {
         self.decode_entries(&mut cursor)
     }
 
-    fn decode_entries(&self,
-                      mut cursor: &mut Cursor<&[u8]>)
-                      -> Result<Vec<Entry>> {
+    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>> {
         let mut offsets = Vec::new();
         let mut entries = Vec::new();
 
@@ -99,7 +96,7 @@ impl<'a> TableTypeWrapper<'a> {
         }
 
         for i in 0..self.get_amount()? {
-            let id = (i & 0xFFFF);
+            let id = i & 0xFFFF;
 
             if offsets[i as usize] != 0xFFFFFFFF {
                 let maybe_entry = Self::decode_entry(cursor, id)?;
@@ -163,9 +160,9 @@ impl<'a> TableTypeWrapper<'a> {
 
         for j in 0..value_count {
             debug!("Parsing value: {}/{} (@{})",
-            j,
-            value_count - 1,
-            cursor.position());
+                   j,
+                   value_count - 1,
+                   cursor.position());
             let val_id = cursor.read_u32::<LittleEndian>()?;
             cursor.read_u16::<LittleEndian>()?;
             // Padding
@@ -186,8 +183,7 @@ impl<'a> TableTypeWrapper<'a> {
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
         let entries = self.get_entries()?;
-
-        entries.get(index as usize).map(|e| e.clone()).ok_or("Entry not found".into())
+        entries.get(index as usize).cloned().ok_or_else(|| "Entry not found".into())
     }
 }
 
@@ -222,7 +218,6 @@ impl<'a> TableTypeTrait for TableType<'a> {
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
         let entries = self.get_entries()?;
-
-        entries.get(index as usize).map(|e| e.clone()).ok_or("Entry not found".into())
+        entries.get(index as usize).cloned().ok_or_else(|| "Entry not found".into())
     }
 }

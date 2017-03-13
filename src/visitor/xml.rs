@@ -56,7 +56,7 @@ impl<'a> XmlVisitor<'a> {
                                            root,
                                            self.get_resources(),
                                            self.arsc())
-                           .chain_err(|| "Could note encode XML");
+                            .chain_err(|| "Could note encode XML");
                     }
                     None => {
                         warn!("No string table found");
