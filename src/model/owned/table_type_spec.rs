@@ -29,9 +29,6 @@ impl OwnedBuf for TableTypeSpecBuf {
     fn get_body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
-        out.write_u32::<LittleEndian>(self.id as u32)?;
-        out.write_u32::<LittleEndian>(self.flags.len() as u32)?;
-
         for flag in &self.flags {
             out.write_u32::<LittleEndian>(*flag)?;
         }
@@ -39,8 +36,13 @@ impl OwnedBuf for TableTypeSpecBuf {
         Ok(out)
     }
 
-    fn get_header_size(&self) -> u16 {
-        16
+    fn get_header(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+
+        out.write_u32::<LittleEndian>(self.id as u32)?;
+        out.write_u32::<LittleEndian>(self.flags.len() as u32)?;
+
+        Ok(out)
     }
 }
 

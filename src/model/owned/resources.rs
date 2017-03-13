@@ -32,10 +32,6 @@ impl OwnedBuf for ResourcesBuf {
 
         Ok(out)
     }
-
-    fn get_header_size(&self) -> u16 {
-        8
-    }
 }
 
 #[cfg(test)]

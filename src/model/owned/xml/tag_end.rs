@@ -22,11 +22,6 @@ impl OwnedBuf for XmlTagEndBuf {
     fn get_body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
-        // Amount of writes
-        out.write_u32::<LittleEndian>(3)?;
-
-        // ??
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
         // ??
         out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
         // Id
@@ -35,8 +30,15 @@ impl OwnedBuf for XmlTagEndBuf {
         Ok(out)
     }
 
-    fn get_header_size(&self) -> u16 {
-        16
+    fn get_header(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+
+        // Amount of writes
+        out.write_u32::<LittleEndian>(3)?;
+        // ??
+        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+
+        Ok(out)
     }
 }
 
