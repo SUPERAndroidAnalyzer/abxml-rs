@@ -39,7 +39,8 @@ impl OwnedBuf for TableTypeBuf {
 
         out.write_u32::<LittleEndian>(self.id as u32)?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
-        out.write_u32::<LittleEndian>(self.get_header_size() as u32 + (self.entries.len() as u32 * 4))?;
+        out.write_u32::<LittleEndian>(self.get_header_size() as u32 +
+                                       (self.entries.len() as u32 * 4))?;
         out.extend(&self.config.to_vec()?);
 
         let mut i = 0;
@@ -56,9 +57,7 @@ impl OwnedBuf for TableTypeBuf {
         // Entries
         for e in &self.entries {
             match *e {
-                Entry::Complex(ref complex) => {
-
-                },
+                Entry::Complex(ref complex) => {}
                 Entry::Simple(ref simple) => {
                     // Header size
                     out.write_u16::<LittleEndian>(8)?;
@@ -72,7 +71,7 @@ impl OwnedBuf for TableTypeBuf {
                     out.write_u8(simple.get_type())?;
                     // Value
                     out.write_u32::<LittleEndian>(simple.get_value() as u32)?;
-                },
+                }
                 Entry::Empty(_, _) => (),
             }
         }
@@ -102,7 +101,10 @@ impl TableType for TableTypeBuf {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        self.entries.get(index as usize).map(|e| e.clone()).ok_or("Entry out of bound".into())
+        self.entries
+            .get(index as usize)
+            .cloned()
+            .ok_or_else(|| "Entry out of bound".into())
     }
 }
 
@@ -132,7 +134,8 @@ mod tests {
 
         assert_eq!(5, table_type.get_id().unwrap());
         assert_eq!(3, table_type.get_amount().unwrap());
-        assert_eq!(10, table_type.get_entry(1).unwrap().complex().unwrap().get_id())
+        assert_eq!(10,
+                   table_type.get_entry(1).unwrap().complex().unwrap().get_id())
     }
 
     #[test]

@@ -74,7 +74,10 @@ pub struct ChunkLoaderStream<'a> {
 
 impl<'a> ChunkLoaderStream<'a> {
     pub fn new(cursor: Cursor<&'a [u8]>) -> Self {
-        ChunkLoaderStream { cursor: cursor, previous: None }
+        ChunkLoaderStream {
+            cursor: cursor,
+            previous: None,
+        }
     }
 
     fn read_one(&mut self) -> Result<Chunk<'a>> {
@@ -146,7 +149,7 @@ mod tests {
 
     #[test]
     fn it_can_detect_loops() {
-        let data = vec![0,0, 0,0, 0,0,0,0, 0,0,0,0];
+        let data = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let cursor: Cursor<&[u8]> = Cursor::new(&data);
         let mut stream = ChunkLoaderStream::new(cursor);
 
@@ -156,7 +159,7 @@ mod tests {
 
     #[test]
     fn it_stops_the_iteration_if_out_of_bounds() {
-        let data = vec![0,0, 0,0, 0,0,0,0, 0,0,0,0];
+        let data = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let mut cursor: Cursor<&[u8]> = Cursor::new(&data);
         cursor.set_position(30);
         let mut stream = ChunkLoaderStream::new(cursor);
@@ -166,7 +169,7 @@ mod tests {
 
     #[test]
     fn it_can_iterate_over_chunks() {
-        let mut data = vec![0,0, 12,0, 0,0,0,0, 0,0,0,0];
+        let mut data = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let st = StringTableBuf::default();
         data.extend(st.to_vec().unwrap());
         let res = ResourcesBuf::default();

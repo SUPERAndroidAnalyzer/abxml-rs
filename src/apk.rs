@@ -21,7 +21,7 @@ impl Apk {
 
         let apk = Apk {
             handler: zip_handler,
-            decoder: BufferedDecoder::from_vec(buffer),
+            decoder: buffer.into(),
         };
 
         Ok(apk)
@@ -41,7 +41,7 @@ impl Apk {
         for i in 0..self.handler.len() {
             let (file_name, contents) = {
                 let mut current_file =
-                self.handler.by_index(i).chain_err(|| "Could not read ZIP entry")?;
+                    self.handler.by_index(i).chain_err(|| "Could not read ZIP entry")?;
                 let mut contents = Vec::new();
                 current_file.read_to_end(&mut contents)
                     .chain_err(|| format!("Could not read: {}", current_file.name()))?;
@@ -51,11 +51,11 @@ impl Apk {
             };
 
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
-                file_name == "AndroidManifest.xml" {
+                              file_name == "AndroidManifest.xml" {
 
-                let xml_visitor = decoder.xml_visitor(&contents).chain_err(|| "Could not decode the target file")?;
-                let out = xml_visitor
-                    .into_string()
+                let xml_visitor = decoder.xml_visitor(&contents)
+                    .chain_err(|| "Could not decode the target file")?;
+                let out = xml_visitor.into_string()
                     .chain_err(|| format!("Could not decode: {}", file_name))?;
 
                 out.into_bytes()
