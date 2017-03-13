@@ -417,7 +417,7 @@ impl<'a> XmlTagEndWrapper<'a> {
 impl<'a> TagEndTrait for XmlTagEndWrapper<'a> {
     fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(5*4));
+        cursor.set_position(self.header.absolute(5 * 4));
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }

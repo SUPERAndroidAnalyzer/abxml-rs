@@ -113,6 +113,7 @@ mod tests {
 
         let errored_flag = wrapper.get_flag(1541);
         assert!(errored_flag.is_err());
-        assert_eq!("Invalid flag on index 1541 out of 1541", errored_flag.err().unwrap().to_string());
+        assert_eq!("Invalid flag on index 1541 out of 1541",
+                   errored_flag.err().unwrap().to_string());
     }
 }

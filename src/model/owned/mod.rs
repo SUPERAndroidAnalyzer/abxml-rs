@@ -1,11 +1,11 @@
 use errors::*;
 use byteorder::{LittleEndian, WriteBytesExt};
 
-pub use self::resources::ResourcesBuf as ResourcesBuf;
-pub use self::string_table::StringTableBuf as StringTableBuf;
-pub use self::string_table::Encoding as Encoding;
-pub use self::xml::XmlTagStartBuf as XmlTagStartBuf;
-pub use self::xml::XmlTagEndBuf as XmlTagEndBuf;
+pub use self::resources::ResourcesBuf;
+pub use self::string_table::StringTableBuf;
+pub use self::string_table::Encoding;
+pub use self::xml::XmlTagStartBuf;
+pub use self::xml::XmlTagEndBuf;
 pub use self::package::PackageBuf;
 pub use self::table_type_spec::TableTypeSpecBuf;
 pub use self::table_type::ConfigurationBuf;
