@@ -84,8 +84,8 @@ impl ElementContainer {
                 Some(())
             })
             .unwrap_or_else(|| {
-                error!("Received an end element event with an empty stack");
-            });
+                                error!("Received an end element event with an empty stack");
+                            });
     }
 
     pub fn get_root(&self) -> &Option<Element> {
