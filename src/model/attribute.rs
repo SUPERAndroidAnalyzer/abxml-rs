@@ -83,9 +83,7 @@ impl Attribute {
         let package = resources.get_package(package_id)
             .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
-        let entry_key = package.get_entry(res_id)
-            .and_then(|e| Ok(e.get_key()))
-            .ok();
+        let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
 
         if let Some(key) = entry_key {
             let namespace = if !is_main { package.get_name() } else { None };
@@ -108,21 +106,22 @@ impl Attribute {
         };
 
         let package_id = entry_ref.get_package() as u8;
-        resources.get_package(package_id)
-            .and_then(|package| self.search_flags(flags, *entry_ref, package))
+        resources.get_package(package_id).and_then(|package| {
+                                                       self.search_flags(flags, *entry_ref, package)
+                                                   })
     }
 
     fn search_flags(&self, flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = self.get_strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes.iter()
             .map(|si| match package.get_entries_string(*si) {
-                Ok(str) => str,
-                Err(_) => {
-                    error!("Key not found on the string table");
+                     Ok(str) => str,
+                     Err(_) => {
+                error!("Key not found on the string table");
 
-                    "".to_string()
-                }
-            })
+                "".to_string()
+            }
+                 })
             .collect();
 
         if str_strs.is_empty() {
@@ -148,7 +147,8 @@ impl Attribute {
             let id_a = a.get_value();
             let id_b = b.get_value();
 
-            // TODO: This code is to create an exact match with Apktool. A simple descending ordering seems to be also ok.
+            // TODO: This code is to create an exact match with Apktool.
+            // A simple descending ordering seems to be also ok.
             let mut i = id_a;
             i -= (i >> 1) & 0x55555555;
             i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
@@ -188,14 +188,14 @@ impl Attribute {
                             entry.simple()
                                 .and_then(|s| Ok(s.get_key()))
                                 .and_then(|key| {
-                                    strs.push(key);
-                                    masks.push(mask);
-                                    Ok(())
-                                })
+                                              strs.push(key);
+                                              masks.push(mask);
+                                              Ok(())
+                                          })
                                 .unwrap_or_else(|_| {
                                     error!("Value should be added but there was an issue reading \
                                             the entry");
-                                });
+                                                });
                         }
                     }
                     Err(_) => {

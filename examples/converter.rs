@@ -60,7 +60,9 @@ fn run() -> Result<()> {
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
     let mut resources_content = Vec::new();
-    archive.by_name("resources.arsc").unwrap().read_to_end(&mut resources_content)?;
+    archive.by_name("resources.arsc")
+        .unwrap()
+        .read_to_end(&mut resources_content)?;
 
     let mut resources_visitor = ModelVisitor::default();
     Executor::arsc(&resources_content, &mut resources_visitor)?;
@@ -100,7 +102,7 @@ fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String>
                                        root,
                                        visitor.get_resources(),
                                        resources)
-                        .chain_err(|| "Could note encode XML");
+                                   .chain_err(|| "Could note encode XML");
                 }
                 None => {
                     println!("No string table found");

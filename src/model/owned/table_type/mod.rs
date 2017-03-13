@@ -135,7 +135,11 @@ mod tests {
         assert_eq!(5, table_type.get_id().unwrap());
         assert_eq!(3, table_type.get_amount().unwrap());
         assert_eq!(10,
-                   table_type.get_entry(1).unwrap().complex().unwrap().get_id())
+                   table_type.get_entry(1)
+                       .unwrap()
+                       .complex()
+                       .unwrap()
+                       .get_id())
     }
 
     #[test]
