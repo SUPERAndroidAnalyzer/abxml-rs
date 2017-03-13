@@ -37,12 +37,6 @@ impl OwnedBuf for TableTypeBuf {
     fn get_body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
-        out.write_u32::<LittleEndian>(self.id as u32)?;
-        out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
-        out.write_u32::<LittleEndian>(self.get_header_size() as u32 +
-                                       (self.entries.len() as u32 * 4))?;
-        out.extend(&self.config.to_vec()?);
-
         let mut i = 0;
         // Entries offsets
         for e in &self.entries {
@@ -79,9 +73,17 @@ impl OwnedBuf for TableTypeBuf {
         Ok(out)
     }
 
-    fn get_header_size(&self) -> u16 {
-        // It seems that can be either 68 or 76
-        68
+    fn get_header(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+
+        let vec_config = self.config.to_vec()?;
+        let header_size = (5 * 4) + vec_config.len() as u32;
+        out.write_u32::<LittleEndian>(self.id as u32)?;
+        out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
+        out.write_u32::<LittleEndian>(header_size + (self.entries.len() as u32 * 4))?;
+        out.extend(&vec_config);
+
+        Ok(out)
     }
 }
 
