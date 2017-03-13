@@ -55,7 +55,7 @@ impl<'a> PackageWrapper<'a> {
     }
 
     fn find_end_position(&self, initial_position: usize) -> usize {
-        let buffer = &self.raw_data[initial_position..initial_position+256];
+        let buffer = &self.raw_data[initial_position..initial_position + 256];
 
         let mut zeros = 0;
         let mut i = 0;
