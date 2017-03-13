@@ -70,10 +70,10 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                     let set_result = self.resources
                         .get_mut_package(package_id)
                         .and_then(|package| {
-                            package.set_string_table(st, Origin::Global);
+                                      package.set_string_table(st, Origin::Global);
 
-                            Some(())
-                        });
+                                      Some(())
+                                  });
 
                     if set_result.is_none() {
                         error!("Could not set the string table because it refers to a \
@@ -88,9 +88,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         let mut entries = Entries::new();
 
         if let Some(ref ts) = self.current_spec {
-            let mask = ts.get_id()
-                .and_then(|id| Ok(self.package_mask | ((id as u32) << 16)))
-                .unwrap_or(0);
+            let mask =
+                ts.get_id().and_then(|id| Ok(self.package_mask | ((id as u32) << 16))).unwrap_or(0);
 
             let entries_result = table_type.get_entries();
 
@@ -110,12 +109,10 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         let package_id = self.package_mask.get_package();
 
-        self.resources
-            .get_mut_package(package_id)
-            .and_then(|package| {
-                package.add_entries(entries);
-                Some(())
-            });
+        self.resources.get_mut_package(package_id).and_then(|package| {
+                                                                package.add_entries(entries);
+                                                                Some(())
+                                                            });
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpec<'a>) {
@@ -229,8 +226,9 @@ impl<'a> LibraryTrait for Library<'a> {
         let spec_id = id.get_spec() as u32;
         let spec_str = self.get_spec_as_str(spec_id)
             .chain_err(|| format!("Could not find spec: {}", spec_id))?;
-        let string = self.get_entries_string(key)
-            .chain_err(|| format!("Could not find key {} on entries string table", key))?;
+        let string =
+            self.get_entries_string(key)
+                .chain_err(|| format!("Could not find key {} on entries string table", key))?;
 
         let ending = if spec_str == "attr" {
             string
@@ -250,8 +248,12 @@ impl<'a> LibraryTrait for Library<'a> {
 
     fn get_entries_string(&self, str_id: u32) -> Result<String> {
         if let Some(ref string_table) = self.entries_string_table {
-            let out_string = string_table.get_string(str_id)
-                .chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
+            let out_string =
+                string_table.get_string(str_id)
+                    .chain_err(|| {
+                                   format!("Could not find string {} on entries string table",
+                                           str_id)
+                               })?;
 
             return Ok((*out_string).clone());
         }
