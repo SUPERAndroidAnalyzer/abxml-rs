@@ -48,20 +48,33 @@ impl OwnedBuf for StringTableBuf {
         TOKEN_STRING_TABLE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
+
         let flags = if self.encoding == Encoding::Utf8 {
             0x00000100
         } else {
             0
         };
 
+        let header_size = (7 * 4);
+        let string_offset = header_size + (self.get_strings_len() as u32 * 4) +
+                            (self.get_styles_len() as u32 * 4);
+
         out.write_u32::<LittleEndian>(self.strings.len() as u32)?;
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;
         out.write_u32::<LittleEndian>(flags)?;
 
-        let string_offset = self.get_header_size() as u32 + (self.get_strings_len() as u32 * 4) +
-                            (self.get_styles_len() as u32 * 4);
+        // TODO: Calculate properly the offset as we are calculating on the decoding part
+        let style_offset = 0;
+        out.write_u32::<LittleEndian>(string_offset as u32)?;
+        out.write_u32::<LittleEndian>(style_offset as u32)?;
+
+        Ok(out)
+    }
+
+    fn get_body_data(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
 
         let mut string_offsets: Vec<u32> = Vec::new();
         let mut style_offsets: Vec<u32> = Vec::new();
@@ -75,10 +88,6 @@ impl OwnedBuf for StringTableBuf {
             utf_16::UTF_16LE_ENCODING.raw_encoder()
         };
 
-        // TODO: Calculate properly the offset as we are calculating on the decoding part
-        let style_offset = 0;
-        out.write_u32::<LittleEndian>(string_offset as u32)?;
-        out.write_u32::<LittleEndian>(style_offset as u32)?;
 
         // Encode strings and save offsets
         for string in &self.strings {
@@ -121,10 +130,6 @@ impl OwnedBuf for StringTableBuf {
         out.extend(style_buffer);
 
         Ok(out)
-    }
-
-    fn get_header_size(&self) -> u16 {
-        7 * 4
     }
 }
 
