@@ -2,7 +2,6 @@ use model::owned::OwnedBuf;
 use errors::*;
 use model::TableType;
 use byteorder::{LittleEndian, WriteBytesExt};
-use model::Configuration;
 
 mod configuration;
 mod entry;
