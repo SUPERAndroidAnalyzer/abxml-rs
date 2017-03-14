@@ -49,16 +49,8 @@ impl OwnedBuf for PackageBuf {
         Ok(out)
     }
 
-    fn get_header_size(&self) -> u16 {
-        288
-    }
-
-    fn write_header(&self, buffer: &mut Vec<u8>, body: &[u8]) -> Result<()> {
-        let header_size = self.get_header_size();
-        buffer.write_u16::<LittleEndian>(self.get_token())?;
-        buffer.write_u16::<LittleEndian>(header_size)?;
-        buffer.write_u32::<LittleEndian>(body.len() as u32 + header_size as u32)?;
-
+    fn get_header(&self) -> Result<Vec<u8>> {
+        let mut buffer = Vec::new();
         let mut encoder = utf_16::UTF_16LE_ENCODING.raw_encoder();
         let mut encoded_string = Vec::new();
         let (size, error) = encoder.raw_feed(&self.package_name, &mut encoded_string);
@@ -79,7 +71,7 @@ impl OwnedBuf for PackageBuf {
         buffer.write_u32::<LittleEndian>(0)?;
         buffer.write_u32::<LittleEndian>(0)?;
 
-        Ok(())
+        Ok(buffer)
     }
 }
 
