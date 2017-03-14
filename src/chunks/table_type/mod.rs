@@ -3,7 +3,6 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use model::TableType as TableTypeTrait;
-use model::Configuration;
 use model::owned::TableTypeBuf;
 use model::owned::{Entry, SimpleEntry, ComplexEntry, EntryHeader};
 
@@ -17,9 +16,6 @@ mod configuration;
 impl TableTypeDecoder {
     pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
         let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
-        let configuration = ttw.get_configuration().unwrap();
-        let language = configuration.get_language().unwrap();
-        let region = configuration.get_language().unwrap();
 
         Ok(Chunk::TableType(ttw))
     }
