@@ -57,7 +57,7 @@ impl OwnedBuf for StringTableBuf {
             0
         };
 
-        let header_size = (7 * 4);
+        let header_size = 7 * 4;
         let string_offset = header_size + (self.get_strings_len() as u32 * 4) +
                             (self.get_styles_len() as u32 * 4);
 
