@@ -2,6 +2,7 @@ use model::owned::OwnedBuf;
 use errors::*;
 use model::TableType;
 use byteorder::{LittleEndian, WriteBytesExt};
+use model::Configuration;
 
 mod configuration;
 mod entry;
@@ -38,37 +39,22 @@ impl OwnedBuf for TableTypeBuf {
         let mut out = Vec::new();
 
         let mut i = 0;
-        // Entries offsets
+        let mut entries_body = Vec::new();
+
         for e in &self.entries {
+            let current_entry = e.to_vec();
+
             if e.is_empty() {
                 out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
             } else {
                 out.write_u32::<LittleEndian>(i)?;
-                i += 16; // It depends on is xompex or simlple!
+                i += current_entry.len() as u32;
             }
+
+            entries_body.extend(&current_entry);
         }
 
-        // Entries
-        for e in &self.entries {
-            match *e {
-                Entry::Complex(ref complex) => {}
-                Entry::Simple(ref simple) => {
-                    // Header size
-                    out.write_u16::<LittleEndian>(8)?;
-                    // Flags => Simple entry
-                    out.write_u16::<LittleEndian>(0)?;
-                    // Key index
-                    out.write_u32::<LittleEndian>(simple.get_key() as u32)?;
-                    // Value type
-                    out.write_u16::<LittleEndian>(8)?;
-                    out.write_u8(0)?;
-                    out.write_u8(simple.get_type())?;
-                    // Value
-                    out.write_u32::<LittleEndian>(simple.get_value() as u32)?;
-                }
-                Entry::Empty(_, _) => (),
-            }
-        }
+        out.extend(&entries_body);
 
         Ok(out)
     }
@@ -154,5 +140,20 @@ mod tests {
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TABLE_TYPE);
+    }
+
+    #[test]
+    fn identity_with_mixed_complex_and_simple_entries() {
+        let header = ChunkHeader::new(0,
+                                      76,
+                                      raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX.len() as u32,
+                                      0x201);
+        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX, header);
+        let _ = wrapper.get_entries();
+
+        let owned = wrapper.to_owned().unwrap();
+        let new_raw = owned.to_vec().unwrap();
+
+        compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX);
     }
 }
