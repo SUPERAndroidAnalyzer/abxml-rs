@@ -4,7 +4,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use model::{Identifier, Entries};
-use model::Package;
 use model::Resources as ResourcesTrait;
 use model::Library as LibraryTrait;
 use model::StringTable as StringTableTrait;
@@ -55,7 +54,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         }
     }
 
-    fn visit_package(&mut self, package: PackageRef<'a>) {
+    fn visit_package(&mut self, package: PackageWrapper<'a>) {
         if let Ok(package_id) = package.get_id() {
             self.package_mask = package_id << 24;
 
@@ -178,7 +177,7 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
 }
 
 pub struct Library<'a> {
-    package: PackageRef<'a>,
+    package: PackageWrapper<'a>,
     specs: Vec<TypeSpec<'a>>,
     string_table: Option<StringTable<'a>>,
     spec_string_table: Option<StringTable<'a>>,
@@ -187,7 +186,7 @@ pub struct Library<'a> {
 }
 
 impl<'a> Library<'a> {
-    pub fn new(package: PackageRef<'a>) -> Library {
+    pub fn new(package: PackageWrapper<'a>) -> Library {
         Library {
             package: package,
             specs: Vec::new(),

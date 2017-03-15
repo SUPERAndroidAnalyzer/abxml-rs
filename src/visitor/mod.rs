@@ -14,7 +14,7 @@ pub use self::model::RefPackage;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
-    fn visit_package(&mut self, _package: PackageRef<'a>) {}
+    fn visit_package(&mut self, _package: PackageWrapper<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
     fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
@@ -51,8 +51,7 @@ impl Executor {
                     origin = Origin::next(origin);
                 }
                 Chunk::Package(pw) => {
-                    let package = PackageRef::new(pw);
-                    visitor.visit_package(package);
+                    visitor.visit_package(pw);
                 }
                 Chunk::TableType(ttw) => {
                     let tt = TableType::new(ttw);
@@ -90,8 +89,7 @@ impl Executor {
                     visitor.visit_string_table(st, origin);
                 }
                 Chunk::Package(pw) => {
-                    let package = PackageRef::new(pw);
-                    visitor.visit_package(package);
+                    visitor.visit_package(pw);
                 }
                 Chunk::TableType(ttw) => {
                     origin = Origin::Entries;
