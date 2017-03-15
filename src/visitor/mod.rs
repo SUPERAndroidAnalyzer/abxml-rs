@@ -22,7 +22,7 @@ pub trait ChunkVisitor<'a> {
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
     fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {}
-    fn visit_resource(&mut self, _resource: Resource<'a>) {}
+    fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {}
 }
 
 pub struct Executor;
@@ -122,8 +122,7 @@ impl Executor {
                     visitor.visit_xml_text(ts);
                 }
                 Chunk::Resource(rw) => {
-                    let ts = Resource::new(rw);
-                    visitor.visit_resource(ts);
+                    visitor.visit_resource(rw);
                 }
                 _ => (),
             }
