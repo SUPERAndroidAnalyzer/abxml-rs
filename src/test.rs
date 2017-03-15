@@ -78,7 +78,7 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
 pub struct FakeStringTable;
 impl model::StringTable for FakeStringTable {
     fn get_strings_len(&self) -> u32 {
-        5
+        8
     }
 
     fn get_styles_len(&self) -> u32 {
