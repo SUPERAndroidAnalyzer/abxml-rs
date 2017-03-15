@@ -155,36 +155,13 @@ impl Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::StringTable;
-
-    struct FakeStringTable;
-
-    impl StringTable for FakeStringTable {
-        fn get_strings_len(&self) -> u32 {
-            5
-        }
-
-        fn get_styles_len(&self) -> u32 {
-            0
-        }
-
-        fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-            match idx {
-                0 => Ok(Rc::new("Zero".to_string())),
-                1 => Ok(Rc::new("One".to_string())),
-                2 => Ok(Rc::new("Two".to_string())),
-                3 => Ok(Rc::new("Three".to_string())),
-                4 => Ok(Rc::new("Four".to_string())),
-                _ => Err("Index out of bounds".into()),
-            }
-        }
-    }
+    use test::FakeStringTable;
 
     #[test]
     fn it_can_generate_a_string_value() {
-        let value = Value::new(TOKEN_TYPE_STRING, 3, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_STRING, 33, &mut FakeStringTable);
 
-        assert_eq!("Three", value.unwrap().to_string());
+        assert_eq!("Threes", value.unwrap().to_string());
     }
 
     #[test]
