@@ -5,9 +5,10 @@ use std::rc::Rc;
 use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
-use model::StringTable;
-use model::owned::XmlTagEndBuf;
+use model::StringTable as StringTableTrait;
+use model::owned::{XmlTagEndBuf, XmlNamespaceStartBuf};
 use model::TagEnd as TagEndTrait;
+use model::NamespaceStart;
 
 pub struct XmlDecoder;
 
@@ -63,6 +64,13 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         }
     }
 
+    pub fn get_line(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
+    }
+
     pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(16));
@@ -77,18 +85,32 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_prefix(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    pub fn to_owned(self) -> Result<XmlNamespaceStartBuf> {
+        let namespace_start = XmlNamespaceStartBuf::new(self.get_line()?,
+                                                        self.get_prefix_index()?,
+                                                        self.get_namespace_index()?);
+
+        Ok(namespace_start)
+    }
+}
+
+impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
+    fn get_prefix<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    pub fn get_namespace(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_namespace_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
+    }
+
+    fn get_line(&self) -> Result<u32> {
+        self.get_line()
     }
 }
 
@@ -410,7 +432,6 @@ impl<'a> XmlTagEndWrapper<'a> {
 
     pub fn to_owned(self) -> Result<XmlTagEndBuf> {
         Ok(XmlTagEndBuf::new(self.get_id()?))
-
     }
 }
 
