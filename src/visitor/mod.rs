@@ -13,7 +13,7 @@ pub use self::xml::XmlVisitor;
 pub use self::model::RefPackage;
 
 pub trait ChunkVisitor<'a> {
-    fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
+    fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {}
     fn visit_package(&mut self, _package: PackageWrapper<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
@@ -46,8 +46,7 @@ impl Executor {
         for c in stream {
             match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
-                    let st = StringTable::new(stw);
-                    visitor.visit_string_table(st, origin);
+                    visitor.visit_string_table(stw, origin);
                     origin = Origin::next(origin);
                 }
                 Chunk::Package(pw) => {
@@ -85,8 +84,7 @@ impl Executor {
         for c in stream {
             match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
-                    let st = StringTable::new(stw);
-                    visitor.visit_string_table(st, origin);
+                    visitor.visit_string_table(stw, origin);
                 }
                 Chunk::Package(pw) => {
                     visitor.visit_package(pw);

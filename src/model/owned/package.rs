@@ -82,6 +82,7 @@ mod tests {
     use model::owned::StringTableBuf;
     use std::io::Cursor;
     use std::iter;
+    use model::StringTable;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

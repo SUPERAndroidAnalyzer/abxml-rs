@@ -33,34 +33,11 @@ impl<'a> StringTableWrapper<'a> {
         }
     }
 
-    pub fn get_strings_len(&self) -> u32 {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        cursor.read_u32::<LittleEndian>().unwrap_or(0)
-    }
-
-    pub fn get_styles_len(&self) -> u32 {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
-
-        cursor.read_u32::<LittleEndian>().unwrap_or(0)
-    }
-
     pub fn get_flags(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(16));
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
-    }
-
-    pub fn get_string(&self, idx: u32) -> Result<String> {
-        let amount = self.get_strings_len();
-        if idx > amount {
-            return Err("Trying to get index outside StringTable".into());
-        }
-
-        self.get_string_position(idx).and_then(|position| self.parse_string(position as u32))
     }
 
     pub fn to_owned(self) -> Result<StringTableBuf> {
@@ -71,7 +48,8 @@ impl<'a> StringTableWrapper<'a> {
         }
 
         for i in 0..self.get_strings_len() {
-            owned.add_string(self.get_string(i)?);
+            let ref string = *self.get_string(i)?;
+            owned.add_string(string.clone());
         }
 
         Ok(owned)
@@ -184,32 +162,33 @@ impl<'a> StringTableWrapper<'a> {
     }
 }
 
-pub struct StringTable<'a> {
-    wrapper: StringTableWrapper<'a>,
-}
-
-impl<'a> Display for StringTable<'a> {
+impl<'a> Display for StringTableWrapper<'a> {
     fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
         let amount = self.get_strings_len();
 
         for i in 0..amount {
-            write!(formatter,
-                   "{} - {}\n",
-                   i,
-                   self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string())))?;
+            let current_string = self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string()));
+
+            write!(formatter, "{} - {}\n", i, current_string)?;
         }
 
         Ok(())
     }
 }
 
-impl<'a> StringTableTrait for StringTable<'a> {
+impl<'a> StringTableTrait for StringTableWrapper<'a> {
     fn get_strings_len(&self) -> u32 {
-        self.wrapper.get_strings_len()
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+
+        cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
     fn get_styles_len(&self) -> u32 {
-        self.wrapper.get_styles_len()
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(12));
+
+        cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
     fn get_string(&self, idx: u32) -> Result<Rc<String>> {
@@ -217,13 +196,9 @@ impl<'a> StringTableTrait for StringTable<'a> {
             return Err("Index out of bounds".into());
         }
 
-        let string = self.wrapper.get_string(idx)?;
-        Ok(Rc::new(string))
-    }
-}
+        let string = self.get_string_position(idx)
+            .and_then(|position| self.parse_string(position as u32))?;
 
-impl<'a> StringTable<'a> {
-    pub fn new(wrapper: StringTableWrapper<'a>) -> Self {
-        StringTable { wrapper: wrapper }
+        Ok(Rc::new(string))
     }
 }
