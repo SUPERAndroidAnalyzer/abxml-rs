@@ -105,6 +105,12 @@ pub trait NamespaceStart {
     fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
 }
 
+pub trait NamespaceEnd {
+    fn get_line(&self) -> Result<u32>;
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
+}
+
 pub trait TypeSpec {
     fn get_id(&self) -> Result<u16>;
     fn get_amount(&self) -> Result<u32>;
