@@ -52,21 +52,6 @@ impl<'a> ResourceWrapper<'a> {
     }
 }
 
-#[allow(dead_code)]
-pub struct Resource<'a> {
-    wrapper: ResourceWrapper<'a>,
-}
-
-impl<'a> Resource<'a> {
-    pub fn new(wrapper: ResourceWrapper<'a>) -> Self {
-        Resource { wrapper: wrapper }
-    }
-
-    pub fn get_resources(&self) -> Result<Vec<u32>> {
-        self.wrapper.get_resources()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

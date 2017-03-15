@@ -47,7 +47,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {
         self.count += 1
     }
-    fn visit_resource(&mut self, _resource: Resource<'a>) {
+    fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {
         self.count += 1
     }
 }
