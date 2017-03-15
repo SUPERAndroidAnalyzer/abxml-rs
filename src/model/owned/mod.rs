@@ -6,6 +6,7 @@ pub use self::string_table::StringTableBuf;
 pub use self::string_table::Encoding;
 pub use self::xml::XmlTagStartBuf;
 pub use self::xml::XmlTagEndBuf;
+pub use self::xml::XmlNamespaceStartBuf;
 pub use self::package::PackageBuf;
 pub use self::table_type_spec::TableTypeSpecBuf;
 pub use self::table_type::ConfigurationBuf;
