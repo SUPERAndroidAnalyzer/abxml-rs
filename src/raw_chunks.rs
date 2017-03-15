@@ -267,3 +267,5 @@ pub static EXAMPLE_TABLE_TYPE_WITH_COMPLEX: &'static [u8] =
       0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 8, 0, 0, 3, 180, 122, 1, 0];
 pub static EXAMPLE_NAMESPACE_START: &'static [u8] = &[0, 1, 16, 0, 24, 0, 0, 0, 17, 0, 0, 0, 255,
                                                       255, 255, 255, 6, 0, 0, 0, 7, 0, 0, 0];
+pub static EXAMPLE_NAMESPACE_END: &'static [u8] = &[1, 1, 16, 0, 24, 0, 0, 0, 29, 0, 0, 0, 255,
+                                                    255, 255, 255, 6, 0, 0, 0, 7, 0, 0, 0];
