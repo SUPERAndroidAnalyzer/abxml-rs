@@ -2,7 +2,6 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::Package;
 use encoding::codec::utf_16;
 use encoding::codec::utf_16::Little;
 
@@ -75,25 +74,5 @@ impl<'a> PackageWrapper<'a> {
         }
 
         initial_position + i
-    }
-}
-
-pub struct PackageRef<'a> {
-    wrapper: PackageWrapper<'a>,
-}
-
-impl<'a> PackageRef<'a> {
-    pub fn new(wrapper: PackageWrapper<'a>) -> Self {
-        PackageRef { wrapper: wrapper }
-    }
-}
-
-impl<'a> Package for PackageRef<'a> {
-    fn get_id(&self) -> Result<u32> {
-        self.wrapper.get_id()
-    }
-
-    fn get_name(&self) -> Result<String> {
-        self.wrapper.get_name()
     }
 }

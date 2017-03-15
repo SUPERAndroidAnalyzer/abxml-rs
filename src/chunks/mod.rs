@@ -14,7 +14,6 @@ pub use self::string_table::StringTableWrapper;
 pub use self::string_table::StringTable;
 pub use self::chunk_header::ChunkHeader;
 pub use self::package::PackageWrapper;
-pub use self::package::PackageRef;
 pub use self::table_type_spec::TypeSpecWrapper;
 pub use self::table_type_spec::TypeSpec;
 pub use self::table_type::TableTypeWrapper;
