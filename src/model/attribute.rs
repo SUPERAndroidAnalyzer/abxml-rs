@@ -219,26 +219,7 @@ mod tests {
     use visitor::Origin;
     use std::rc::Rc;
     use model::TypeSpec;
-
-    struct FakeStringTable;
-    impl StringTable for FakeStringTable {
-        fn get_strings_len(&self) -> u32 {
-            0
-        }
-
-        fn get_styles_len(&self) -> u32 {
-            0
-        }
-
-        fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-            match idx {
-                456 => Ok(Rc::new("left".to_string())),
-                789 => Ok(Rc::new("right".to_string())),
-                123 => Ok(Rc::new("center".to_string())),
-                _ => Err("Get string".into()),
-            }
-        }
-    }
+    use test::FakeStringTable;
 
     struct FakeLibrary {
         entries: Entries,
@@ -452,7 +433,7 @@ mod tests {
     #[test]
     fn it_resolves_flags_if_in_resources() {
         let string_table = FakeStringTable;
-        let value = Value::new(0x01, 1 as u32, &string_table).unwrap();
+        let value = Value::new(0x01, 11 as u32, &string_table).unwrap();
         let a = Attribute::new(Rc::new("attribute".to_string()), value, None, None, 0);
         let resources = FakeResources::fake();
 
