@@ -19,7 +19,7 @@ pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
     current_spec: Option<TypeSpec<'a>>,
-    tables: HashMap<Origin, StringTable<'a>>,
+    tables: HashMap<Origin, StringTableWrapper<'a>>,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -33,7 +33,7 @@ impl<'a> ModelVisitor<'a> {
 }
 
 impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
-    fn visit_string_table(&mut self, string_table: StringTable<'a>, origin: Origin) {
+    fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, origin: Origin) {
         match origin {
             Origin::Global => {
                 self.tables.insert(origin, string_table);
@@ -179,9 +179,9 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
 pub struct Library<'a> {
     package: PackageWrapper<'a>,
     specs: Vec<TypeSpec<'a>>,
-    string_table: Option<StringTable<'a>>,
-    spec_string_table: Option<StringTable<'a>>,
-    entries_string_table: Option<StringTable<'a>>,
+    string_table: Option<StringTableWrapper<'a>>,
+    spec_string_table: Option<StringTableWrapper<'a>>,
+    entries_string_table: Option<StringTableWrapper<'a>>,
     entries: Entries,
 }
 
@@ -272,7 +272,7 @@ impl<'a> LibraryTrait for Library<'a> {
 }
 
 impl<'a> LibraryBuilder<'a> for Library<'a> {
-    type StringTable = StringTable<'a>;
+    type StringTable = StringTableWrapper<'a>;
     type TypeSpec = TypeSpec<'a>;
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
