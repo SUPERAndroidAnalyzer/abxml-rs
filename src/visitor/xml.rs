@@ -123,7 +123,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         self.container.end_element()
     }
 
-    fn visit_resource(&mut self, resource: Resource<'a>) {
+    fn visit_resource(&mut self, resource: ResourceWrapper<'a>) {
         if let Ok(res) = resource.get_resources() {
             self.res = res;
         }

@@ -21,7 +21,6 @@ pub use self::table_type::TableType;
 pub use self::table_type::ConfigurationWrapper;
 
 pub use self::resource::ResourceWrapper;
-pub use self::resource::Resource;
 pub use self::xml::XmlNamespaceStart;
 pub use self::xml::XmlNamespaceStartWrapper;
 pub use self::xml::XmlNamespaceEnd;
