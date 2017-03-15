@@ -1,6 +1,5 @@
 use chunks::*;
 use model::StringTable as StringTableTrait;
-use model::Package;
 use model::TypeSpec as TypeSpecTrait;
 use model::TableType as TableTypeTrait;
 
@@ -18,7 +17,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
                  string_table.get_strings_len());
     }
 
-    fn visit_package(&mut self, package: PackageRef) {
+    fn visit_package(&mut self, package: PackageWrapper) {
         println!("Package!");
         println!("\tId: {}", package.get_id().unwrap());
         println!("\tName: {}", package.get_name().unwrap());
