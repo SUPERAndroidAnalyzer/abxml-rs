@@ -10,7 +10,7 @@ use super::Origin;
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
-    fn visit_string_table(&mut self, string_table: StringTable, origin: Origin) {
+    fn visit_string_table(&mut self, string_table: StringTableWrapper, origin: Origin) {
         println!("String Table!");
         println!("\tLength ({:?}): {} ",
                  origin,
