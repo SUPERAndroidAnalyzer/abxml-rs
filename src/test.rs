@@ -1,6 +1,9 @@
 use chunks::*;
 use visitor::ChunkVisitor;
 use visitor::Origin;
+use std::rc::Rc;
+use errors::*;
+use model;
 
 pub struct CounterChunkVisitor {
     count: u32,
@@ -70,4 +73,29 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
     }
 
     assert!(is_equal);
+}
+
+pub struct FakeStringTable;
+impl model::StringTable for FakeStringTable {
+    fn get_strings_len(&self) -> u32 {
+        5
+    }
+
+    fn get_styles_len(&self) -> u32 {
+        0
+    }
+
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+        match idx {
+            0 => Ok(Rc::new("Zero".to_string())),
+            11 => Ok(Rc::new("Ones".to_string())),
+            22 => Ok(Rc::new("Twos".to_string())),
+            33 => Ok(Rc::new("Threes".to_string())),
+            44 => Ok(Rc::new("Fours".to_string())),
+            123 => Ok(Rc::new("center".to_string())),
+            456 => Ok(Rc::new("left".to_string())),
+            789 => Ok(Rc::new("right".to_string())),
+            _ => Err("Index out of bounds".into()),
+        }
+    }
 }
