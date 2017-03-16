@@ -69,7 +69,6 @@ mod tests {
     use test::compare_chunks;
     use raw_chunks;
     use chunks::*;
-    use model::TypeSpec as TypeSpecTrait;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
