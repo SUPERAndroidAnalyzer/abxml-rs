@@ -23,7 +23,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
         println!("\tName: {}", package.get_name().unwrap());
     }
 
-    fn visit_table_type(&mut self, table_type: TableType) {
+    fn visit_table_type(&mut self, table_type: TableTypeWrapper) {
         println!("Table type!");
         println!("\tId: {}", table_type.get_id().unwrap());
     }

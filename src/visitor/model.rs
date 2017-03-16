@@ -82,7 +82,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         }
     }
 
-    fn visit_table_type(&mut self, table_type: TableType<'a>) {
+    fn visit_table_type(&mut self, table_type: TableTypeWrapper<'a>) {
         let mut entries = Entries::new();
 
         if let Some(ref ts) = self.current_spec {
