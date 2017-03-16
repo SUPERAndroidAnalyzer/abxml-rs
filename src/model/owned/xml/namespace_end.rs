@@ -74,7 +74,6 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
-        let fake_string_table = FakeStringTable;
         let namespace_end = XmlNamespaceEndBuf::new(99, 1001, 2203);
 
         assert_eq!(99, namespace_end.get_line().unwrap());
