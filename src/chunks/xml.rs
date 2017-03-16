@@ -5,9 +5,9 @@ use std::rc::Rc;
 use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
-use model::StringTable as StringTableTrait;
+use model::StringTable;
 use model::owned::{XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf};
-use model::TagEnd as TagEndTrait;
+use model::TagEnd;
 use model::NamespaceStart;
 use model::NamespaceEnd;
 
@@ -89,14 +89,14 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
 }
 
 impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
-    fn get_prefix<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_namespace_index()?;
         let string = string_table.get_string(index)?;
 
@@ -156,14 +156,14 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_prefix<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_namespace_index()?;
         let string = string_table.get_string(index)?;
 
@@ -448,7 +448,7 @@ impl<'a> XmlTagEndWrapper<'a> {
     }
 }
 
-impl<'a> TagEndTrait for XmlTagEndWrapper<'a> {
+impl<'a> TagEnd for XmlTagEndWrapper<'a> {
     fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(5 * 4));

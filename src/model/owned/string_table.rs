@@ -2,7 +2,7 @@ use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
 use errors::*;
 use chunks::*;
-use model::StringTable as StringTableTrait;
+use model::StringTable;
 use std::rc::Rc;
 use encoding::codec::{utf_16, utf_8};
 use encoding::Encoding as EncodingTrait;
@@ -133,7 +133,7 @@ impl OwnedBuf for StringTableBuf {
     }
 }
 
-impl StringTableTrait for StringTableBuf {
+impl StringTable for StringTableBuf {
     fn get_strings_len(&self) -> u32 {
         self.strings.len() as u32
     }

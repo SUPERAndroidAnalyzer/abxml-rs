@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::TableType as TableTypeTrait;
+use model::TableType;
 use model::owned::TableTypeBuf;
 use model::owned::{Entry, SimpleEntry, ComplexEntry, EntryHeader};
 
@@ -151,7 +151,7 @@ impl<'a> TableTypeWrapper<'a> {
     }
 }
 
-impl<'a> TableTypeTrait for TableTypeWrapper<'a> {
+impl<'a> TableType for TableTypeWrapper<'a> {
     type Configuration = ConfigurationWrapper<'a>;
 
     fn get_id(&self) -> Result<u8> {

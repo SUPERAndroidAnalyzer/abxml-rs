@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::TypeSpec as TypeSpecTrait;
+use model::TypeSpec;
 use model::owned::TableTypeSpecBuf;
 
 pub struct TableTypeSpecDecoder;
@@ -40,7 +40,7 @@ impl<'a> TypeSpecWrapper<'a> {
     }
 }
 
-impl<'a> TypeSpecTrait for TypeSpecWrapper<'a> {
+impl<'a> TypeSpec for TypeSpecWrapper<'a> {
     fn get_id(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));
