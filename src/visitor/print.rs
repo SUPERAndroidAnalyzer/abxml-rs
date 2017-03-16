@@ -28,7 +28,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
         println!("\tId: {}", table_type.get_id().unwrap());
     }
 
-    fn visit_type_spec(&mut self, type_spec: TypeSpec) {
+    fn visit_type_spec(&mut self, type_spec: TypeSpecWrapper) {
         println!("Type spec!");
         println!("\tId: {}", type_spec.get_id().unwrap());
     }
