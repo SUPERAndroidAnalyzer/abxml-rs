@@ -49,34 +49,6 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(owned)
     }
 
-    pub fn get_id(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
-    pub fn get_amount(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
-    pub fn get_configuration(&self) -> Result<ConfigurationWrapper<'a>> {
-        let ini = self.header.absolute(20) as usize;
-        let end = self.header.get_data_offset() as usize;
-
-        if ini > end || (end - ini) <= 28 {
-            return Err("Configuration slice is not valid".into());
-        }
-
-        let slice = &self.raw_data[ini..end];
-        let wrapper = ConfigurationWrapper::new(slice);
-
-        Ok(wrapper)
-    }
-
     pub fn get_entries(&self) -> Result<Vec<Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.get_data_offset());
@@ -177,40 +149,38 @@ impl<'a> TableTypeWrapper<'a> {
 
         Ok(Some(entry))
     }
-
-    fn get_entry(&self, index: u32) -> Result<Entry> {
-        let entries = self.get_entries()?;
-        entries.get(index as usize).cloned().ok_or_else(|| "Entry not found".into())
-    }
 }
 
-pub struct TableType<'a> {
-    wrapper: TableTypeWrapper<'a>,
-}
-
-impl<'a> TableType<'a> {
-    pub fn new(wrapper: TableTypeWrapper<'a>) -> Self {
-        TableType { wrapper: wrapper }
-    }
-
-    pub fn get_entries(&self) -> Result<Vec<Entry>> {
-        self.wrapper.get_entries()
-    }
-}
-
-impl<'a> TableTypeTrait for TableType<'a> {
+impl<'a> TableTypeTrait for TableTypeWrapper<'a> {
     type Configuration = ConfigurationWrapper<'a>;
 
     fn get_id(&self) -> Result<u8> {
-        Ok((self.wrapper.get_id()? & 0xF) as u8)
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+        let out_value = cursor.read_u32::<LittleEndian>()? & 0xF;
+
+        Ok(out_value as u8)
     }
 
     fn get_amount(&self) -> Result<u32> {
-        self.wrapper.get_amount()
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(12));
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     fn get_configuration(&self) -> Result<Self::Configuration> {
-        self.wrapper.get_configuration()
+        let ini = self.header.absolute(20) as usize;
+        let end = self.header.get_data_offset() as usize;
+
+        if ini > end || (end - ini) <= 28 {
+            return Err("Configuration slice is not valid".into());
+        }
+
+        let slice = &self.raw_data[ini..end];
+        let wrapper = ConfigurationWrapper::new(slice);
+
+        Ok(wrapper)
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {

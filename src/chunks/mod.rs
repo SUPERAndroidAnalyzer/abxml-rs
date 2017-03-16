@@ -15,7 +15,6 @@ pub use self::chunk_header::ChunkHeader;
 pub use self::package::PackageWrapper;
 pub use self::table_type_spec::TypeSpecWrapper;
 pub use self::table_type::TableTypeWrapper;
-pub use self::table_type::TableType;
 pub use self::table_type::ConfigurationWrapper;
 
 pub use self::resource::ResourceWrapper;
