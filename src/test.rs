@@ -32,7 +32,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_type_spec(&mut self, _type_spec: TypeSpecWrapper<'a>) {
         self.count += 1
     }
-    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {
+    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStartWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {

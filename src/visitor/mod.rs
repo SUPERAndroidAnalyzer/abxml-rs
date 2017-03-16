@@ -17,7 +17,7 @@ pub trait ChunkVisitor<'a> {
     fn visit_package(&mut self, _package: PackageWrapper<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableTypeWrapper<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpecWrapper<'a>) {}
-    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
+    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStartWrapper<'a>) {}
     fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {}
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
     fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
@@ -96,8 +96,7 @@ impl Executor {
                     visitor.visit_type_spec(tsw);
                 }
                 Chunk::XmlNamespaceStart(xnsw) => {
-                    let ts = XmlNamespaceStart::new(xnsw);
-                    visitor.visit_xml_namespace_start(ts);
+                    visitor.visit_xml_namespace_start(xnsw);
                 }
                 Chunk::XmlNamespaceEnd(xnsw) => {
                     let ts = XmlNamespaceEnd::new(xnsw);

@@ -65,13 +65,6 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         }
     }
 
-    pub fn get_line(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
     pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(16));
@@ -111,25 +104,10 @@ impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
     }
 
     fn get_line(&self) -> Result<u32> {
-        self.get_line()
-    }
-}
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
 
-pub struct XmlNamespaceStart<'a> {
-    wrapper: XmlNamespaceStartWrapper<'a>,
-}
-
-impl<'a> XmlNamespaceStart<'a> {
-    pub fn new(wrapper: XmlNamespaceStartWrapper<'a>) -> Self {
-        XmlNamespaceStart { wrapper: wrapper }
-    }
-
-    pub fn get_prefix(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
-        self.wrapper.get_prefix(string_table)
-    }
-
-    pub fn get_namespace(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
-        self.wrapper.get_namespace(string_table)
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 }
 
