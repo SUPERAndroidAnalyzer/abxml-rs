@@ -171,17 +171,6 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
     }
 }
 
-#[allow(dead_code)]
-pub struct XmlNamespaceEnd<'a> {
-    wrapper: XmlNamespaceEndWrapper<'a>,
-}
-
-impl<'a> XmlNamespaceEnd<'a> {
-    pub fn new(wrapper: XmlNamespaceEndWrapper<'a>) -> Self {
-        XmlNamespaceEnd { wrapper: wrapper }
-    }
-}
-
 pub struct XmlTagStartWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
