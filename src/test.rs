@@ -29,7 +29,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {
         self.count += 1
     }
-    fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {
+    fn visit_type_spec(&mut self, _type_spec: TypeSpecWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {

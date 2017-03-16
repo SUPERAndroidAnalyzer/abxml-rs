@@ -18,7 +18,7 @@ use super::Origin;
 pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
-    current_spec: Option<TypeSpec<'a>>,
+    current_spec: Option<TypeSpecWrapper<'a>>,
     tables: HashMap<Origin, StringTableWrapper<'a>>,
 }
 
@@ -113,7 +113,7 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
                                                             });
     }
 
-    fn visit_type_spec(&mut self, type_spec: TypeSpec<'a>) {
+    fn visit_type_spec(&mut self, type_spec: TypeSpecWrapper<'a>) {
         self.current_spec = Some(type_spec.clone());
         let package_id = (self.package_mask >> 24) as u8;
         match self.resources.get_mut_package(package_id) {
@@ -178,7 +178,7 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
 
 pub struct Library<'a> {
     package: PackageWrapper<'a>,
-    specs: Vec<TypeSpec<'a>>,
+    specs: Vec<TypeSpecWrapper<'a>>,
     string_table: Option<StringTableWrapper<'a>>,
     spec_string_table: Option<StringTableWrapper<'a>>,
     entries_string_table: Option<StringTableWrapper<'a>>,
@@ -273,7 +273,7 @@ impl<'a> LibraryTrait for Library<'a> {
 
 impl<'a> LibraryBuilder<'a> for Library<'a> {
     type StringTable = StringTableWrapper<'a>;
-    type TypeSpec = TypeSpec<'a>;
+    type TypeSpec = TypeSpecWrapper<'a>;
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {
         match origin {
