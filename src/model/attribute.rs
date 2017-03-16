@@ -2,7 +2,7 @@ use std::rc::Rc;
 use model::Value;
 use model::Identifier;
 use errors::*;
-use model::Resources as ResourcesTrait;
+use model::Resources;
 use model::Library;
 
 #[derive(Debug)]
@@ -50,11 +50,11 @@ impl Attribute {
         self.name_index
     }
 
-    pub fn resolve_flags<'a, R: ResourcesTrait<'a>>(&self,
-                                                    flags: u32,
-                                                    xml_resources: &[u32],
-                                                    resources: &R)
-                                                    -> Option<String> {
+    pub fn resolve_flags<'a, R: Resources<'a>>(&self,
+                                               flags: u32,
+                                               xml_resources: &[u32],
+                                               resources: &R)
+                                               -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
         let name_index = self.get_name_index();
@@ -67,11 +67,11 @@ impl Attribute {
         }
     }
 
-    pub fn resolve_reference<'a, R: ResourcesTrait<'a>>(&self,
-                                                        id: u32,
-                                                        resources: &R,
-                                                        prefix: &str)
-                                                        -> Result<String> {
+    pub fn resolve_reference<'a, R: Resources<'a>>(&self,
+                                                   id: u32,
+                                                   resources: &R,
+                                                   prefix: &str)
+                                                   -> Result<String> {
         let res_id = id;
         let package_id = id.get_package();
 
@@ -94,12 +94,12 @@ impl Attribute {
         Err("Error resolving reference".into())
     }
 
-    fn search_values<'a, R: ResourcesTrait<'a>>(&self,
-                                                flags: u32,
-                                                name_index: u32,
-                                                xml_resources: &[u32],
-                                                resources: &R)
-                                                -> Option<String> {
+    fn search_values<'a, R: Resources<'a>>(&self,
+                                           flags: u32,
+                                           name_index: u32,
+                                           xml_resources: &[u32],
+                                           resources: &R)
+                                           -> Option<String> {
         let entry_ref = match xml_resources.get(name_index as usize) {
             Some(entry_ref) => entry_ref,
             None => return None,

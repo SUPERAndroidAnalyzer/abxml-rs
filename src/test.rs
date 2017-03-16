@@ -26,22 +26,22 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_package(&mut self, _package: PackageWrapper<'a>) {
         self.count += 1
     }
-    fn visit_table_type(&mut self, _table_type: TableType<'a>) {
+    fn visit_table_type(&mut self, _table_type: TableTypeWrapper<'a>) {
         self.count += 1
     }
-    fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {
+    fn visit_type_spec(&mut self, _type_spec: TypeSpecWrapper<'a>) {
         self.count += 1
     }
-    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {
+    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStartWrapper<'a>) {
         self.count += 1
     }
-    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {
+    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEndWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {
         self.count += 1
     }
-    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {
+    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEndWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {

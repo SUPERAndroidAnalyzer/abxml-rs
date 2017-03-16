@@ -2,7 +2,7 @@ use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
-use model::TypeSpec as TypeSpecTrait;
+use model::TypeSpec;
 use model::owned::TableTypeSpecBuf;
 
 pub struct TableTypeSpecDecoder;
@@ -28,34 +28,6 @@ impl<'a> TypeSpecWrapper<'a> {
         }
     }
 
-    pub fn get_id(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
-    pub fn get_amount(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
-    pub fn get_flag(&self, index: u32) -> Result<u32> {
-        let amount = self.get_amount()?;
-
-        if index >= amount {
-            return Err(format!("Invalid flag on index {} out of {}", index, amount).into());
-        }
-
-        let mut cursor = Cursor::new(self.raw_data);
-        let flag_offset = 16 + (index * 4) as u64;
-        cursor.set_position(self.header.absolute(flag_offset));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
     pub fn to_owned(self) -> Result<TableTypeSpecBuf> {
         let mut owned = TableTypeSpecBuf::new(self.get_id()? as u16);
         let amount = self.get_amount()?;
@@ -68,28 +40,34 @@ impl<'a> TypeSpecWrapper<'a> {
     }
 }
 
-#[derive(Clone)]
-pub struct TypeSpec<'a> {
-    wrapper: TypeSpecWrapper<'a>,
-}
-
-impl<'a> TypeSpec<'a> {
-    pub fn new(wrapper: TypeSpecWrapper<'a>) -> Self {
-        TypeSpec { wrapper: wrapper }
-    }
-}
-
-impl<'a> TypeSpecTrait for TypeSpec<'a> {
+impl<'a> TypeSpec for TypeSpecWrapper<'a> {
     fn get_id(&self) -> Result<u16> {
-        Ok((self.wrapper.get_id()? & 0xFF) as u16)
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+        let out_value = cursor.read_u32::<LittleEndian>()? & 0xFF;
+
+        Ok(out_value as u16)
     }
 
     fn get_amount(&self) -> Result<u32> {
-        self.wrapper.get_amount()
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(12));
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     fn get_flag(&self, index: u32) -> Result<u32> {
-        self.wrapper.get_flag(index)
+        let amount = self.get_amount()?;
+
+        if index >= amount {
+            return Err(format!("Invalid flag on index {} out of {}", index, amount).into());
+        }
+
+        let mut cursor = Cursor::new(self.raw_data);
+        let flag_offset = 16 + (index * 4) as u64;
+        cursor.set_position(self.header.absolute(flag_offset));
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 }
 

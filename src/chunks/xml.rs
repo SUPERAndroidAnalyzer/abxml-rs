@@ -5,9 +5,9 @@ use std::rc::Rc;
 use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
-use model::StringTable as StringTableTrait;
+use model::StringTable;
 use model::owned::{XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf};
-use model::TagEnd as TagEndTrait;
+use model::TagEnd;
 use model::NamespaceStart;
 use model::NamespaceEnd;
 
@@ -65,13 +65,6 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         }
     }
 
-    pub fn get_line(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
-
-        Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-
     pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(16));
@@ -96,14 +89,14 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
 }
 
 impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
-    fn get_prefix<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_namespace_index()?;
         let string = string_table.get_string(index)?;
 
@@ -111,25 +104,10 @@ impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
     }
 
     fn get_line(&self) -> Result<u32> {
-        self.get_line()
-    }
-}
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
 
-pub struct XmlNamespaceStart<'a> {
-    wrapper: XmlNamespaceStartWrapper<'a>,
-}
-
-impl<'a> XmlNamespaceStart<'a> {
-    pub fn new(wrapper: XmlNamespaceStartWrapper<'a>) -> Self {
-        XmlNamespaceStart { wrapper: wrapper }
-    }
-
-    pub fn get_prefix(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
-        self.wrapper.get_prefix(string_table)
-    }
-
-    pub fn get_namespace(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
-        self.wrapper.get_namespace(string_table)
+        Ok(cursor.read_u32::<LittleEndian>()?)
     }
 }
 
@@ -178,29 +156,18 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_prefix<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTableTrait>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let index = self.get_namespace_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
-    }
-}
-
-#[allow(dead_code)]
-pub struct XmlNamespaceEnd<'a> {
-    wrapper: XmlNamespaceEndWrapper<'a>,
-}
-
-impl<'a> XmlNamespaceEnd<'a> {
-    pub fn new(wrapper: XmlNamespaceEndWrapper<'a>) -> Self {
-        XmlNamespaceEnd { wrapper: wrapper }
     }
 }
 
@@ -481,23 +448,12 @@ impl<'a> XmlTagEndWrapper<'a> {
     }
 }
 
-impl<'a> TagEndTrait for XmlTagEndWrapper<'a> {
+impl<'a> TagEnd for XmlTagEndWrapper<'a> {
     fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(5 * 4));
 
         Ok(cursor.read_u32::<LittleEndian>()?)
-    }
-}
-
-#[allow(dead_code)]
-pub struct XmlTagEnd<'a> {
-    wrapper: XmlTagEndWrapper<'a>,
-}
-
-impl<'a> XmlTagEnd<'a> {
-    pub fn new(wrapper: XmlTagEndWrapper<'a>) -> Self {
-        XmlTagEnd { wrapper: wrapper }
     }
 }
 
