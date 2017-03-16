@@ -120,7 +120,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_tag_end(&mut self, _: XmlTagEnd<'a>) {
+    fn visit_xml_tag_end(&mut self, _: XmlTagEndWrapper<'a>) {
         self.container.end_element()
     }
 

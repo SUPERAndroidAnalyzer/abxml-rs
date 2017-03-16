@@ -41,7 +41,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {
         self.count += 1
     }
-    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {
+    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEndWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {
