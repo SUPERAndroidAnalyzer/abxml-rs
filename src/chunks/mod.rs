@@ -11,10 +11,8 @@ mod xml;
 
 pub use self::string_table::StringTableDecoder;
 pub use self::string_table::StringTableWrapper;
-pub use self::string_table::StringTable;
 pub use self::chunk_header::ChunkHeader;
 pub use self::package::PackageWrapper;
-pub use self::package::PackageRef;
 pub use self::table_type_spec::TypeSpecWrapper;
 pub use self::table_type_spec::TypeSpec;
 pub use self::table_type::TableTypeWrapper;
@@ -22,7 +20,6 @@ pub use self::table_type::TableType;
 pub use self::table_type::ConfigurationWrapper;
 
 pub use self::resource::ResourceWrapper;
-pub use self::resource::Resource;
 pub use self::xml::XmlNamespaceStart;
 pub use self::xml::XmlNamespaceStartWrapper;
 pub use self::xml::XmlNamespaceEnd;
