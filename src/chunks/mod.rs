@@ -22,7 +22,6 @@ pub use self::xml::XmlNamespaceStartWrapper;
 pub use self::xml::XmlNamespaceEndWrapper;
 pub use self::xml::XmlTagStart;
 pub use self::xml::XmlTagStartWrapper;
-pub use self::xml::XmlTagEnd;
 pub use self::xml::XmlTagEndWrapper;
 pub use self::xml::XmlText;
 pub use self::xml::XmlTextWrapper;
