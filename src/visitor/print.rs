@@ -1,6 +1,5 @@
 use chunks::*;
 use model::StringTable as StringTableTrait;
-use model::Package;
 use model::TypeSpec as TypeSpecTrait;
 use model::TableType as TableTypeTrait;
 
@@ -11,14 +10,14 @@ use super::Origin;
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {
-    fn visit_string_table(&mut self, string_table: StringTable, origin: Origin) {
+    fn visit_string_table(&mut self, string_table: StringTableWrapper, origin: Origin) {
         println!("String Table!");
         println!("\tLength ({:?}): {} ",
                  origin,
                  string_table.get_strings_len());
     }
 
-    fn visit_package(&mut self, package: PackageRef) {
+    fn visit_package(&mut self, package: PackageWrapper) {
         println!("Package!");
         println!("\tId: {}", package.get_id().unwrap());
         println!("\tName: {}", package.get_name().unwrap());

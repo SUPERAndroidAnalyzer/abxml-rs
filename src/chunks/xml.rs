@@ -124,11 +124,11 @@ impl<'a> XmlNamespaceStart<'a> {
         XmlNamespaceStart { wrapper: wrapper }
     }
 
-    pub fn get_prefix(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    pub fn get_prefix(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
         self.wrapper.get_prefix(string_table)
     }
 
-    pub fn get_namespace(&self, string_table: &mut StringTable) -> Result<Rc<String>> {
+    pub fn get_namespace(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
         self.wrapper.get_namespace(string_table)
     }
 }
@@ -268,7 +268,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
     pub fn get_tag_start(&self,
                          namespaces: &Namespaces,
-                         string_table: &mut StringTable)
+                         string_table: &StringTableWrapper)
                          -> Result<(Vec<Attribute>, Rc<String>)> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(36));
@@ -312,7 +312,7 @@ impl<'a> XmlTagStartWrapper<'a> {
     fn decode_attribute(&self,
                         cursor: &mut Cursor<&[u8]>,
                         namespaces: &Namespaces,
-                        string_table: &mut StringTable)
+                        string_table: &StringTableWrapper)
                         -> Result<Attribute> {
         let attr_ns_idx = cursor.read_u32::<LittleEndian>()?;
         let attr_name_idx = cursor.read_u32::<LittleEndian>()?;
@@ -436,7 +436,7 @@ impl<'a> XmlTagStart<'a> {
 
     pub fn get_tag(&self,
                    namespaces: &Namespaces,
-                   string_table: &mut StringTable)
+                   string_table: &StringTableWrapper)
                    -> Result<(Vec<Attribute>, Rc<String>)> {
         self.wrapper.get_tag_start(namespaces, string_table)
     }
@@ -533,10 +533,8 @@ impl<'a> XmlText<'a> {
         XmlText { wrapper: wrapper }
     }
 
-    pub fn get_text(&self, string_table: &StringTable) -> Result<Rc<String>> {
+    pub fn get_text(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
         let index = self.wrapper.get_text_index()?;
-        // println!("{}", string_table);
-        // println!("TARGET STR: {} {}", index, string_table.get_uncached_string(index)?);
         string_table.get_string(index)
     }
 }

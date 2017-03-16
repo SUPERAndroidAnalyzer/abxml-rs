@@ -8,7 +8,7 @@ use super::ChunkVisitor;
 use super::Origin;
 
 pub struct XmlVisitor<'a> {
-    main_string_table: Option<StringTable<'a>>,
+    main_string_table: Option<StringTableWrapper<'a>>,
     namespaces: Namespaces,
     container: ElementContainer,
     res: Vec<u32>,
@@ -34,7 +34,7 @@ impl<'a> XmlVisitor<'a> {
         self.container.get_root()
     }
 
-    pub fn get_string_table(&self) -> &Option<StringTable> {
+    pub fn get_string_table(&self) -> &Option<StringTableWrapper> {
         &self.main_string_table
     }
 
@@ -73,7 +73,7 @@ impl<'a> XmlVisitor<'a> {
 }
 
 impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
-    fn visit_string_table(&mut self, string_table: StringTable<'a>, _: Origin) {
+    fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, _: Origin) {
         match self.main_string_table {
             Some(_) => {
                 error!("Secondary table!");
@@ -123,7 +123,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         self.container.end_element()
     }
 
-    fn visit_resource(&mut self, resource: Resource<'a>) {
+    fn visit_resource(&mut self, resource: ResourceWrapper<'a>) {
         if let Ok(res) = resource.get_resources() {
             self.res = res;
         }

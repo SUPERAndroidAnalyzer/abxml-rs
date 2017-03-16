@@ -13,8 +13,8 @@ pub use self::xml::XmlVisitor;
 pub use self::model::RefPackage;
 
 pub trait ChunkVisitor<'a> {
-    fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {}
-    fn visit_package(&mut self, _package: PackageRef<'a>) {}
+    fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {}
+    fn visit_package(&mut self, _package: PackageWrapper<'a>) {}
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
     fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
     fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
@@ -22,7 +22,7 @@ pub trait ChunkVisitor<'a> {
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
     fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {}
-    fn visit_resource(&mut self, _resource: Resource<'a>) {}
+    fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {}
 }
 
 pub struct Executor;
@@ -46,13 +46,11 @@ impl Executor {
         for c in stream {
             match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
-                    let st = StringTable::new(stw);
-                    visitor.visit_string_table(st, origin);
+                    visitor.visit_string_table(stw, origin);
                     origin = Origin::next(origin);
                 }
                 Chunk::Package(pw) => {
-                    let package = PackageRef::new(pw);
-                    visitor.visit_package(package);
+                    visitor.visit_package(pw);
                 }
                 Chunk::TableType(ttw) => {
                     let tt = TableType::new(ttw);
@@ -86,12 +84,10 @@ impl Executor {
         for c in stream {
             match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
-                    let st = StringTable::new(stw);
-                    visitor.visit_string_table(st, origin);
+                    visitor.visit_string_table(stw, origin);
                 }
                 Chunk::Package(pw) => {
-                    let package = PackageRef::new(pw);
-                    visitor.visit_package(package);
+                    visitor.visit_package(pw);
                 }
                 Chunk::TableType(ttw) => {
                     origin = Origin::Entries;
@@ -124,8 +120,7 @@ impl Executor {
                     visitor.visit_xml_text(ts);
                 }
                 Chunk::Resource(rw) => {
-                    let ts = Resource::new(rw);
-                    visitor.visit_resource(ts);
+                    visitor.visit_resource(rw);
                 }
                 _ => (),
             }

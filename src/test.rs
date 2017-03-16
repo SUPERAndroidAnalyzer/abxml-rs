@@ -20,10 +20,10 @@ impl CounterChunkVisitor {
 }
 
 impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
-    fn visit_string_table(&mut self, _string_table: StringTable<'a>, _origin: Origin) {
+    fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {
         self.count += 1
     }
-    fn visit_package(&mut self, _package: PackageRef<'a>) {
+    fn visit_package(&mut self, _package: PackageWrapper<'a>) {
         self.count += 1
     }
     fn visit_table_type(&mut self, _table_type: TableType<'a>) {
@@ -47,7 +47,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {
         self.count += 1
     }
-    fn visit_resource(&mut self, _resource: Resource<'a>) {
+    fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {
         self.count += 1
     }
 }
