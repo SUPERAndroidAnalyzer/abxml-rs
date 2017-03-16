@@ -3,6 +3,7 @@ use model::{Element, ElementContainer, Namespaces};
 use encoder::Xml;
 use visitor::model::Resources;
 use errors::*;
+use model::NamespaceStart;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -84,7 +85,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStart<'a>) {
+    fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStartWrapper<'a>) {
         if let Some(ref mut string_table) = self.main_string_table {
             match (namespace_start.get_namespace(string_table),
                    namespace_start.get_prefix(string_table)) {
