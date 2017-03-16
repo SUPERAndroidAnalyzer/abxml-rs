@@ -6,7 +6,7 @@ use errors::*;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
-use model::StringTable as StringTableTrait;
+use model::StringTable;
 use encoding::codec::{utf_16, utf_8};
 use model::owned::{StringTableBuf, Encoding as EncodingType};
 
@@ -176,7 +176,7 @@ impl<'a> Display for StringTableWrapper<'a> {
     }
 }
 
-impl<'a> StringTableTrait for StringTableWrapper<'a> {
+impl<'a> StringTable for StringTableWrapper<'a> {
     fn get_strings_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.header.absolute(8));

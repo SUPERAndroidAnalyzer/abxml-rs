@@ -15,12 +15,12 @@ pub use self::model::RefPackage;
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {}
     fn visit_package(&mut self, _package: PackageWrapper<'a>) {}
-    fn visit_table_type(&mut self, _table_type: TableType<'a>) {}
-    fn visit_type_spec(&mut self, _type_spec: TypeSpec<'a>) {}
-    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStart<'a>) {}
-    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {}
+    fn visit_table_type(&mut self, _table_type: TableTypeWrapper<'a>) {}
+    fn visit_type_spec(&mut self, _type_spec: TypeSpecWrapper<'a>) {}
+    fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStartWrapper<'a>) {}
+    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEndWrapper<'a>) {}
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {}
-    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEnd<'a>) {}
+    fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEndWrapper<'a>) {}
     fn visit_xml_text(&mut self, _text: XmlText<'a>) {}
     fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {}
 }
@@ -53,12 +53,10 @@ impl Executor {
                     visitor.visit_package(pw);
                 }
                 Chunk::TableType(ttw) => {
-                    let tt = TableType::new(ttw);
-                    visitor.visit_table_type(tt);
+                    visitor.visit_table_type(ttw);
                 }
                 Chunk::TableTypeSpec(tsw) => {
-                    let ts = TypeSpec::new(tsw);
-                    visitor.visit_type_spec(ts);
+                    visitor.visit_type_spec(tsw);
                 }
                 _ => {
                     warn!("Not expected chunk on ARSC");
@@ -91,29 +89,24 @@ impl Executor {
                 }
                 Chunk::TableType(ttw) => {
                     origin = Origin::Entries;
-                    let tt = TableType::new(ttw);
-                    visitor.visit_table_type(tt);
+                    visitor.visit_table_type(ttw);
                 }
                 Chunk::TableTypeSpec(tsw) => {
                     origin = Origin::Spec;
-                    let ts = TypeSpec::new(tsw);
-                    visitor.visit_type_spec(ts);
+                    visitor.visit_type_spec(tsw);
                 }
                 Chunk::XmlNamespaceStart(xnsw) => {
-                    let ts = XmlNamespaceStart::new(xnsw);
-                    visitor.visit_xml_namespace_start(ts);
+                    visitor.visit_xml_namespace_start(xnsw);
                 }
                 Chunk::XmlNamespaceEnd(xnsw) => {
-                    let ts = XmlNamespaceEnd::new(xnsw);
-                    visitor.visit_xml_namespace_end(ts);
+                    visitor.visit_xml_namespace_end(xnsw);
                 }
                 Chunk::XmlTagStart(xnsw) => {
                     let ts = XmlTagStart::new(xnsw);
                     visitor.visit_xml_tag_start(ts);
                 }
                 Chunk::XmlTagEnd(xnsw) => {
-                    let ts = XmlTagEnd::new(xnsw);
-                    visitor.visit_xml_tag_end(ts);
+                    visitor.visit_xml_tag_end(xnsw);
                 }
                 Chunk::XmlText(xsnw) => {
                     let ts = XmlText::new(xsnw);
