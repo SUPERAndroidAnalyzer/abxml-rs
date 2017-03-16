@@ -35,7 +35,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
     fn visit_xml_namespace_start(&mut self, _namespace_start: XmlNamespaceStartWrapper<'a>) {
         self.count += 1
     }
-    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEnd<'a>) {
+    fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEndWrapper<'a>) {
         self.count += 1
     }
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStart<'a>) {
