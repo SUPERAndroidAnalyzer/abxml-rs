@@ -458,17 +458,6 @@ impl<'a> TagEndTrait for XmlTagEndWrapper<'a> {
 }
 
 #[allow(dead_code)]
-pub struct XmlTagEnd<'a> {
-    wrapper: XmlTagEndWrapper<'a>,
-}
-
-impl<'a> XmlTagEnd<'a> {
-    pub fn new(wrapper: XmlTagEndWrapper<'a>) -> Self {
-        XmlTagEnd { wrapper: wrapper }
-    }
-}
-
-#[allow(dead_code)]
 pub struct XmlTextWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
