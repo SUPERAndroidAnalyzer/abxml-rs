@@ -14,7 +14,7 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     st.add_string("start_tag".to_string());
 
     xml.push_owned(Box::new(st));
-    xml.push_owned(Box::new(XmlTagStartBuf::new(2, None)));
+    xml.push_owned(Box::new(XmlTagStartBuf::new(2, 0, 0xFFFFFFFF, 0, 0, 0)));
     xml.push_owned(Box::new(XmlTagEndBuf::new(90)));
 
     let xml_content = xml.into_vec().unwrap();

@@ -6,10 +6,9 @@ use errors::*;
 use std::clone::Clone;
 use model::{Identifier, Namespaces, Value, Attribute};
 use model::StringTable;
-use model::owned::{XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf};
-use model::TagEnd;
-use model::NamespaceStart;
-use model::NamespaceEnd;
+use model::owned::{XmlTagStartBuf, XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf,
+                   AttributeBuf};
+use model::{TagStart, TagEnd, NamespaceStart, NamespaceEnd, AttributeTrait};
 
 pub struct XmlDecoder;
 
@@ -176,6 +175,70 @@ pub struct XmlTagStartWrapper<'a> {
     header: ChunkHeader,
 }
 
+impl<'a> TagStart for XmlTagStartWrapper<'a> {
+    type Attribute = AttributeWrapper<'a>;
+
+    fn get_line(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(8));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get line")
+    }
+
+    fn get_field1(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(12));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_namespace_index(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(16));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_element_name_index(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(20));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_field2(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(24));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_attributes_amount(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(28));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_class(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(self.header.absolute(32));
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+    }
+
+    fn get_attribute(&self, index: u32) -> Result<Self::Attribute> {
+        let offset = 36 + (index * (5 * 4)) as u64;
+        let initial_position: usize = self.header.absolute(offset) as usize;
+        let final_position: usize = self.header.absolute(offset + (5 * 4)) as usize;
+        let slice = &self.raw_data[initial_position..final_position];
+
+        let out = AttributeWrapper::new(slice);
+
+        Ok(out)
+    }
+}
+
 impl<'a> XmlTagStartWrapper<'a> {
     pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
         XmlTagStartWrapper {
@@ -184,53 +247,20 @@ impl<'a> XmlTagStartWrapper<'a> {
         }
     }
 
-    pub fn get_line(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+    pub fn to_owned(self) -> Result<XmlTagStartBuf> {
+        let mut tag_start = XmlTagStartBuf::new(self.get_line()?,
+                                                self.get_field1()?,
+                                                self.get_namespace_index()?,
+                                                self.get_element_name_index()?,
+                                                self.get_field2()?,
+                                                self.get_class()?);
 
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get line")
-    }
+        for i in 0..self.get_attributes_amount()? {
+            let attr = self.get_attribute(i).chain_err(|| "Could not get attribute")?;
+            tag_start.add_attribute(attr.to_owned()?);
+        }
 
-    pub fn get_field1(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
-    }
-
-    pub fn get_ns_uri(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
-    }
-
-    pub fn get_element_name_index(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(20));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
-    }
-
-    pub fn get_field2(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(24));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
-    }
-
-    pub fn get_attributes_amount(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(28));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
-    }
-
-    pub fn get_class(&self) -> Result<u32> {
-        let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(32));
-
-        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
+        Ok(tag_start)
     }
 
     pub fn get_tag_start(&self,
@@ -254,26 +284,6 @@ impl<'a> XmlTagStartWrapper<'a> {
         }
 
         Ok((attributes, element_name))
-    }
-
-    pub fn get_attribute_values(&self, index: usize) -> Result<Attributes> {
-        let mut values = Vec::new();
-
-        let mut cursor = Cursor::new(self.raw_data);
-        let initial_position = 36 + (index * (5 * 4));
-        cursor.set_position(self.header.absolute(initial_position as u64));
-
-        for i in 0..5 {
-            if i == 3 {
-                values.push(cursor.read_u32::<LittleEndian>()?.get_package() as u32);
-            } else {
-                values.push(cursor.read_u32::<LittleEndian>()?);
-            }
-        }
-
-        let out = Attributes::new(values);
-
-        Ok(out)
     }
 
     fn decode_attribute(&self,
@@ -314,52 +324,64 @@ impl<'a> XmlTagStartWrapper<'a> {
     }
 }
 
-pub struct Attributes {
-    values: Vec<u32>,
+pub struct AttributeWrapper<'a> {
+    slice: &'a [u8],
 }
 
-impl Attributes {
-    pub fn new(values: Vec<u32>) -> Self {
-        Attributes { values: values }
+impl<'a> AttributeTrait for AttributeWrapper<'a> {
+    fn get_namespace(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(0);
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get namespace")
     }
 
-    pub fn get_namespace(&self) -> Result<u32> {
-        self.values
-            .get(0)
-            .cloned()
-            .ok_or_else(|| "Error reading namespace".into())
+    fn get_name(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(4);
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get name")
     }
 
-    pub fn get_name(&self) -> Result<u32> {
-        self.values
-            .get(1)
-            .cloned()
-            .ok_or_else(|| "Error reading name".into())
+    fn get_class(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(8);
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get class")
     }
 
-    pub fn get_class(&self) -> Result<()> {
-        Err("unimplemented".into())
+    fn get_resource_value(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(12);
+
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get resource value")
     }
 
-    pub fn get_attr_id(&self) -> Result<()> {
-        Err("unimplemented".into())
-    }
+    fn get_data(&self) -> Result<u32> {
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(16);
 
-    pub fn get_resource_value(&self) -> Result<u8> {
-        self.values
-            .get(3)
-            .map(|v| *v as u8)
-            .ok_or_else(|| "Error reading value".into())
-    }
-
-    pub fn get_data(&self) -> Result<u32> {
-        self.values
-            .get(4)
-            .cloned()
-            .ok_or_else(|| "Error reading data".into())
+        cursor.read_u32::<LittleEndian>().chain_err(|| "Could not get data")
     }
 }
 
+impl<'a> AttributeWrapper<'a> {
+    pub fn new(slice: &'a [u8]) -> Self {
+        AttributeWrapper { slice: slice }
+    }
+
+    pub fn to_owned(self) -> Result<AttributeBuf> {
+        let attr = AttributeBuf::new(self.get_namespace()?,
+                                     self.get_name()?,
+                                     self.get_class()?,
+                                     self.get_resource_value()?,
+                                     self.get_data()?);
+
+        Ok(attr)
+    }
+}
+
+/*
 pub struct XmlTagStart<'a> {
     wrapper: XmlTagStartWrapper<'a>,
 }
@@ -428,6 +450,7 @@ impl<'a> XmlTagStart<'a> {
         id
     }
 }
+*/
 
 #[allow(dead_code)]
 pub struct XmlTagEndWrapper<'a> {

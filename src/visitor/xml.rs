@@ -99,8 +99,8 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
         }
     }
 
-    fn visit_xml_tag_start(&mut self, tag_start: XmlTagStart<'a>) {
-        match self.main_string_table {
+    fn visit_xml_tag_start(&mut self, tag_start: XmlTagStartWrapper<'a>) {
+        /*match self.main_string_table {
             Some(ref mut string_table) => {
                 match tag_start.get_tag(&self.namespaces, string_table) {
                     Ok((attributes, element_name)) => {
@@ -117,7 +117,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
             None => {
                 error!("No main string table found!");
             }
-        }
+        }*/
     }
 
     fn visit_xml_tag_end(&mut self, _: XmlTagEndWrapper<'a>) {
