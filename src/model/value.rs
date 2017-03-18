@@ -31,7 +31,7 @@ pub enum Value {
     Color2(String),
     ReferenceId(u32),
     AttributeReferenceId(u32),
-    Unknown,
+    Unknown(u8, u32),
 }
 
 impl Value {
@@ -120,7 +120,7 @@ impl Value {
                 let formatted_color = format!("#{:08x}", data);
                 Value::Color2(formatted_color)
             }
-            _ => Value::Unknown,
+            _ => Value::Unknown(value_type, data),
 
         };
 

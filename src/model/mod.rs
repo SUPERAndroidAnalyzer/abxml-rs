@@ -14,7 +14,7 @@ pub use self::value::Value;
 
 use visitor::Origin;
 
-pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
+pub type Namespaces = BTreeMap<String, String>;
 pub type Entries = HashMap<u32, Entry>;
 
 pub trait Identifier {
@@ -110,12 +110,17 @@ pub trait AttributeTrait {
     fn get_data(&self) -> Result<u32>;
 
     fn get_value(&self) -> Result<Value> {
-        let data_type = (self.get_resource_value()? & 0xF) as u8;
-        println!("Data type: {}", data_type);
+        let data_type = ((self.get_resource_value()? >> 24) & 0xFF) as u8;
         let data_value = self.get_data()?;
-        println!("Data value: {}", data_value);
+        let class = self.get_class()?;
 
-        Ok(Value::new(data_type, data_value)?)
+        let value = if class == 0xFFFFFFFF {
+            Value::new(data_type, data_value)?
+        } else {
+            Value::StringReference(class)
+        };
+
+        Ok(value)
     }
 }
 
