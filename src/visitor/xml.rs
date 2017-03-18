@@ -96,10 +96,8 @@ impl<'a> XmlVisitor<'a> {
                         tag_start: &XmlTagStartWrapper)
                         -> Result<(String, HashMap<String, String>)> {
         let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
-        println!("Name index: {}", name_index);
         let rc_string = string_table.get_string(name_index)
             .chain_err(|| "Element name is not on the string table")?;
-        println!("Rc string: {}", rc_string);
         let string = (*rc_string).clone();
 
         let mut attributes = HashMap::new();
@@ -107,17 +105,51 @@ impl<'a> XmlVisitor<'a> {
             .chain_err(|| "Could not get the amount of attributes")?;
 
         for i in 0..num_attributes {
+            let mut final_name = String::new();
             let current_attribute = tag_start.get_attribute(i)
                 .chain_err(|| format!("Could not read attribute {} ", i))?;
+
+            let namespace_index = current_attribute.get_namespace()?;
+            if namespace_index != 0xFFFFFFFF {
+                let namespace = (*string_table.get_string(namespace_index)?).clone();
+                let prefix = self.namespaces
+                    .get(&namespace)
+                    .ok_or("Namespace not found")?;
+                final_name.push_str(prefix);
+                final_name.push(':');
+            }
+
             let name_index = current_attribute.get_name()?;
             let name = string_table.get_string(name_index)?;
+            final_name.push_str((*name).as_str());
 
-            let value = match current_attribute.get_value()? {
+            let current_value = current_attribute.get_value()?;
+            let value = match current_value {
                 Value::StringReference(index) => (*string_table.get_string(index)?).clone(),
-                _ => "".to_string(),
+                Value::ReferenceId(ref id) => {
+                    self.resolve_reference(*id, "@").chain_err(|| "Could not resolve reference")?
+                }
+                Value::AttributeReferenceId(ref id) => {
+                    self.resolve_reference(*id, "?")
+                        .chain_err(|| "Could not resolve attribute reference")?
+                }
+                Value::Integer(ref value) |
+                Value::Flags(ref value) => {
+                    let flag_resolution = self.resolve_flags(&current_attribute,
+                                                             *value as u32,
+                                                             &self.res,
+                                                             self.resources);
+
+                    if flag_resolution.is_none() {
+                        current_attribute.get_value()?.to_string()
+                    } else {
+                        flag_resolution.unwrap()
+                    }
+                }
+                _ => current_value.to_string(),
             };
 
-            attributes.insert((*name).clone(), value);
+            attributes.insert(final_name, value);
         }
 
         Ok((string, attributes))
@@ -141,11 +173,7 @@ impl<'a> XmlVisitor<'a> {
         }
     }
 
-    fn resolve_reference<R: ResourceTrait<'a>>(&self,
-                                               id: u32,
-                                               resources: &R,
-                                               prefix: &str)
-                                               -> Result<String> {
+    fn resolve_reference(&self, id: u32, prefix: &str) -> Result<String> {
         let res_id = id;
         let package_id = id.get_package();
 
@@ -153,8 +181,9 @@ impl<'a> XmlVisitor<'a> {
             return Ok("@null".to_string());
         }
 
-        let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id)
+        let is_main = self.resources.is_main_package(package_id);
+        let package = self.resources
+            .get_package(package_id)
             .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
         let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
@@ -300,7 +329,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
             match (namespace_start.get_namespace(string_table),
                    namespace_start.get_prefix(string_table)) {
                 (Ok(namespace), Ok(prefix)) => {
-                    self.namespaces.insert(namespace, prefix);
+                    self.namespaces.insert((*namespace).clone(), (*prefix).clone());
                 }
                 _ => {
                     error!("Error reading namespace from the string table");
@@ -315,10 +344,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
             Ok(element) => {
                 self.container.start_element(element);
             }
-            Err(e) => {
-                println!("Error: {}", e);
-                error!("Could not build a XML element")
-            }
+            Err(e) => error!("Could not build a XML element"),
         }
     }
 

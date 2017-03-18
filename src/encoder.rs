@@ -48,7 +48,6 @@ impl Xml {
         }
 
         for (k, v) in element.get_attributes() {
-            println!("Key: {}, Value: {}", k, v);
             elem.push_attribute(k, v);
             /*let rc_name = a.get_name();
             let prefix = a.get_prefix();
@@ -95,16 +94,16 @@ impl Xml {
         let xmlns = Rc::new(String::from("xmlns"));
 
         for (namespace, prefix) in namespaces {
-            let label = Self::attribute_name(prefix.clone(), Some(xmlns.clone()));
+            let label = Self::attribute_name((*prefix).clone(), Some(xmlns.clone()));
 
-            output.push((label, namespace.deref().clone()));
+            output.push((label, (*namespace).clone()));
         }
 
         output
     }
 
-    pub fn attribute_name(label: Rc<String>, prefix: Option<Rc<String>>) -> String {
-        let name = label.deref();
+    pub fn attribute_name(label: String, prefix: Option<Rc<String>>) -> String {
+        let name = label;
 
         prefix.and_then(|rc_prefix| {
                 let p = rc_prefix.deref();
@@ -112,7 +111,7 @@ impl Xml {
                 let mut s = String::new();
                 s.push_str(p);
                 s.push_str(":");
-                s.push_str(name);
+                s.push_str(&name);
 
                 Some(s)
             })
