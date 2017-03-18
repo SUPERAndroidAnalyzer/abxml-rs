@@ -49,31 +49,6 @@ impl Xml {
 
         for (k, v) in element.get_attributes() {
             elem.push_attribute(k, v);
-            /*let rc_name = a.get_name();
-            let prefix = a.get_prefix();
-            let final_name = Self::attribute_name(rc_name, prefix);
-
-
-            let val = match *a.get_value() {
-                Value::ReferenceId(ref id) => a.resolve_reference(*id, resources, "@").ok(),
-                Value::AttributeReferenceId(ref id) => {
-                    a.resolve_reference(*id, resources, "?").ok()
-                }
-                Value::Integer(ref value) |
-                Value::Flags(ref value) => {
-                    // let flag_resolution =
-                    //       Self::resolve_flags(*value as u32, a, xml_resources, resources);
-                    let flag_resolution = a.resolve_flags(*value as u32, xml_resources, resources);
-
-                    if flag_resolution.is_none() {
-                        Some(a.get_value().to_string())
-                    } else {
-                        flag_resolution
-                    }
-                }
-                _ => None,
-            };*/
-            // elem.push_attribute(final_name, &val.unwrap_or_else(|| a.get_value_as_str()));
         }
 
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
