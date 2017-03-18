@@ -26,6 +26,10 @@ rust:
   - stable
   - 1.15.1
 
+matrix:
+  allow_failures:
+    - rust: nightly
+
 before_script:
   - |
       cargo install cargo-travis || true  &&
