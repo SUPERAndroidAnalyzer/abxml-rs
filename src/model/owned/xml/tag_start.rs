@@ -3,7 +3,6 @@ use model::TagStart;
 use byteorder::{LittleEndian, WriteBytesExt};
 use chunks::*;
 use errors::*;
-use model::attribute::Attribute;
 use model::owned::AttributeBuf;
 use std::rc::Rc;
 use model::AttributeTrait;

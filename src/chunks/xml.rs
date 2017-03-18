@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use errors::*;
 use std::clone::Clone;
-use model::{Identifier, Namespaces, Value, Attribute};
+use model::{Identifier, Namespaces, Value};
 use model::StringTable;
 use model::owned::{XmlTagStartBuf, XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf,
                    AttributeBuf};
@@ -263,6 +263,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         Ok(tag_start)
     }
 
+    /*
     pub fn get_tag_start(&self,
                          namespaces: &Namespaces,
                          string_table: &StringTableWrapper)
@@ -322,6 +323,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         Ok(Attribute::new(element_name, value, namespace, prefix, attr_name_idx))
     }
+    */
 }
 
 pub struct AttributeWrapper<'a> {

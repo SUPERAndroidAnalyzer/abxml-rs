@@ -5,14 +5,12 @@ use errors::*;
 
 mod element;
 mod value;
-mod attribute;
 pub mod owned;
 pub mod builder;
 
 pub use self::element::Element;
 pub use self::element::ElementContainer;
 pub use self::value::Value;
-pub use self::attribute::Attribute;
 
 use visitor::Origin;
 
@@ -110,6 +108,15 @@ pub trait AttributeTrait {
     fn get_class(&self) -> Result<u32>;
     fn get_resource_value(&self) -> Result<u32>;
     fn get_data(&self) -> Result<u32>;
+
+    fn get_value(&self) -> Result<Value> {
+        let data_type = (self.get_resource_value()? & 0xF) as u8;
+        println!("Data type: {}", data_type);
+        let data_value = self.get_data()?;
+        println!("Data value: {}", data_value);
+
+        Ok(Value::new(data_type, data_value)?)
+    }
 }
 
 pub trait TagEnd {
