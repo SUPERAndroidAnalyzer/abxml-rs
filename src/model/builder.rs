@@ -136,20 +136,17 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_resources_xml_file_content_with_some_chunks() {
-        /*
-        let mut xml = Xml::new();
+        let mut xml = Xml::default();
 
-        xml.push_owned(Box::new(StringTableBuf::new()));
-        xml.push_owned(Box::new(StringTableBuf::new()));
-        xml.push_owned(Box::new(ResourceBuf::new()));
+        xml.push_owned(Box::new(StringTableBuf::default()));
+        xml.push_owned(Box::new(StringTableBuf::default()));
+        xml.push_owned(Box::new(ResourcesBuf::default()));
 
-        let content = xml.to_vec().unwrap();
+        let content = xml.into_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
-        Executor::arsc(Cursor::new(&content), &mut visitor);
+        Executor::xml(Cursor::new(&content), &mut visitor);
 
-        // Resource should be ignored as it is not a chunk that appears on an ARSC
-        assert_eq!(1, visitor.get_count());
-        */
+        assert_eq!(3, visitor.get_count());
     }
 }
