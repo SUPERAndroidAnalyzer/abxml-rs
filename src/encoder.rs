@@ -47,8 +47,10 @@ impl Xml {
             elem.extend_attributes(xmlns);
         }
 
-        for a in element.get_attributes().iter() {
-            let rc_name = a.get_name();
+        for (k, v) in element.get_attributes() {
+            println!("Key: {}, Value: {}", k, v);
+            elem.push_attribute(k, v);
+            /*let rc_name = a.get_name();
             let prefix = a.get_prefix();
             let final_name = Self::attribute_name(rc_name, prefix);
 
@@ -71,9 +73,8 @@ impl Xml {
                     }
                 }
                 _ => None,
-            };
-
-            elem.push_attribute(final_name, &val.unwrap_or_else(|| a.get_value_as_str()));
+            };*/
+            // elem.push_attribute(final_name, &val.unwrap_or_else(|| a.get_value_as_str()));
         }
 
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
