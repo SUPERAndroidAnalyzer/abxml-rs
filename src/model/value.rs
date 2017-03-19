@@ -12,8 +12,10 @@ const TOKEN_TYPE_DYN_ATTRIBUTE: u8 = 0x08;
 const TOKEN_TYPE_INTEGER: u8 = 0x10;
 const TOKEN_TYPE_FLAGS: u8 = 0x11;
 const TOKEN_TYPE_BOOLEAN: u8 = 0x12;
-const TOKEN_TYPE_COLOR: u8 = 0x1C; // ARGB8
-const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
+const TOKEN_TYPE_ARGB8: u8 = 0x1C;
+const TOKEN_TYPE_RGB8: u8 = 0x1D;
+const TOKEN_TYPE_ARGB4: u8 = 0x1E;
+const TOKEN_TYPE_RGB4: u8 = 0x1F;
 
 #[derive(Debug)]
 pub enum Value {
@@ -24,8 +26,10 @@ pub enum Value {
     Integer(u64),
     Flags(u64),
     Boolean(bool),
-    Color(String),
-    Color2(String),
+    ColorARGB8(String),
+    ColorRGB8(String),
+    ColorARGB4(String),
+    ColorRGB4(String),
     ReferenceId(u32),
     AttributeReferenceId(u32),
     Unknown(u8, u32),
@@ -37,8 +41,10 @@ impl Value {
             Value::StringReference(i) => format!("@string/{}", i),
             Value::Dimension(ref s) |
             Value::Fraction(ref s) |
-            Value::Color(ref s) |
-            Value::Color2(ref s) => s.clone(),
+            Value::ColorARGB8(ref s) |
+            Value::ColorRGB8(ref s) |
+            Value::ColorARGB4(ref s) |
+            Value::ColorRGB4(ref s) => s.clone(),
             Value::Float(f) => format!("{:.*}", 1, f),
             Value::Integer(i) |
             Value::Flags(i) => i.to_string(),
@@ -109,13 +115,21 @@ impl Value {
                     Value::Boolean(false)
                 }
             }
-            TOKEN_TYPE_COLOR => {
+            TOKEN_TYPE_ARGB8 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::Color(formatted_color)
+                Value::ColorARGB8(formatted_color)
             }
-            TOKEN_TYPE_COLOR2 => {
+            TOKEN_TYPE_RGB8 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::Color2(formatted_color)
+                Value::ColorRGB8(formatted_color)
+            }
+            TOKEN_TYPE_ARGB4 => {
+                let formatted_color = format!("#{:08x}", data);
+                Value::ColorARGB4(formatted_color)
+            }
+            TOKEN_TYPE_RGB4 => {
+                let formatted_color = format!("#{:08x}", data);
+                Value::ColorRGB4(formatted_color)
             }
             _ => Value::Unknown(value_type, data),
 
@@ -279,7 +293,7 @@ mod tests {
     fn it_can_generate_a_color_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_COLOR, data);
+        let value = Value::new(TOKEN_TYPE_ARGB8, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -288,7 +302,25 @@ mod tests {
     fn it_can_generate_a_color2_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_COLOR2, data);
+        let value = Value::new(TOKEN_TYPE_RGB8, data);
+
+        assert_eq!("#01ab23fe", value.unwrap().to_string());
+    }
+
+    #[test]
+    fn it_can_generate_an_argb4_color_value() {
+        let data = 0x01AB23FE;
+
+        let value = Value::new(TOKEN_TYPE_ARGB4, data);
+
+        assert_eq!("#01ab23fe", value.unwrap().to_string());
+    }
+
+    #[test]
+    fn it_can_generate_a_rgb4_color_value() {
+        let data = 0x01AB23FE;
+
+        let value = Value::new(TOKEN_TYPE_RGB4, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
