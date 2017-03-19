@@ -145,7 +145,7 @@ mod tests {
         let content = xml.into_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
-        Executor::xml(Cursor::new(&content), &mut visitor);
+        let _ = Executor::xml(Cursor::new(&content), &mut visitor);
 
         assert_eq!(3, visitor.get_count());
     }

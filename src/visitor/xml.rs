@@ -369,12 +369,10 @@ impl AttributeHelper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::Value;
     use model::{StringTable, Resources, Library, LibraryBuilder};
     use model::Entries;
     use model::owned::{Entry, SimpleEntry, ComplexEntry, AttributeBuf};
     use visitor::Origin;
-    use std::rc::Rc;
     use model::TypeSpec;
     use test::FakeStringTable;
 
