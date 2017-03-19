@@ -5,18 +5,16 @@ use errors::*;
 
 mod element;
 mod value;
-mod attribute;
 pub mod owned;
 pub mod builder;
 
 pub use self::element::Element;
 pub use self::element::ElementContainer;
 pub use self::value::Value;
-pub use self::attribute::Attribute;
 
 use visitor::Origin;
 
-pub type Namespaces = BTreeMap<Rc<String>, Rc<String>>;
+pub type Namespaces = BTreeMap<String, String>;
 pub type Entries = HashMap<u32, Entry>;
 
 pub trait Identifier {
@@ -92,7 +90,38 @@ pub trait Resources<'a> {
 }
 
 pub trait TagStart {
-    fn get_tag_start(&self) -> Result<(Vec<Attribute>, Rc<String>)>;
+    type Attribute: AttributeTrait;
+
+    fn get_line(&self) -> Result<u32>;
+    fn get_field1(&self) -> Result<u32>;
+    fn get_namespace_index(&self) -> Result<u32>;
+    fn get_element_name_index(&self) -> Result<u32>;
+    fn get_field2(&self) -> Result<u32>;
+    fn get_attributes_amount(&self) -> Result<u32>;
+    fn get_class(&self) -> Result<u32>;
+    fn get_attribute(&self, index: u32) -> Result<Self::Attribute>;
+}
+
+pub trait AttributeTrait {
+    fn get_namespace(&self) -> Result<u32>;
+    fn get_name(&self) -> Result<u32>;
+    fn get_class(&self) -> Result<u32>;
+    fn get_resource_value(&self) -> Result<u32>;
+    fn get_data(&self) -> Result<u32>;
+
+    fn get_value(&self) -> Result<Value> {
+        let data_type = ((self.get_resource_value()? >> 24) & 0xFF) as u8;
+        let data_value = self.get_data()?;
+        let class = self.get_class()?;
+
+        let value = if class == 0xFFFFFFFF {
+            Value::new(data_type, data_value)?
+        } else {
+            Value::StringReference(class)
+        };
+
+        Ok(value)
+    }
 }
 
 pub trait TagEnd {

@@ -3,31 +3,81 @@ use model::TagStart;
 use byteorder::{LittleEndian, WriteBytesExt};
 use chunks::*;
 use errors::*;
-use model::attribute::Attribute;
-use std::rc::Rc;
+use model::owned::AttributeBuf;
+use model::AttributeTrait;
 
 pub struct XmlTagStartBuf {
     /// Attributes of the tag
-    attributes: Vec<Attribute>,
+    attributes: Vec<AttributeBuf>,
     /// Index of the string on the main string table
     name: u32,
     /// Optional index of the namespace
-    namespace: Option<u32>,
+    namespace: u32,
+    line: u32,
+    field1: u32,
+    field2: u32,
+    class: u32,
 }
 
 impl XmlTagStartBuf {
-    pub fn new(name_index: u32, namespace: Option<u32>) -> Self {
+    pub fn new(line: u32,
+               field1: u32,
+               namespace: u32,
+               name_index: u32,
+               field2: u32,
+               class: u32)
+               -> Self {
         XmlTagStartBuf {
             attributes: Vec::new(),
             name: name_index,
             namespace: namespace,
+            line: line,
+            field1: field1,
+            field2: field2,
+            class: class,
         }
+    }
+
+    pub fn add_attribute(&mut self, attribute: AttributeBuf) {
+        self.attributes.push(attribute);
     }
 }
 
 impl TagStart for XmlTagStartBuf {
-    fn get_tag_start(&self) -> Result<(Vec<Attribute>, Rc<String>)> {
-        Err("Unimplemented!".into())
+    type Attribute = AttributeBuf;
+
+    fn get_line(&self) -> Result<u32> {
+        Ok(self.line)
+    }
+
+    fn get_field1(&self) -> Result<u32> {
+        Ok(self.field1)
+    }
+
+    fn get_namespace_index(&self) -> Result<u32> {
+        Ok(self.namespace)
+    }
+
+    fn get_element_name_index(&self) -> Result<u32> {
+        Ok(self.name)
+    }
+
+    fn get_field2(&self) -> Result<u32> {
+        Ok(self.field2)
+    }
+
+    fn get_attributes_amount(&self) -> Result<u32> {
+        Ok(self.attributes.len() as u32)
+    }
+
+    fn get_class(&self) -> Result<u32> {
+        Ok(self.class)
+    }
+
+    fn get_attribute(&self, index: u32) -> Result<Self::Attribute> {
+        let attr = self.attributes.get(index as usize).unwrap();
+
+        Ok(attr.clone())
     }
 }
 
@@ -39,31 +89,28 @@ impl OwnedBuf for XmlTagStartBuf {
     fn get_body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
-        // Line
-        out.write_u32::<LittleEndian>(0)?;
-
-        // Field1
-        out.write_u32::<LittleEndian>(0)?;
-
-        // Namespace
-        out.write_u32::<LittleEndian>(self.namespace.unwrap_or(0))?;
-
-        // Element name
+        out.write_u32::<LittleEndian>(self.namespace)?;
         out.write_u32::<LittleEndian>(self.name)?;
-
-        // Field2
-        out.write_u32::<LittleEndian>(0)?;
-
-        // Num attributes
+        out.write_u32::<LittleEndian>(self.field2)?;
         out.write_u32::<LittleEndian>(self.attributes.len() as u32)?;
+        out.write_u32::<LittleEndian>(self.class)?;
 
-        // Get class
-        out.write_u32::<LittleEndian>(0)?;
+        for a in &self.attributes {
+            out.write_u32::<LittleEndian>(a.get_namespace()?)?;
+            out.write_u32::<LittleEndian>(a.get_name()?)?;
+            out.write_u32::<LittleEndian>(a.get_class()?)?;
+            out.write_u32::<LittleEndian>(a.get_resource_value()?)?;
+            out.write_u32::<LittleEndian>(a.get_data()?)?;
+        }
 
-        // Field2
-        out.write_u32::<LittleEndian>(0)?;
+        Ok(out)
+    }
 
-        // TODO: Start writing attributes
+    fn get_header(&self) -> Result<Vec<u8>> {
+        let mut out = Vec::new();
+
+        out.write_u32::<LittleEndian>(self.line)?;
+        out.write_u32::<LittleEndian>(self.field1)?;
 
         Ok(out)
     }
@@ -72,20 +119,37 @@ impl OwnedBuf for XmlTagStartBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use model::owned::AttributeBuf;
+    use raw_chunks::EXAMPLE_TAG_START;
+    use test::compare_chunks;
+    use chunks::XmlTagStartWrapper;
 
     #[test]
-    fn it_can_generate_an_empty_chunk() {
-        let tag_start = XmlTagStartBuf::new(2, None);
-        let out = tag_start.to_vec().unwrap();
-        let expected = vec![2, 1, 8, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    fn it_can_generate_a_chunk_with_the_given_data() {
+        let attribute1 = AttributeBuf::new(1, 2, 3, 5, 6);
+        let attribute2 = AttributeBuf::new(7, 8, 9, 11, 12);
 
-        assert_eq!(expected, out);
+        let mut tag_start = XmlTagStartBuf::new(10, 22, 0xFFFFFFFF, 7, 5, 3);
+        tag_start.add_attribute(attribute1);
+        tag_start.add_attribute(attribute2);
+
+        assert_eq!(10, tag_start.get_line().unwrap());
+        assert_eq!(22, tag_start.get_field1().unwrap());
+        assert_eq!(7, tag_start.get_element_name_index().unwrap());
+        assert_eq!(5, tag_start.get_field2().unwrap());
+        assert_eq!(3, tag_start.get_class().unwrap());
+        assert_eq!(2, tag_start.get_attributes_amount().unwrap());
     }
 
     #[test]
-    fn it_can_generate_a_chunk_with_the_given_data() {}
+    fn identity() {
+        let raw = EXAMPLE_TAG_START;
+        let chunk_header = ChunkHeader::new(0, 16, EXAMPLE_TAG_START.len() as u32, 0x102);
+        let wrapper = XmlTagStartWrapper::new(raw, chunk_header);
 
-    #[test]
-    fn identity() {}
+        let owned = wrapper.to_owned().unwrap();
+        let new_raw = owned.to_vec().unwrap();
+
+        compare_chunks(&raw, &new_raw);
+    }
 }
