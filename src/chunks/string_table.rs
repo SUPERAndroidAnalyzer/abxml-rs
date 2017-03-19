@@ -9,6 +9,7 @@ use std::fmt::Error as FmtError;
 use model::StringTable;
 use encoding::codec::{utf_16, utf_8};
 use model::owned::{StringTableBuf, Encoding as EncodingType};
+use std::cell::RefCell;
 
 pub struct StringTableDecoder;
 
@@ -200,5 +201,47 @@ impl<'a> StringTable for StringTableWrapper<'a> {
             .and_then(|position| self.parse_string(position as u32))?;
 
         Ok(Rc::new(string))
+    }
+}
+
+pub struct CountingStringTable<S: StringTable> {
+    inner: S,
+    counters: RefCell<Vec<u32>>,
+}
+
+impl<S: StringTable> CountingStringTable<S> {
+    pub fn new(inner: S) -> Self {
+        let str_amount = inner.get_strings_len();
+
+        CountingStringTable {
+            inner: inner,
+            counters: RefCell::new(vec![0; str_amount as usize]),
+        }
+    }
+
+    pub fn display_stats(&self) {
+        let counter_borrow = self.counters.borrow();
+        let mut new_counters: Vec<u32> = counter_borrow.clone();
+        let amount = new_counters.len();
+        new_counters.sort();
+
+        println!("Sorted: {:?}", new_counters);
+    }
+}
+
+impl<S: StringTable> StringTable for CountingStringTable<S> {
+    fn get_strings_len(&self) -> u32 {
+        self.inner.get_strings_len()
+    }
+
+    fn get_styles_len(&self) -> u32 {
+        self.inner.get_styles_len()
+    }
+
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+        let mut count_borrow = self.counters.borrow_mut();
+        count_borrow[idx as usize] += 1;
+
+        self.inner.get_string(idx)
     }
 }
