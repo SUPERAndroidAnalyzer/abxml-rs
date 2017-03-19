@@ -1,95 +1,63 @@
-use quick_xml::{Element, XmlWriter};
-use quick_xml::Event::*;
-use std::io::Cursor;
+use xml::writer::{EventWriter, EmitterConfig, XmlEvent};
+use xml::common::XmlVersion;
 use model::Element as AbxmlElement;
 use std::ops::Deref;
 use std::io::Write;
-use std::rc::Rc;
 use errors::*;
-use visitor::Resources;
 use model::Namespaces;
 
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces,
-                  element: &AbxmlElement,
-                  xml_resources: &[u32],
-                  resources: &Resources)
-                  -> Result<String> {
-        let mut writer = XmlWriter::new(Cursor::new(Vec::new()));
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
+        let target: Vec<u8> = Vec::new();
+        let mut writer = EmitterConfig::new().perform_indent(true).create_writer(target);
 
-        Self::encode_element(&mut writer,
-                             Some(namespaces),
-                             element,
-                             xml_resources,
-                             resources).chain_err(|| "Error decoding an element")?;
+        let version = XmlVersion::Version10;
+        writer.write(XmlEvent::StartDocument {
+                         version: version,
+                         encoding: None,
+                         standalone: Some(false),
+                     })?;
+        Self::encode_element(&mut writer, namespaces, element)
+            .chain_err(|| "Error decoding an element")?;
 
-        let result = writer.into_inner().into_inner();
-        let str_result = String::from_utf8(result).chain_err(|| "Could not encode to UTF-8")?;
-        let output = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}",
-                             str_result);
-
-        Ok(output)
+        let inner = writer.into_inner();
+        String::from_utf8(inner).chain_err(|| "Could not export XML")
     }
 
-    fn encode_element<W: Write>(mut writer: &mut XmlWriter<W>,
-                                namespaces: Option<&Namespaces>,
-                                element: &AbxmlElement,
-                                xml_resources: &[u32],
-                                resources: &Resources)
+    fn encode_element<W: Write>(writer: &mut EventWriter<W>,
+                                namespaces: &Namespaces,
+                                element: &AbxmlElement)
                                 -> Result<()> {
-        let tag = element.get_tag();
-        let mut elem = Element::new(tag.deref());
 
-        if let Some(ns) = namespaces {
-            let xmlns = Self::namespaces_to_attributes(ns);
-            elem.extend_attributes(xmlns);
-        }
+        let tag = element.get_tag();
+        let tag_name = tag.get_name();
+        let prefixes = tag.get_prefixes();
+        let mut xml_element = XmlEvent::start_element(tag_name.deref().as_str());
 
         for (k, v) in element.get_attributes() {
-            elem.push_attribute(k, v);
+            xml_element = xml_element.attr(k.as_str(), v);
         }
 
-        writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
+        for uri in prefixes {
+            let prefix = namespaces.get(&uri.deref().clone());
+            match prefix {
+                Some(p) => {
+                    xml_element = xml_element.ns(p.as_str(), uri.as_str());
+                }
+                _ => (),
+            }
+        }
+
+        writer.write(xml_element)?;
 
         for child in element.get_children() {
-            Self::encode_element(&mut writer, None, child, xml_resources, resources)
-                .chain_err(|| "Error while writing a children")?;
+            Self::encode_element(writer, namespaces, child)?;
         }
 
-        writer.write(End(Element::new(tag.deref())))
-            .chain_err(|| "Error while writing end element")?;
+        writer.write(XmlEvent::end_element())?;
 
         Ok(())
-    }
-
-    pub fn namespaces_to_attributes(namespaces: &Namespaces) -> Vec<(String, String)> {
-        let mut output = Vec::new();
-        let xmlns = Rc::new(String::from("xmlns"));
-
-        for (namespace, prefix) in namespaces {
-            let label = Self::attribute_name((*prefix).clone(), Some(xmlns.clone()));
-
-            output.push((label, (*namespace).clone()));
-        }
-
-        output
-    }
-
-    pub fn attribute_name(label: String, prefix: Option<Rc<String>>) -> String {
-        let name = label;
-
-        prefix.and_then(|rc_prefix| {
-                let p = rc_prefix.deref();
-
-                let mut s = String::new();
-                s.push_str(p);
-                s.push_str(":");
-                s.push_str(&name);
-
-                Some(s)
-            })
-            .unwrap_or_else(|| name.to_owned())
     }
 }
