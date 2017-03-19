@@ -11,6 +11,7 @@ mod xml;
 
 pub use self::string_table::StringTableDecoder;
 pub use self::string_table::StringTableWrapper;
+pub use self::string_table::CountingStringTable;
 pub use self::chunk_header::ChunkHeader;
 pub use self::package::PackageWrapper;
 pub use self::table_type_spec::TypeSpecWrapper;
