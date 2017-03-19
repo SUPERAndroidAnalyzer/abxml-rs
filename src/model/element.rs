@@ -5,16 +5,42 @@ use std::fmt::Error as FmtError;
 use std::iter;
 use std::collections::HashMap;
 
+#[derive(Default, Debug, PartialEq, Eq, Hash)]
+pub struct Tag {
+    name: Rc<String>,
+    prefix: Option<Rc<String>>,
+}
+
+impl Tag {
+    pub fn new(name: Rc<String>, prefix: Option<Rc<String>>) -> Self {
+        Tag {
+            name: name,
+            prefix: prefix,
+        }
+    }
+
+    pub fn get_name(&self) -> Rc<String> {
+        self.name.clone()
+    }
+
+    pub fn get_prefix(&self) -> Option<Rc<String>> {
+        match self.prefix {
+            Some(ref p) => Some(p.clone()),
+            None => None,
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct Element {
-    tag: Rc<String>,
+    tag: Tag,
     attrs: HashMap<String, String>,
     children: Vec<Element>,
     level: u32,
 }
 
 impl Element {
-    pub fn new(tag: Rc<String>, attrs: HashMap<String, String>) -> Self {
+    pub fn new(tag: Tag, attrs: HashMap<String, String>) -> Self {
         Element {
             tag: tag,
             attrs: attrs,
@@ -35,8 +61,8 @@ impl Element {
         &self.attrs
     }
 
-    pub fn get_tag(&self) -> Rc<String> {
-        self.tag.clone()
+    pub fn get_tag(&self) -> &Tag {
+        &self.tag
     }
 
     pub fn get_children(&self) -> &Vec<Element> {
@@ -47,7 +73,7 @@ impl Element {
 impl Display for Element {
     fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
         let tabs = iter::repeat("\t").take(self.level as usize).collect::<String>();
-        write!(formatter, "{}Element: {}\n", tabs, self.tag)?;
+        write!(formatter, "{}Element: {}\n", tabs, self.tag.get_name())?;
 
         for c in &self.children {
             write!(formatter, "{}", c)?;

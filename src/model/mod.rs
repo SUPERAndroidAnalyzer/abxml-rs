@@ -9,6 +9,7 @@ pub mod owned;
 pub mod builder;
 
 pub use self::element::Element;
+pub use self::element::Tag;
 pub use self::element::ElementContainer;
 pub use self::value::Value;
 
