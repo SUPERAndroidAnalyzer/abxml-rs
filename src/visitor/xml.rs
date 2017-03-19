@@ -189,7 +189,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
             Ok(element) => {
                 self.container.start_element(element);
             }
-            Err(e) => error!("Could not build a XML element"),
+            Err(_) => error!("Could not build a XML element"),
         }
     }
 

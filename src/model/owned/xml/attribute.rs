@@ -1,6 +1,3 @@
-use model::owned::OwnedBuf;
-use chunks::TOKEN_XML_TAG_END;
-use byteorder::{LittleEndian, WriteBytesExt};
 use errors::*;
 use model::AttributeTrait;
 

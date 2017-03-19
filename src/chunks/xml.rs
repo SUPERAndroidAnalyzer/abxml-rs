@@ -3,16 +3,12 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use errors::*;
-use std::clone::Clone;
-use model::{Identifier, Namespaces, Value};
 use model::StringTable;
 use model::owned::{XmlTagStartBuf, XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamespaceEndBuf,
                    AttributeBuf};
 use model::{TagStart, TagEnd, NamespaceStart, NamespaceEnd, AttributeTrait};
 
 pub struct XmlDecoder;
-
-const TOKEN_VOID: u32 = 0xFFFFFFFF;
 
 impl XmlDecoder {
     pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>,

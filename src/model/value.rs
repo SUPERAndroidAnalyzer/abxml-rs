@@ -1,8 +1,5 @@
-use std::rc::Rc;
-use model::StringTable;
 use std::mem;
 use errors::*;
-use std::ops::Deref;
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;

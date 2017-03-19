@@ -4,7 +4,6 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use chunks::*;
 use errors::*;
 use model::owned::AttributeBuf;
-use std::rc::Rc;
 use model::AttributeTrait;
 
 pub struct XmlTagStartBuf {

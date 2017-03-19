@@ -7,7 +7,7 @@ use std::io::Write;
 use std::rc::Rc;
 use errors::*;
 use visitor::Resources;
-use model::{Namespaces, Value};
+use model::Namespaces;
 
 pub struct Xml;
 
