@@ -283,10 +283,6 @@ impl<'a> LibraryBuilder<'a> for Library<'a> {
         }
     }
 
-    /*fn add_package(&mut self, package: Self::Library) {
-        self.package = Some(package);
-    }*/
-
     fn add_entries(&mut self, entries: Entries) {
         self.entries.extend(entries);
     }

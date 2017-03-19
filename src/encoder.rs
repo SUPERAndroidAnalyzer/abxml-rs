@@ -7,7 +7,7 @@ use std::io::Write;
 use std::rc::Rc;
 use errors::*;
 use visitor::Resources;
-use model::{Namespaces, Value};
+use model::Namespaces;
 
 pub struct Xml;
 
@@ -47,33 +47,8 @@ impl Xml {
             elem.extend_attributes(xmlns);
         }
 
-        for a in element.get_attributes().iter() {
-            let rc_name = a.get_name();
-            let prefix = a.get_prefix();
-            let final_name = Self::attribute_name(rc_name, prefix);
-
-
-            let val = match *a.get_value() {
-                Value::ReferenceId(ref id) => a.resolve_reference(*id, resources, "@").ok(),
-                Value::AttributeReferenceId(ref id) => {
-                    a.resolve_reference(*id, resources, "?").ok()
-                }
-                Value::Integer(ref value) |
-                Value::Flags(ref value) => {
-                    // let flag_resolution =
-                    //       Self::resolve_flags(*value as u32, a, xml_resources, resources);
-                    let flag_resolution = a.resolve_flags(*value as u32, xml_resources, resources);
-
-                    if flag_resolution.is_none() {
-                        Some(a.get_value().to_string())
-                    } else {
-                        flag_resolution
-                    }
-                }
-                _ => None,
-            };
-
-            elem.push_attribute(final_name, &val.unwrap_or_else(|| a.get_value_as_str()));
+        for (k, v) in element.get_attributes() {
+            elem.push_attribute(k, v);
         }
 
         writer.write(Start(elem)).chain_err(|| "Error while writ ing start element")?;
@@ -94,16 +69,16 @@ impl Xml {
         let xmlns = Rc::new(String::from("xmlns"));
 
         for (namespace, prefix) in namespaces {
-            let label = Self::attribute_name(prefix.clone(), Some(xmlns.clone()));
+            let label = Self::attribute_name((*prefix).clone(), Some(xmlns.clone()));
 
-            output.push((label, namespace.deref().clone()));
+            output.push((label, (*namespace).clone()));
         }
 
         output
     }
 
-    pub fn attribute_name(label: Rc<String>, prefix: Option<Rc<String>>) -> String {
-        let name = label.deref();
+    pub fn attribute_name(label: String, prefix: Option<Rc<String>>) -> String {
+        let name = label;
 
         prefix.and_then(|rc_prefix| {
                 let p = rc_prefix.deref();
@@ -111,7 +86,7 @@ impl Xml {
                 let mut s = String::new();
                 s.push_str(p);
                 s.push_str(":");
-                s.push_str(name);
+                s.push_str(&name);
 
                 Some(s)
             })

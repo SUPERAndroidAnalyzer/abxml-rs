@@ -1,8 +1,5 @@
-use std::rc::Rc;
-use model::StringTable;
 use std::mem;
 use errors::*;
-use std::ops::Deref;
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
@@ -20,7 +17,7 @@ const TOKEN_TYPE_COLOR2: u8 = 0x1D; // RGB8
 
 #[derive(Debug)]
 pub enum Value {
-    String(Rc<String>),
+    StringReference(u32),
     Dimension(String),
     Fraction(String),
     Float(f32),
@@ -31,13 +28,13 @@ pub enum Value {
     Color2(String),
     ReferenceId(u32),
     AttributeReferenceId(u32),
-    Unknown,
+    Unknown(u8, u32),
 }
 
 impl Value {
     pub fn to_string(&self) -> String {
         match *self {
-            Value::String(ref s) => s.deref().clone(),
+            Value::StringReference(i) => format!("@string/{}", i),
             Value::Dimension(ref s) |
             Value::Fraction(ref s) |
             Value::Color(ref s) |
@@ -52,19 +49,13 @@ impl Value {
         }
     }
 
-    pub fn new(value_type: u8, data: u32, str_table: &StringTable) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID |
             TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID |
             TOKEN_TYPE_DYN_ATTRIBUTE => Value::AttributeReferenceId(data),
-            TOKEN_TYPE_STRING => {
-                let string =
-                    str_table.get_string(data)
-                        .chain_err(|| format!("Could not find string {} on string table", data))?;
-
-                Value::String(string.clone())
-            }
+            TOKEN_TYPE_STRING => Value::StringReference(data),
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dip", "sp", "pt", "in", "mm"];
                 let value = Self::complex(data);
@@ -126,7 +117,7 @@ impl Value {
                 let formatted_color = format!("#{:08x}", data);
                 Value::Color2(formatted_color)
             }
-            _ => Value::Unknown,
+            _ => Value::Unknown(value_type, data),
 
         };
 
@@ -155,26 +146,18 @@ impl Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::FakeStringTable;
 
     #[test]
     fn it_can_generate_a_string_value() {
-        let value = Value::new(TOKEN_TYPE_STRING, 33, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_STRING, 33);
 
-        assert_eq!("Threes", value.unwrap().to_string());
-    }
-
-    #[test]
-    fn it_can_not_generate_a_string_value_if_is_out_of_value() {
-        let value = Value::new(TOKEN_TYPE_STRING, 6, &mut FakeStringTable);
-
-        assert_eq!(true, value.is_err());
+        assert_eq!("@string/33", value.unwrap().to_string());
     }
 
     #[test]
     fn it_can_generate_reference_and_dyn_references() {
-        let value = Value::new(TOKEN_TYPE_REFERENCE_ID, 12345, &mut FakeStringTable).unwrap();
-        let value2 = Value::new(TOKEN_TYPE_DYN_REFERENCE, 67890, &mut FakeStringTable).unwrap();
+        let value = Value::new(TOKEN_TYPE_REFERENCE_ID, 12345).unwrap();
+        let value2 = Value::new(TOKEN_TYPE_DYN_REFERENCE, 67890).unwrap();
 
         assert_eq!("@id/0x3039", value.to_string());
         assert_eq!("@id/0x10932", value2.to_string());
@@ -185,7 +168,7 @@ mod tests {
         let dim = 1 << 30; // Positive value 2-complement
         let units = 0x5;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("4194304.0mm", str_value);
@@ -196,7 +179,7 @@ mod tests {
         let dim = 1 << 31; // Negative value 2-complement
         let units = 0x0;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("-8388608.0px", str_value);
@@ -207,7 +190,7 @@ mod tests {
         let dim = 0;
         let units = 0x6;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
 
         // TODO: Assert error string!
         assert!(value.is_err());
@@ -218,7 +201,7 @@ mod tests {
         let dim = 1 << 25; // Positive value 2-complement
         let units = 0x1;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("13107200.0%p", str_value);
@@ -229,7 +212,7 @@ mod tests {
         let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x0;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("-25599.988281%", str_value);
@@ -240,7 +223,7 @@ mod tests {
         let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x2;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
 
         // TODO: Assert error string!
         assert!(value.is_err());
@@ -250,7 +233,7 @@ mod tests {
     fn it_can_generate_integer_values() {
         let int = 12345;
 
-        let value = Value::new(TOKEN_TYPE_INTEGER, int, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_INTEGER, int);
 
         assert_eq!("12345", value.unwrap().to_string());
     }
@@ -259,7 +242,7 @@ mod tests {
     fn it_can_generate_flag_values() {
         let int = 12345;
 
-        let value = Value::new(TOKEN_TYPE_FLAGS, int, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_FLAGS, int);
 
         assert_eq!("12345", value.unwrap().to_string());
     }
@@ -269,7 +252,7 @@ mod tests {
         // TODO: Improve this test with a IEE754 number
         let float = 0;
 
-        let value = Value::new(TOKEN_TYPE_FLOAT, float, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_FLOAT, float);
 
         assert_eq!("0.0", value.unwrap().to_string());
     }
@@ -278,7 +261,7 @@ mod tests {
     fn it_can_generate_a_boolean_true_value() {
         let data = 123;
 
-        let value = Value::new(TOKEN_TYPE_BOOLEAN, data, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_BOOLEAN, data);
 
         assert_eq!("true", value.unwrap().to_string());
     }
@@ -287,7 +270,7 @@ mod tests {
     fn it_can_generate_a_boolean_false_value() {
         let data = 0;
 
-        let value = Value::new(TOKEN_TYPE_BOOLEAN, data, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_BOOLEAN, data);
 
         assert_eq!("false", value.unwrap().to_string());
     }
@@ -296,7 +279,7 @@ mod tests {
     fn it_can_generate_a_color_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_COLOR, data, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_COLOR, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -305,7 +288,7 @@ mod tests {
     fn it_can_generate_a_color2_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_COLOR2, data, &mut FakeStringTable);
+        let value = Value::new(TOKEN_TYPE_COLOR2, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
