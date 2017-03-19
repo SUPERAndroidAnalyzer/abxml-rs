@@ -69,7 +69,7 @@ mod tests {
     use super::*;
     use chunks::XmlNamespaceEndWrapper;
     use chunks::ChunkHeader;
-    use test::{FakeStringTable, compare_chunks};
+    use test::compare_chunks;
     use raw_chunks::EXAMPLE_NAMESPACE_END;
 
     #[test]
