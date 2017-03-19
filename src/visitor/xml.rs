@@ -272,7 +272,7 @@ impl AttributeHelper {
         let str_indexes = Self::get_strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes.iter()
             .map(|si| match package.get_entries_string(*si) {
-                     Ok(str) => str,
+                     Ok(str) => (*str).clone(),
                      Err(_) => {
                 error!("Key not found on the string table");
 
@@ -445,13 +445,13 @@ mod tests {
             self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
         }
 
-        fn get_entries_string(&self, str_id: u32) -> Result<String> {
+        fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
             let st = FakeStringTable;
 
-            Ok((*st.get_string(str_id)?).clone())
+            Ok(st.get_string(str_id)?)
         }
 
-        fn get_spec_string(&self, _: u32) -> Result<String> {
+        fn get_spec_string(&self, _: u32) -> Result<Rc<String>> {
             Err("Sepc string".into())
         }
     }
