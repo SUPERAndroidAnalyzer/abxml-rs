@@ -1,7 +1,7 @@
 #![recursion_limit = "1024"]
 
 extern crate byteorder;
-extern crate quick_xml;
+extern crate xml;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
@@ -29,7 +29,7 @@ pub mod errors {
     error_chain! {
         foreign_links {
             Io(::std::io::Error);
-            Xml(::quick_xml::error::Error);
+            Xml(::xml::writer::Error);
             Utf8(::std::string::FromUtf8Error);
             Zip(::zip::result::ZipError) #[cfg(feature = "zip_decode")];
         }

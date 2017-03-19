@@ -12,6 +12,7 @@ use model::Identifier;
 use model::AttributeTrait;
 use model::StringTable;
 use model::Value;
+use model::Tag;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -22,6 +23,7 @@ pub struct XmlVisitor<'a> {
     container: ElementContainer,
     res: Vec<u32>,
     resources: &'a Resources<'a>,
+    namespace_prefixes: Vec<Rc<String>>,
 }
 
 impl<'a> XmlVisitor<'a> {
@@ -32,6 +34,7 @@ impl<'a> XmlVisitor<'a> {
             container: ElementContainer::default(),
             res: Vec::new(),
             resources: resources,
+            namespace_prefixes: Vec::new(),
         }
     }
 
@@ -62,9 +65,7 @@ impl<'a> XmlVisitor<'a> {
                 match *self.get_string_table() {
                     Some(_) => {
                         return Xml::encode(self.get_namespaces(),
-                                           root,
-                                           self.get_resources(),
-                                           self.arsc())
+                                           root)
                                        .chain_err(|| "Could note encode XML");
                     }
                     None => {
@@ -83,9 +84,9 @@ impl<'a> XmlVisitor<'a> {
     fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element> {
         match self.main_string_table {
             Some(ref string_table) => {
-                let (name, attributes) = self.get_element_data(string_table, tag_start)
+                let (tag, attributes) = self.get_element_data(string_table, tag_start)
                     .chain_err(|| "Could not get element data")?;
-                Ok(Element::new(Rc::new(name), attributes))
+                Ok(Element::new(tag, attributes))
             }
             None => Err("No main string table found!".into()),
         }
@@ -94,11 +95,11 @@ impl<'a> XmlVisitor<'a> {
     fn get_element_data(&self,
                         string_table: &StringTableWrapper,
                         tag_start: &XmlTagStartWrapper)
-                        -> Result<(String, HashMap<String, String>)> {
+                        -> Result<(Tag, HashMap<String, String>)> {
         let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
         let rc_string = string_table.get_string(name_index)
             .chain_err(|| "Element name is not on the string table")?;
-        let string = (*rc_string).clone();
+        let tag = Tag::new(rc_string.clone(), self.namespace_prefixes.clone());
 
         let mut attributes = HashMap::new();
         let num_attributes = tag_start.get_attributes_amount()
@@ -150,10 +151,11 @@ impl<'a> XmlVisitor<'a> {
                 _ => current_value.to_string(),
             };
 
+
             attributes.insert(final_name, value);
         }
 
-        Ok((string, attributes))
+        Ok((tag, attributes))
     }
 }
 
@@ -175,6 +177,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                    namespace_start.get_prefix(string_table)) {
                 (Ok(namespace), Ok(prefix)) => {
                     self.namespaces.insert((*namespace).clone(), (*prefix).clone());
+                    self.namespace_prefixes.push(namespace.clone());
                 }
                 _ => {
                     error!("Error reading namespace from the string table");
@@ -195,6 +198,10 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
 
     fn visit_xml_tag_end(&mut self, _: XmlTagEndWrapper<'a>) {
         self.container.end_element()
+    }
+
+    fn visit_xml_namespace_end(&mut self, _: XmlNamespaceEndWrapper<'a>) {
+        let _ = self.namespace_prefixes.pop();
     }
 
     fn visit_resource(&mut self, resource: ResourceWrapper<'a>) {
