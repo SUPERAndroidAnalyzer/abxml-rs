@@ -17,7 +17,7 @@ use super::ChunkVisitor;
 use super::Origin;
 
 pub struct XmlVisitor<'a> {
-    main_string_table: Option<CountingStringTable<StringTableWrapper<'a>>>,
+    main_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     namespaces: Namespaces,
     container: ElementContainer,
     res: Vec<u32>,
@@ -43,7 +43,7 @@ impl<'a> XmlVisitor<'a> {
         self.container.get_root()
     }
 
-    pub fn get_string_table(&self) -> &Option<CountingStringTable<StringTableWrapper<'a>>> {
+    pub fn get_string_table(&self) -> &Option<StringTableCache<StringTableWrapper<'a>>> {
         &self.main_string_table
     }
 
@@ -92,7 +92,7 @@ impl<'a> XmlVisitor<'a> {
     }
 
     fn get_element_data(&self,
-                        string_table: &CountingStringTable<StringTableWrapper<'a>>,
+                        string_table: &StringTableCache<StringTableWrapper<'a>>,
                         tag_start: &XmlTagStartWrapper)
                         -> Result<(String, HashMap<String, String>)> {
         let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
@@ -164,7 +164,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                 error!("Secondary table!");
             }
             None => {
-                self.main_string_table = Some(CountingStringTable::new(string_table));
+                self.main_string_table = Some(StringTableCache::new(string_table));
             }
         }
     }
