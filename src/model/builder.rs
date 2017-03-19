@@ -24,9 +24,8 @@ impl Arsc {
             inner.extend(encoded_chunk);
         }
 
-        // TODO: Check initial token
         // Token
-        out.write_u16::<LittleEndian>(0)?;
+        out.write_u16::<LittleEndian>(2)?;
 
         // Header_size
         out.write_u16::<LittleEndian>(3 * 4)?;
@@ -66,12 +65,11 @@ impl Xml {
             inner.extend(encoded_chunk);
         }
 
-        // TODO: Check initial token
         // Token
-        out.write_u16::<LittleEndian>(0)?;
+        out.write_u16::<LittleEndian>(3)?;
 
         // Header_size
-        out.write_u16::<LittleEndian>(3 * 4)?;
+        out.write_u16::<LittleEndian>(2 * 4)?;
 
         // Chunk size
         out.write_u32::<LittleEndian>(file_size as u32)?;
@@ -97,7 +95,7 @@ mod tests {
         let content = arsc.to_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
-        assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], content);
+        assert_eq!(vec![2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], content);
 
         Executor::arsc(&content, &mut visitor).unwrap();
 
@@ -127,7 +125,7 @@ mod tests {
         let content = xml.into_vec().unwrap();
         let mut visitor = CounterChunkVisitor::new();
 
-        assert_eq!(vec![0, 0, 12, 0, 0, 0, 0, 0], content);
+        assert_eq!(vec![3, 0, 8, 0, 0, 0, 0, 0], content);
 
         Executor::xml(Cursor::new(&content), &mut visitor).unwrap();
 
