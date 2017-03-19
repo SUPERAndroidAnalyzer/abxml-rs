@@ -20,7 +20,6 @@ pub use self::table_type::ConfigurationWrapper;
 pub use self::resource::ResourceWrapper;
 pub use self::xml::XmlNamespaceStartWrapper;
 pub use self::xml::XmlNamespaceEndWrapper;
-pub use self::xml::XmlTagStart;
 pub use self::xml::XmlTagStartWrapper;
 pub use self::xml::XmlTagEndWrapper;
 pub use self::xml::XmlText;

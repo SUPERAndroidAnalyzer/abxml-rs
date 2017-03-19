@@ -1,20 +1,20 @@
 use std::rc::Rc;
-use model::Attribute;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 use std::fmt::Error as FmtError;
 use std::iter;
+use std::collections::HashMap;
 
 #[derive(Default, Debug)]
 pub struct Element {
     tag: Rc<String>,
-    attrs: Vec<Attribute>,
+    attrs: HashMap<String, String>,
     children: Vec<Element>,
     level: u32,
 }
 
 impl Element {
-    pub fn new(tag: Rc<String>, attrs: Vec<Attribute>) -> Self {
+    pub fn new(tag: Rc<String>, attrs: HashMap<String, String>) -> Self {
         Element {
             tag: tag,
             attrs: attrs,
@@ -31,7 +31,7 @@ impl Element {
         self.level = level;
     }
 
-    pub fn get_attributes(&self) -> &Vec<Attribute> {
+    pub fn get_attributes(&self) -> &HashMap<String, String> {
         &self.attrs
     }
 
