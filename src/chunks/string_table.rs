@@ -10,6 +10,8 @@ use model::StringTable;
 use encoding::codec::{utf_16, utf_8};
 use model::owned::{StringTableBuf, Encoding as EncodingType};
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 
 pub struct StringTableDecoder;
 
@@ -204,32 +206,21 @@ impl<'a> StringTable for StringTableWrapper<'a> {
     }
 }
 
-pub struct CountingStringTable<S: StringTable> {
+pub struct StringTableCache<S: StringTable> {
     inner: S,
-    counters: RefCell<Vec<u32>>,
+    cache: RefCell<HashMap<u32, Rc<String>>>,
 }
 
-impl<S: StringTable> CountingStringTable<S> {
+impl<S: StringTable> StringTableCache<S> {
     pub fn new(inner: S) -> Self {
-        let str_amount = inner.get_strings_len();
-
-        CountingStringTable {
+        StringTableCache {
             inner: inner,
-            counters: RefCell::new(vec![0; str_amount as usize]),
+            cache: RefCell::new(HashMap::new()),
         }
     }
-
-    pub fn display_stats(&self) {
-        let counter_borrow = self.counters.borrow();
-        let mut new_counters: Vec<u32> = counter_borrow.clone();
-        let amount = new_counters.len();
-        new_counters.sort();
-
-        println!("Sorted: {:?}", new_counters);
-    }
 }
 
-impl<S: StringTable> StringTable for CountingStringTable<S> {
+impl<S: StringTable> StringTable for StringTableCache<S> {
     fn get_strings_len(&self) -> u32 {
         self.inner.get_strings_len()
     }
@@ -239,9 +230,19 @@ impl<S: StringTable> StringTable for CountingStringTable<S> {
     }
 
     fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-        let mut count_borrow = self.counters.borrow_mut();
-        count_borrow[idx as usize] += 1;
+        let mut cache = self.cache.borrow_mut();
+        let entry = cache.entry(idx);
 
-        self.inner.get_string(idx)
+        let string_ref = match entry {
+            Vacant(entry) => {
+                let string_ref = self.inner.get_string(idx)?;
+                entry.insert(string_ref.clone());
+
+                Ok(string_ref)
+            }
+            Occupied(entry) => Ok(entry.get().clone()),
+        };
+
+        string_ref
     }
 }
