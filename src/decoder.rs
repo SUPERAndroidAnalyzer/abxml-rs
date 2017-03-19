@@ -80,20 +80,20 @@ mod tests {
     #[test]
     fn it_can_not_decode_an_empty_binary_xml() {
         // Empty resources.arsc file
-        let buffer = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let buffer = vec![2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         let owned = BufferedDecoder::from(buffer);
         let decoder = owned.get_decoder().unwrap();
 
         // Empty binary XML file
-        let another = vec![0, 0, 0, 0, 0, 0, 0, 0];
+        let another = vec![3, 0, 0, 0, 0, 0, 0, 0];
         let xml_result = decoder.xml_visitor(&another).unwrap().into_string();
         assert!(xml_result.is_err());
     }
 
     #[test]
     fn it_can_create_a_buffer_decoder_from_read() {
-        let buffer = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let buffer = vec![2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         let owned = BufferedDecoder::from_read(Cursor::new(buffer)).unwrap();
         let _ = owned.get_decoder().unwrap();
