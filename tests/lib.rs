@@ -29,8 +29,8 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     let xml_visitor = decoder.xml_visitor(&xml_content).unwrap();
     let out = xml_visitor.into_string().unwrap();
 
-    let inner_expected = "<start_tag key=\"value\"></start_tag>";
-    let expected = format!("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n{}",
+    let inner_expected = "<start_tag key=\"value\" />";
+    let expected = format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n{}",
                            inner_expected);
     assert_eq!(expected, out);
 }
