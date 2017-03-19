@@ -99,7 +99,7 @@ impl<'a> XmlVisitor<'a> {
         let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
         let rc_string = string_table.get_string(name_index)
             .chain_err(|| "Element name is not on the string table")?;
-        let tag = Tag::new(rc_string.clone(), self.get_current_namespace_prefix());
+        let tag = Tag::new(rc_string.clone(), self.namespace_prefixes.clone());
 
         let mut attributes = HashMap::new();
         let num_attributes = tag_start.get_attributes_amount()
@@ -156,10 +156,6 @@ impl<'a> XmlVisitor<'a> {
         }
 
         Ok((tag, attributes))
-    }
-
-    fn get_current_namespace_prefix(&self) -> Option<Rc<String>> {
-        self.namespace_prefixes.last().cloned()
     }
 }
 
