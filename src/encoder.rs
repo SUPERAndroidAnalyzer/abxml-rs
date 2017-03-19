@@ -33,22 +33,20 @@ impl Xml {
 
         let tag = element.get_tag();
         let tag_name = tag.get_name();
-        let prefix = tag.get_prefix();
+        let prefixes = tag.get_prefixes();
         let mut xml_element = XmlEvent::start_element(tag_name.deref().as_str());
 
         for (k, v) in element.get_attributes() {
             xml_element = xml_element.attr(k.as_str(), v);
         }
 
-        if prefix.is_some() {
-            let prefix = prefix.unwrap();
-            let uri_result = namespaces.get(prefix.deref());
-
-            if uri_result.is_some() {
-                let uri_result = uri_result.unwrap();
-                let str_prefix = prefix.as_str();
-
-                xml_element = xml_element.ns(uri_result.as_str(), str_prefix);
+        for uri in prefixes {
+            let prefix = namespaces.get(&uri.deref().clone());
+            match prefix {
+                Some(p) => {
+                    xml_element = xml_element.ns(p.as_str(), uri.as_str());
+                }
+                _ => (),
             }
         }
 

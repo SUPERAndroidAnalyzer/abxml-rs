@@ -8,14 +8,14 @@ use std::collections::HashMap;
 #[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct Tag {
     name: Rc<String>,
-    prefix: Option<Rc<String>>,
+    prefixes: Vec<Rc<String>>,
 }
 
 impl Tag {
-    pub fn new(name: Rc<String>, prefix: Option<Rc<String>>) -> Self {
+    pub fn new(name: Rc<String>, prefixes: Vec<Rc<String>>) -> Self {
         Tag {
             name: name,
-            prefix: prefix,
+            prefixes: prefixes,
         }
     }
 
@@ -23,11 +23,8 @@ impl Tag {
         self.name.clone()
     }
 
-    pub fn get_prefix(&self) -> Option<Rc<String>> {
-        match self.prefix {
-            Some(ref p) => Some(p.clone()),
-            None => None,
-        }
+    pub fn get_prefixes(&self) -> &Vec<Rc<String>> {
+        &self.prefixes
     }
 }
 
