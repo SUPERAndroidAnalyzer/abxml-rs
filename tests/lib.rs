@@ -6,7 +6,7 @@ use abxml::model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf, Attribut
 
 #[test]
 fn it_can_generate_a_decoder_from_a_buffer() {
-    let arsc = vec![0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let arsc = vec![2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let mut xml = Xml::default();
     let mut st = StringTableBuf::default();
     st.add_string("Some string".to_string());

@@ -79,7 +79,8 @@ fn run() -> Result<()> {
                 let new_content = xml_content.clone();
 
                 let resources = resources_visitor.get_resources();
-                let out = parse_xml(&new_content, resources).unwrap();
+                let out = parse_xml(&new_content, resources)
+                    .chain_err(|| "Could not decode target file")?;
                 println!("{}", out);
             }
         }

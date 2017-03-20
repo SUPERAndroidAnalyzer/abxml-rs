@@ -30,7 +30,12 @@ pub struct Executor;
 impl Executor {
     pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], mut visitor: &mut V) -> Result<()> {
         let mut cursor = Cursor::new(buffer);
-        let _token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+        let token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+
+        if token != 0x2 {
+            return Err(format!("File does not start with ARSC token: {:X}", token).into());
+        }
+
         let _header_size = cursor.read_u16::<LittleEndian>()
             .chain_err(|| "Error reading header size")?;
         let _chunk_size = cursor.read_u32::<LittleEndian>()
@@ -70,12 +75,17 @@ impl Executor {
     pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>,
                                         mut visitor: &mut V)
                                         -> Result<()> {
-        let _token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
-        let _header_size = cursor.read_u16::<LittleEndian>()
+        let token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+
+        if token != 0x3 {
+            return Err(format!("Document does not start with XML token: {:X}", token).into());
+        }
+
+        let header_size = cursor.read_u16::<LittleEndian>()
             .chain_err(|| "Error reading header size")?;
         let _chunk_size = cursor.read_u32::<LittleEndian>()
             .chain_err(|| "Error reading chunk size")?;
-
+        cursor.set_position(header_size as u64);
         let stream = ChunkLoaderStream::new(cursor);
         let mut origin = Origin::Global;
 
