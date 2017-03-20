@@ -57,12 +57,11 @@ impl Apk {
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
                               file_name == "AndroidManifest.xml" {
 
-                let xml_visitor = decoder.xml_visitor(&contents)
-                    .chain_err(|| "Could not decode the target file")?;
-                let out = xml_visitor.into_string()
-                    .chain_err(|| format!("Could not decode: {}", file_name))?;
+                decoder.xml_visitor(&contents)
+                    .and_then(|visitor| visitor.into_string())
+                    .and_then(|string| Ok(string.into_bytes()))
+                    .unwrap_or(contents)
 
-                out.into_bytes()
             } else {
                 contents
             };
