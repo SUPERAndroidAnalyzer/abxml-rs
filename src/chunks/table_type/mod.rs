@@ -56,12 +56,22 @@ impl<'a> TableTypeWrapper<'a> {
         self.decode_entries(&mut cursor)
     }
 
+    fn get_offset(&self, index: u32) -> Result<u32> {
+        let offset_offset = self.header.absolute(self.header.get_data_offset() +
+                                                 (index * 4) as u64);
+        let mut cursor = Cursor::new(self.raw_data);
+        cursor.set_position(offset_offset);
+
+        Ok(cursor.read_u32::<LittleEndian>()?)
+    }
+
     fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>> {
         let mut offsets = Vec::new();
         let mut entries = Vec::new();
 
         for _ in 0..self.get_amount()? {
-            offsets.push(cursor.read_u32::<LittleEndian>()?);
+            let result = cursor.read_u32::<LittleEndian>()?;
+            offsets.push(result);
         }
 
         for i in 0..self.get_amount()? {
@@ -184,7 +194,28 @@ impl<'a> TableType for TableTypeWrapper<'a> {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        let entries = self.get_entries()?;
-        entries.get(index as usize).cloned().ok_or_else(|| "Entry not found".into())
+        let amount = self.get_amount()?;
+
+        if index > amount {
+            return Err(format!("Requested entry {} out of {}", index, amount).into());
+        }
+
+        let base_offset = self.header.get_data_offset() + (amount as u64 * 4);
+        let offset = self.get_offset(index)?;
+        let id = index & 0xFFFF;
+
+        if offset == 0xFFFFFFFF {
+            Ok(Entry::Empty(id, id))
+        } else {
+            let mut cursor = Cursor::new(self.raw_data);
+            cursor.set_position(self.header.absolute(base_offset + offset as u64));
+
+            let maybe_entry = Self::decode_entry(&mut cursor, id)?;
+            match maybe_entry {
+                Some(e) => Ok(e),
+                None => Err(format!("Could not decode target entry {}", id).into()),
+            }
+
+        }
     }
 }
