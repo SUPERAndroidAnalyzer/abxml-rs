@@ -1,3 +1,5 @@
+//! Structs which contains the read data from binary documents
+
 use visitor::ModelVisitor;
 use std::io::Cursor;
 use visitor::Executor;
