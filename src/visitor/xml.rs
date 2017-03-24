@@ -13,6 +13,8 @@ use model::AttributeTrait;
 use model::StringTable;
 use model::Value;
 use model::Tag;
+use model::owned::SimpleEntry;
+use std::cmp::Ordering;
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -307,30 +309,7 @@ impl AttributeHelper {
 
         let mut sorted = inner_entries.to_vec();
 
-        sorted.sort_by(|a, b| {
-            let id_a = a.get_value();
-            let id_b = b.get_value();
-
-            // TODO: This code is to create an exact match with Apktool.
-            // A simple descending ordering seems to be also ok.
-            let mut i = id_a;
-            i -= (i >> 1) & 0x55555555;
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            i = (i + (i >> 4)) & 0x0f0f0f0f;
-            i += i >> 8;
-            i += i >> 16;
-            i &= 0x3f;
-
-            let mut j = id_b;
-            j -= (j >> 1) & 0x55555555;
-            j = (j & 0x33333333) + ((j >> 2) & 0x33333333);
-            j = (j + (j >> 4)) & 0x0f0f0f0f;
-            j += j >> 8;
-            j += j >> 16;
-            j &= 0x3f;
-
-            j.cmp(&i)
-        });
+        sorted.sort_by(Self::compare_entries);
 
         for ie in sorted {
             let mask = ie.get_value();
@@ -370,6 +349,31 @@ impl AttributeHelper {
         }
 
         strs
+    }
+
+    fn compare_entries(a: &SimpleEntry, b: &SimpleEntry) -> Ordering {
+        let id_a = a.get_value();
+        let id_b = b.get_value();
+
+        // TODO: This code is to create an exact match with Apktool.
+        // A simple descending ordering seems to be also ok.
+        let mut i = id_a;
+        i -= (i >> 1) & 0x55555555;
+        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+        i = (i + (i >> 4)) & 0x0f0f0f0f;
+        i += i >> 8;
+        i += i >> 16;
+        i &= 0x3f;
+
+        let mut j = id_b;
+        j -= (j >> 1) & 0x55555555;
+        j = (j & 0x33333333) + ((j >> 2) & 0x33333333);
+        j = (j + (j >> 4)) & 0x0f0f0f0f;
+        j += j >> 8;
+        j += j >> 16;
+        j &= 0x3f;
+
+        j.cmp(&i)
     }
 }
 
