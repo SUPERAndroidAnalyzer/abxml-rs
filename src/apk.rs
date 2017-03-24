@@ -88,7 +88,6 @@ impl Apk {
             .chain_err(|| "Could not open file to write")?;
 
         descriptor.write_all(content).chain_err(|| "Could not write to target file")?;
-        descriptor.sync_all().chain_err(|| "Could not flush")?;
 
         Ok(())
     }
