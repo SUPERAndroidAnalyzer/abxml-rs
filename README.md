@@ -9,7 +9,23 @@ The code is deeply inspired on Apktool: Without it, this library wouldn't exist.
 
 ## Quick example
 
-TODO
+The easiest way to use the library is using the helper struct `APK` to decompress and decode it to the filesystem. 
+
+```
+extern crate abxml;
+
+use std::path::Path;
+use abxml::apk::Apk;
+
+fn main() {
+    let path = Path::new("path_to.apk");
+    let mut apk = Apk::new(path).unwrap();
+    apk.export(Path::new("/tmp/apk_output/"), false).unwrap();
+}
+
+```
+
+The `Apk::new` will create a handler that will allow to export to the filesystem. At this moment, it will load to memory the APK, decompress it and parse the contained `resources.arsc`. If this process succeeds, using the method `export`, it will start exporting all the contained files. If it finds an Android binary XML, it will convert it to a string version of it; otherwise, it will move it to the filesystem as is. 
 
 ## Testing
 
