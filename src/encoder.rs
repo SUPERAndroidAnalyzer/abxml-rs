@@ -1,3 +1,5 @@
+//! Exports the decoded binary XMLs to string XMLs
+
 use xml::writer::{EventWriter, EmitterConfig, XmlEvent};
 use xml::common::XmlVersion;
 use model::Element as AbxmlElement;

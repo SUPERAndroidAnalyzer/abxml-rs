@@ -1,3 +1,4 @@
+//! Collection of visitors that are fed from chunk iterator
 use std::io::Cursor;
 use chunks::*;
 use byteorder::{LittleEndian, ReadBytesExt};

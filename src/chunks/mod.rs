@@ -1,3 +1,4 @@
+//! Structs to represent chunks and iterate them
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 

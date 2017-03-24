@@ -1,3 +1,5 @@
+//! High level abstraction to easy the extraction to file system of APKs
+
 use zip::read::ZipArchive;
 use std::fs;
 use std;

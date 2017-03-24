@@ -1,3 +1,5 @@
+//! Representations of logical structures found on android binary files
+
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use model::owned::Entry;
