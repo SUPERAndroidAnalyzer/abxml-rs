@@ -6,20 +6,26 @@ use errors::*;
 use model::owned::AttributeBuf;
 use model::AttributeTrait;
 
+/// Representation of a XML Tag start chunk
 pub struct XmlTagStartBuf {
     /// Attributes of the tag
     attributes: Vec<AttributeBuf>,
     /// Index of the string on the main string table
     name: u32,
-    /// Optional index of the namespace
+    /// Index of the namespace
     namespace: u32,
+    /// ¿Line of the xml?
     line: u32,
+    /// Unknown field
     field1: u32,
+    /// Unknown field
     field2: u32,
+    /// ¿Class?
     class: u32,
 }
 
 impl XmlTagStartBuf {
+    /// Creates a new `XmlTagStartBuf` with the given data
     pub fn new(line: u32,
                field1: u32,
                namespace: u32,
@@ -38,6 +44,7 @@ impl XmlTagStartBuf {
         }
     }
 
+    /// Adds a new attribute to the XML tag
     pub fn add_attribute(&mut self, attribute: AttributeBuf) {
         self.attributes.push(attribute);
     }
@@ -75,7 +82,11 @@ impl TagStart for XmlTagStartBuf {
     }
 
     fn get_attribute(&self, index: u32) -> Result<Self::Attribute> {
-        let attr = self.attributes.get(index as usize).unwrap();
+        if index as usize >= self.attributes.len() {
+            return Err("Requested attribute out of bounds".into());
+        }
+
+        let ref attr = self.attributes[index as usize];
 
         Ok(attr.clone())
     }
@@ -139,6 +150,11 @@ mod tests {
         assert_eq!(5, tag_start.get_field2().unwrap());
         assert_eq!(3, tag_start.get_class().unwrap());
         assert_eq!(2, tag_start.get_attributes_amount().unwrap());
+        assert_eq!(0xFFFFFFFF, tag_start.get_namespace_index().unwrap());
+        let first_attribute = tag_start.get_attribute(0).unwrap();
+        assert_eq!(1, first_attribute.get_namespace().unwrap());
+        let third_attribute = tag_start.get_attribute(2);
+        assert!(third_attribute.is_err());
     }
 
     #[test]
