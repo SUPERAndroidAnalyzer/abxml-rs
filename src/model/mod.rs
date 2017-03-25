@@ -92,26 +92,43 @@ pub trait Resources<'a> {
     fn is_main_package(&self, package_id: u8) -> bool;
 }
 
+/// Trait that represents a XML tag start
 pub trait TagStart {
+    /// Type of the attributes
     type Attribute: AttributeTrait;
 
+    /// Return the ¿line in which the tag appear?
     fn get_line(&self) -> Result<u32>;
+    /// Return the content of the unknown field1
     fn get_field1(&self) -> Result<u32>;
+    /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
     fn get_namespace_index(&self) -> Result<u32>;
+    /// Returns the index of the tag name on the string table
     fn get_element_name_index(&self) -> Result<u32>;
+    /// Return the content of the unknown field1
     fn get_field2(&self) -> Result<u32>;
+    /// Return the amount of attributes this tag contains
     fn get_attributes_amount(&self) -> Result<u32>;
+    /// Returns the ¿class?
     fn get_class(&self) -> Result<u32>;
+    /// Returns the attribute on the `index` position or error if it is greater than
+    /// `get_attributes_amount`
     fn get_attribute(&self, index: u32) -> Result<Self::Attribute>;
 }
 
 pub trait AttributeTrait {
+    /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
     fn get_namespace(&self) -> Result<u32>;
+    /// Returns the index of the attribute on the string table
     fn get_name(&self) -> Result<u32>;
+    /// Returns the ¿class?
     fn get_class(&self) -> Result<u32>;
+    /// Returns the data type (see `Values`)
     fn get_resource_value(&self) -> Result<u32>;
+    /// Returns the value (see `Values`)
     fn get_data(&self) -> Result<u32>;
 
+    /// Creates a `Value` depending on the data type and data value
     fn get_value(&self) -> Result<Value> {
         let data_type = ((self.get_resource_value()? >> 24) & 0xFF) as u8;
         let data_value = self.get_data()?;
