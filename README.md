@@ -3,7 +3,7 @@
 
 # ABXML
 
-ABXML is a library that is able to decode APK files in Rust.
+ABXML is a library that is able to decode APK files in Rust. It tries to make easy to work with the binary documents found inside the APK files. It is able to decode the contained `resources.arsc` and also all the binary XML documents contained on the `res/` folder. It also exposes some structures to work at a lower level, in case anyone will be interested.
 
 The code is deeply inspired on Apktool: Without it, this library wouldn't exist.
 
@@ -25,7 +25,37 @@ fn main() {
 
 ```
 
-The `Apk::new` will create a handler that will allow to export to the filesystem. At this moment, it will load to memory the APK, decompress it and parse the contained `resources.arsc`. If this process succeeds, using the method `export`, it will start exporting all the contained files. If it finds an Android binary XML, it will convert it to a string version of it; otherwise, it will move it to the filesystem as is. 
+The `Apk::new` will create a handler that will allow to export to the filesystem. At this moment, it will load to memory the APK, decompress it and parse the contained `resources.arsc`. If this process succeeds, using the method `export`, it will start exporting all the contained files. If it finds an Android binary XML, it will convert it to a string version of it; otherwise, it will move it to the filesystem as is. The second parameter on the `export` function is used to force the removal of the path given on the first argument. In this case, the second invocation of this snippet will fail, as the directory will be non empty.
+
+## Visitors
+
+This library uses the visitor pattern to access to the contents of a binary file. There is a helper struct called `Executor` which is in charge of, given the contents of one binary file, call to the corresponding functions on the given visitor. The next example will print to the output the message for each string table found:
+
+```rust
+extern crate abxml;
+
+use abxml::visitor::Executor;
+use abxml::visitor::ChunkVisitor;
+
+pub struct PrintVisitor;
+
+impl<'a> ChunkVisitor<'a> for PrintVisitor {
+    fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, origin: Origin) {
+        println!("Found string table with origin: {:?}", origin);
+    }
+}
+
+fn main() {
+    let data = [];
+    let mut visitor = PrintVisitor;
+    
+    Executor::xml(&data, &mut visitor);
+}
+```
+
+`Executor` contains two public methods that should be used depending on the type of the input: `arsc` to decode `resources.arsc` and `xml` for binary XMLs. The reason of this split is because the header of the files is distinct (`resources.arsc` has a 12 bytes header, while binary XMLs has 8 bytes).
+
+## Wrapper, Buffers and traits
 
 ## Testing
 
