@@ -26,9 +26,12 @@ pub trait ChunkVisitor<'a> {
     fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {}
 }
 
+/// Methods to decode a binary resource.arsc file or a binary xml file
 pub struct Executor;
 
 impl Executor {
+    /// Given a valid `resources.arsc` file contents, it will call to the proper methods on the
+    /// given visitor.
     pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], mut visitor: &mut V) -> Result<()> {
         let mut cursor = Cursor::new(buffer);
         let token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
@@ -73,6 +76,8 @@ impl Executor {
         Ok(())
     }
 
+    /// Given a valid binary XML file contents, it will call to the proper methods on the
+    /// given visitor.
     pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>,
                                         mut visitor: &mut V)
                                         -> Result<()> {
@@ -88,23 +93,11 @@ impl Executor {
             .chain_err(|| "Error reading chunk size")?;
         cursor.set_position(header_size as u64);
         let stream = ChunkLoaderStream::new(cursor);
-        let mut origin = Origin::Global;
 
         for c in stream {
             match c.chain_err(|| "Error reading next chunk")? {
                 Chunk::StringTable(stw) => {
-                    visitor.visit_string_table(stw, origin);
-                }
-                Chunk::Package(pw) => {
-                    visitor.visit_package(pw);
-                }
-                Chunk::TableType(ttw) => {
-                    origin = Origin::Entries;
-                    visitor.visit_table_type(ttw);
-                }
-                Chunk::TableTypeSpec(tsw) => {
-                    origin = Origin::Spec;
-                    visitor.visit_type_spec(tsw);
+                    visitor.visit_string_table(stw, Origin::Global);
                 }
                 Chunk::XmlNamespaceStart(xnsw) => {
                     visitor.visit_xml_namespace_start(xnsw);
@@ -132,10 +125,6 @@ impl Executor {
         Ok(())
     }
 }
-
-pub struct DummyVisitor;
-
-impl<'a> ChunkVisitor<'a> for DummyVisitor {}
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Origin {
