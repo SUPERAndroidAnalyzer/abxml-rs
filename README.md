@@ -57,7 +57,13 @@ fn main() {
 
 ## Wrapper, Buffers and traits
 
-## Testing
+On the model namespace there are several traits that exposes how the library works with each one of the concepts behind the binary files. Each of the traits are usually implemented by both wrapper and buffers. Why this distinction?
+
+Wrappers gives a read-only view of the represented chunk. This way, the library only allocates data when is accessed. On the other hand, the Buf structs are owned and intended to be used as mutable.
+
+All wrappers have functions to be converted to buffers (`to_owned`) and all buffers have functions to create an encoded view as bytes (through the `OwnedBuf` trait). This means that it's possible to do bidirectional conversions.
+
+## Comparing to Apktool
 
 To prepare the test environment the following tools should be installed on your path:
 
