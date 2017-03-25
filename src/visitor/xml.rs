@@ -20,7 +20,7 @@ use super::ChunkVisitor;
 use super::Origin;
 
 pub struct XmlVisitor<'a> {
-    main_string_table: Option<StringTableWrapper<'a>>,
+    main_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     namespaces: Namespaces,
     container: ElementContainer,
     res: Vec<u32>,
@@ -48,7 +48,7 @@ impl<'a> XmlVisitor<'a> {
         self.container.get_root()
     }
 
-    pub fn get_string_table(&self) -> &Option<StringTableWrapper> {
+    pub fn get_string_table(&self) -> &Option<StringTableCache<StringTableWrapper<'a>>> {
         &self.main_string_table
     }
 
@@ -95,7 +95,7 @@ impl<'a> XmlVisitor<'a> {
     }
 
     fn get_element_data(&self,
-                        string_table: &StringTableWrapper,
+                        string_table: &StringTableCache<StringTableWrapper<'a>>,
                         tag_start: &XmlTagStartWrapper)
                         -> Result<(Tag, HashMap<String, String>)> {
         let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
@@ -168,7 +168,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                 error!("Secondary table!");
             }
             None => {
-                self.main_string_table = Some(string_table);
+                self.main_string_table = Some(StringTableCache::new(string_table));
             }
         }
     }
@@ -281,7 +281,7 @@ impl AttributeHelper {
         let str_indexes = Self::get_strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes.iter()
             .map(|si| match package.get_entries_string(*si) {
-                     Ok(str) => str,
+                     Ok(str) => (*str).clone(),
                      Err(_) => {
                 error!("Key not found on the string table");
 
@@ -456,13 +456,13 @@ mod tests {
             self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
         }
 
-        fn get_entries_string(&self, str_id: u32) -> Result<String> {
+        fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
             let st = FakeStringTable;
 
-            Ok((*st.get_string(str_id)?).clone())
+            Ok(st.get_string(str_id)?)
         }
 
-        fn get_spec_string(&self, _: u32) -> Result<String> {
+        fn get_spec_string(&self, _: u32) -> Result<Rc<String>> {
             Err("Sepc string".into())
         }
     }

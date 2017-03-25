@@ -19,7 +19,7 @@ pub struct ModelVisitor<'a> {
     package_mask: u32,
     resources: Resources<'a>,
     current_spec: Option<TypeSpecWrapper<'a>>,
-    tables: HashMap<Origin, StringTableWrapper<'a>>,
+    tables: HashMap<Origin, StringTableCache<StringTableWrapper<'a>>>,
 }
 
 impl<'a> ModelVisitor<'a> {
@@ -36,14 +36,14 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, origin: Origin) {
         match origin {
             Origin::Global => {
-                self.tables.insert(origin, string_table);
+                self.tables.insert(origin, StringTableCache::new(string_table));
             }
             _ => {
                 let package_id = self.package_mask.get_package();
 
                 let st_res = self.resources.get_mut_package(package_id)
                     .and_then(|package| {
-                         package.set_string_table(string_table, origin);
+                         package.set_string_table(StringTableCache::new(string_table), origin);
                          Some(())
                     });
 
@@ -179,9 +179,9 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
 pub struct Library<'a> {
     package: PackageWrapper<'a>,
     specs: Vec<TypeSpecWrapper<'a>>,
-    string_table: Option<StringTableWrapper<'a>>,
-    spec_string_table: Option<StringTableWrapper<'a>>,
-    entries_string_table: Option<StringTableWrapper<'a>>,
+    string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
+    spec_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
+    entries_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     entries: Entries,
 }
 
@@ -231,7 +231,7 @@ impl<'a> LibraryTrait for Library<'a> {
         let ending = if spec_str == "attr" {
             string
         } else {
-            format!("{}/{}", spec_str, string)
+            Rc::new(format!("{}/{}", spec_str, string))
         };
 
         match namespace {
@@ -244,7 +244,7 @@ impl<'a> LibraryTrait for Library<'a> {
         self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
     }
 
-    fn get_entries_string(&self, str_id: u32) -> Result<String> {
+    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
         if let Some(ref string_table) = self.entries_string_table {
             let out_string =
                 string_table.get_string(str_id)
@@ -253,18 +253,18 @@ impl<'a> LibraryTrait for Library<'a> {
                                            str_id)
                                })?;
 
-            return Ok((*out_string).clone());
+            return Ok(out_string);
         }
 
         Err("String not found on entries string table".into())
     }
 
-    fn get_spec_string(&self, str_id: u32) -> Result<String> {
+    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>> {
         if let Some(ref string_table) = self.spec_string_table {
             let out_string = string_table.get_string(str_id)
                 .chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
 
-            return Ok((*out_string).clone());
+            return Ok(out_string);
         }
 
         Err("String not found on spec string table".into())
@@ -272,7 +272,7 @@ impl<'a> LibraryTrait for Library<'a> {
 }
 
 impl<'a> LibraryBuilder<'a> for Library<'a> {
-    type StringTable = StringTableWrapper<'a>;
+    type StringTable = StringTableCache<StringTableWrapper<'a>>;
     type TypeSpec = TypeSpecWrapper<'a>;
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin) {

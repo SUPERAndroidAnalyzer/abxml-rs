@@ -70,8 +70,8 @@ pub trait Library {
                         -> Result<String>;
     // fn get_entries(&self) -> &Entries;
     fn get_entry(&self, id: u32) -> Result<&Entry>;
-    fn get_entries_string(&self, str_id: u32) -> Result<String>;
-    fn get_spec_string(&self, str_id: u32) -> Result<String>;
+    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>>;
+    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>>;
 }
 
 pub trait LibraryBuilder<'a> {
