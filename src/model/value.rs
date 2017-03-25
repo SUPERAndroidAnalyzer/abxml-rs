@@ -1,4 +1,5 @@
 use std::mem;
+use std::string::ToString;
 use errors::*;
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
@@ -18,25 +19,44 @@ const TOKEN_TYPE_ARGB4: u8 = 0x1E;
 const TOKEN_TYPE_RGB4: u8 = 0x1F;
 
 #[derive(Debug)]
+/// Represents a value on the binary documents. It is formed by a type and a 32 bits payload. The
+/// payloads are interpreted depending on the type.
 pub enum Value {
+    /// Represents an index on a `StringTable`
     StringReference(u32),
+    /// Represents a dimension. Bits [31..8] represents the numeric value. Bits [7..4] is an
+    /// index on a lookup table that modified the numeric value. Bits [3..0] is an index on a
+    /// dimensions lookup table
     Dimension(String),
+    /// Represents a fraction. Bits [31..8] represents the numeric value. Bits [7..4] seems to be
+    /// unused. Bits [3..0] is an index on a units lookup table
     Fraction(String),
+    /// Represents a float value
     Float(f32),
-    Integer(u64),
-    Flags(u64),
+    /// Represents an integer value
+    Integer(u32),
+    /// Integer value that should be interpreted as a bit flag array
+    Flags(u32),
+    /// Represents a boolean value
     Boolean(bool),
+    /// Represents a ARGB8 color
     ColorARGB8(String),
+    /// Represents a RGB8 color
     ColorRGB8(String),
+    /// Represents a ARGB4 color
     ColorARGB4(String),
+    /// Represents a RGB4 color
     ColorRGB4(String),
+    /// Represents a reference to an `Entry`
     ReferenceId(u32),
+    /// Represents a reference to an `Entry` on attribute context
     AttributeReferenceId(u32),
+    /// Unknown value. It saves the type and the payload in case that needs to be checked
     Unknown(u8, u32),
 }
 
-impl Value {
-    pub fn to_string(&self) -> String {
+impl ToString for Value {
+    fn to_string(&self) -> String {
         match *self {
             Value::StringReference(i) => format!("@string/{}", i),
             Value::Dimension(ref s) |
@@ -54,7 +74,11 @@ impl Value {
             _ => "Unknown".to_string(),
         }
     }
+}
 
+impl Value {
+    /// Creates a new `Value`. If the payload can not be interpreted by the given `value_type`, it
+    /// will return an error. If the type is not know, it will return `Value::Unknown`
     pub fn new(value_type: u8, data: u32) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID |
@@ -101,9 +125,9 @@ impl Value {
             }
             TOKEN_TYPE_INTEGER => {
                 // TODO: Should we transmute to signed integer?
-                Value::Integer(data as u64)
+                Value::Integer(data)
             }
-            TOKEN_TYPE_FLAGS => Value::Flags(data as u64),
+            TOKEN_TYPE_FLAGS => Value::Flags(data),
             TOKEN_TYPE_FLOAT => {
                 let f = unsafe { mem::transmute::<u32, f32>(data) };
                 Value::Float(f)
@@ -172,6 +196,15 @@ mod tests {
     fn it_can_generate_reference_and_dyn_references() {
         let value = Value::new(TOKEN_TYPE_REFERENCE_ID, 12345).unwrap();
         let value2 = Value::new(TOKEN_TYPE_DYN_REFERENCE, 67890).unwrap();
+
+        assert_eq!("@id/0x3039", value.to_string());
+        assert_eq!("@id/0x10932", value2.to_string());
+    }
+
+    #[test]
+    fn it_can_generate_attribute_and_dyn_references() {
+        let value = Value::new(TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID, 12345).unwrap();
+        let value2 = Value::new(TOKEN_TYPE_DYN_ATTRIBUTE, 67890).unwrap();
 
         assert_eq!("@id/0x3039", value.to_string());
         assert_eq!("@id/0x10932", value2.to_string());
@@ -323,5 +356,14 @@ mod tests {
         let value = Value::new(TOKEN_TYPE_RGB4, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
+    }
+
+    #[test]
+    fn it_generated_unknown_values_if_type_is_unkown() {
+        let data = 0x12345;
+
+        let value = Value::new(0x20, data);
+
+        assert_eq!("Unknown", value.unwrap().to_string());
     }
 }
