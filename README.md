@@ -11,7 +11,7 @@ The code is deeply inspired on Apktool: Without it, this library wouldn't exist.
 
 The easiest way to use the library is using the helper struct `APK` to decompress and decode it to the filesystem. 
 
-```
+```rust
 extern crate abxml;
 
 use std::path::Path;
