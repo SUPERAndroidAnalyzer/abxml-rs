@@ -166,6 +166,7 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
     }
 }
 
+/// Contains a reference to the whole buffer and the chunk header of a `TagStart`
 pub struct XmlTagStartWrapper<'a> {
     raw_data: &'a [u8],
     header: ChunkHeader,
@@ -236,6 +237,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 }
 
 impl<'a> XmlTagStartWrapper<'a> {
+    /// Creates a new `XmlTagStartWrapper`
     pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
         XmlTagStartWrapper {
             raw_data: raw_data,
@@ -243,6 +245,7 @@ impl<'a> XmlTagStartWrapper<'a> {
         }
     }
 
+    /// It converts the wrapper into a `XmlTagStartBuf` which can be later manipulated
     pub fn to_owned(self) -> Result<XmlTagStartBuf> {
         let mut tag_start = XmlTagStartBuf::new(self.get_line()?,
                                                 self.get_field1()?,
@@ -260,6 +263,7 @@ impl<'a> XmlTagStartWrapper<'a> {
     }
 }
 
+/// Contains a slice that represents an attribute
 pub struct AttributeWrapper<'a> {
     slice: &'a [u8],
 }
@@ -302,10 +306,12 @@ impl<'a> AttributeTrait for AttributeWrapper<'a> {
 }
 
 impl<'a> AttributeWrapper<'a> {
+    /// Creates a new `AttributeWrapper`
     pub fn new(slice: &'a [u8]) -> Self {
         AttributeWrapper { slice: slice }
     }
 
+    /// It converts the wrapper into a `AttributeBuf` which can be later manipulated
     pub fn to_owned(self) -> Result<AttributeBuf> {
         let attr = AttributeBuf::new(self.get_namespace()?,
                                      self.get_name()?,
