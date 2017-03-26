@@ -43,7 +43,7 @@ impl<'a> StringTableWrapper<'a> {
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    pub fn to_owned(self) -> Result<StringTableBuf> {
+    pub fn to_buffer(&self) -> Result<StringTableBuf> {
         let mut owned = StringTableBuf::default();
 
         if !self.is_utf8() {
