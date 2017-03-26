@@ -82,7 +82,7 @@ mod tests {
         let header = ChunkHeader::new(0, 16, raw_chunks::EXAMPLE_TYPE_SPEC.len() as u32, 0x202);
         let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC, header);
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TYPE_SPEC);

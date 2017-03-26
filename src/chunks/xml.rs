@@ -74,7 +74,7 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn to_owned(self) -> Result<XmlNamespaceStartBuf> {
+    pub fn to_buffer(&self) -> Result<XmlNamespaceStartBuf> {
         let namespace_start = XmlNamespaceStartBuf::new(self.get_line()?,
                                                         self.get_prefix_index()?,
                                                         self.get_namespace_index()?);
@@ -134,7 +134,7 @@ impl<'a> XmlNamespaceEndWrapper<'a> {
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn to_owned(self) -> Result<XmlNamespaceEndBuf> {
+    pub fn to_buffer(&self) -> Result<XmlNamespaceEndBuf> {
         let namespace_end = XmlNamespaceEndBuf::new(self.get_line()?,
                                                     self.get_prefix_index()?,
                                                     self.get_namespace_index()?);
@@ -246,7 +246,7 @@ impl<'a> XmlTagStartWrapper<'a> {
     }
 
     /// It converts the wrapper into a `XmlTagStartBuf` which can be later manipulated
-    pub fn to_owned(self) -> Result<XmlTagStartBuf> {
+    pub fn to_buffer(&self) -> Result<XmlTagStartBuf> {
         let mut tag_start = XmlTagStartBuf::new(self.get_line()?,
                                                 self.get_field1()?,
                                                 self.get_namespace_index()?,
@@ -256,7 +256,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 
         for i in 0..self.get_attributes_amount()? {
             let attr = self.get_attribute(i).chain_err(|| "Could not get attribute")?;
-            tag_start.add_attribute(attr.to_owned()?);
+            tag_start.add_attribute(attr.to_buffer()?);
         }
 
         Ok(tag_start)
@@ -312,7 +312,7 @@ impl<'a> AttributeWrapper<'a> {
     }
 
     /// It converts the wrapper into a `AttributeBuf` which can be later manipulated
-    pub fn to_owned(self) -> Result<AttributeBuf> {
+    pub fn to_buffer(&self) -> Result<AttributeBuf> {
         let attr = AttributeBuf::new(self.get_namespace()?,
                                      self.get_name()?,
                                      self.get_class()?,
@@ -337,7 +337,7 @@ impl<'a> XmlTagEndWrapper<'a> {
         }
     }
 
-    pub fn to_owned(self) -> Result<XmlTagEndBuf> {
+    pub fn to_buffer(&self) -> Result<XmlTagEndBuf> {
         Ok(XmlTagEndBuf::new(self.get_id()?))
     }
 }

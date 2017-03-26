@@ -3,9 +3,6 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
 use errors::*;
-use std::fmt::{Display, Formatter};
-use std::result::Result as StdResult;
-use std::fmt::Error as FmtError;
 use model::StringTable;
 use encoding::codec::{utf_16, utf_8};
 use model::owned::{StringTableBuf, Encoding as EncodingType};
@@ -43,7 +40,7 @@ impl<'a> StringTableWrapper<'a> {
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    pub fn to_owned(self) -> Result<StringTableBuf> {
+    pub fn to_buffer(&self) -> Result<StringTableBuf> {
         let mut owned = StringTableBuf::default();
 
         if !self.is_utf8() {
@@ -51,7 +48,7 @@ impl<'a> StringTableWrapper<'a> {
         }
 
         for i in 0..self.get_strings_len() {
-            let ref string = *self.get_string(i)?;
+            let string = &*self.get_string(i)?;
             owned.add_string(string.clone());
         }
 
@@ -165,20 +162,6 @@ impl<'a> StringTableWrapper<'a> {
     }
 }
 
-impl<'a> Display for StringTableWrapper<'a> {
-    fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
-        let amount = self.get_strings_len();
-
-        for i in 0..amount {
-            let current_string = self.get_string(i).unwrap_or(Rc::new("<UNKOWN>".to_string()));
-
-            write!(formatter, "{} - {}\n", i, current_string)?;
-        }
-
-        Ok(())
-    }
-}
-
 impl<'a> StringTable for StringTableWrapper<'a> {
     fn get_strings_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
@@ -233,7 +216,7 @@ impl<S: StringTable> StringTable for StringTableCache<S> {
         let mut cache = self.cache.borrow_mut();
         let entry = cache.entry(idx);
 
-        let string_ref = match entry {
+        match entry {
             Vacant(entry) => {
                 let string_ref = self.inner.get_string(idx)?;
                 entry.insert(string_ref.clone());
@@ -241,8 +224,6 @@ impl<S: StringTable> StringTable for StringTableCache<S> {
                 Ok(string_ref)
             }
             Occupied(entry) => Ok(entry.get().clone()),
-        };
-
-        string_ref
+        }
     }
 }

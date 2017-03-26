@@ -28,7 +28,7 @@ impl<'a> TypeSpecWrapper<'a> {
         }
     }
 
-    pub fn to_owned(self) -> Result<TableTypeSpecBuf> {
+    pub fn to_buffer(&self) -> Result<TableTypeSpecBuf> {
         let mut owned = TableTypeSpecBuf::new(self.get_id()? as u16);
         let amount = self.get_amount()?;
 
