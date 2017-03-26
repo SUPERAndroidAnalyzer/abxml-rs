@@ -185,7 +185,7 @@ mod tests {
         let chunk_header = ChunkHeader::new(0, 8, raw.len() as u32, TOKEN_STRING_TABLE);
         let wrapper = StringTableWrapper::new(&raw, chunk_header);
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let owned_as_vec = owned.to_vec().unwrap();
 
         compare_chunks(&owned_as_vec, &raw);

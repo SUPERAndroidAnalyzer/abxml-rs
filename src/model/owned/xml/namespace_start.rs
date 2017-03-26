@@ -88,7 +88,7 @@ mod tests {
         let header = ChunkHeader::new(0, 8, 23, 0x100);
         let wrapper = XmlNamespaceStartWrapper::new(EXAMPLE_NAMESPACE_START, header);
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &EXAMPLE_NAMESPACE_START);
