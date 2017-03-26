@@ -71,7 +71,7 @@ mod tests {
         let chunk_header = ChunkHeader::new(0, 8, 24, 0x103);
         let wrapper = XmlTagEndWrapper::new(&raw, chunk_header);
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&raw, &new_raw);

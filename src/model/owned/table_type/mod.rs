@@ -135,7 +135,7 @@ mod tests {
         let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE, header);
         let _ = wrapper.get_entries();
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TABLE_TYPE);
@@ -150,7 +150,7 @@ mod tests {
         let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX, header);
         let _ = wrapper.get_entries();
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX);

@@ -163,7 +163,7 @@ mod tests {
         let chunk_header = ChunkHeader::new(0, 16, EXAMPLE_TAG_START.len() as u32, 0x102);
         let wrapper = XmlTagStartWrapper::new(raw, chunk_header);
 
-        let owned = wrapper.to_owned().unwrap();
+        let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&raw, &new_raw);

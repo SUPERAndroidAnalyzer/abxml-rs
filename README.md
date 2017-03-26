@@ -61,7 +61,7 @@ On the model namespace there are several traits that exposes how the library wor
 
 Wrappers gives a read-only view of the represented chunk. This way, the library only allocates data when is accessed. On the other hand, the Buf structs are owned and intended to be used as mutable.
 
-All wrappers have functions to be converted to buffers (`to_owned`) and all buffers have functions to create an encoded view as bytes (through the `OwnedBuf` trait). This means that it's possible to do bidirectional conversions.
+All wrappers have functions to be converted to buffers (`to_buffer`) and all buffers have functions to create an encoded view as bytes (through the `OwnedBuf` trait). This means that it's possible to do bidirectional conversions.
 
 ## Comparing to Apktool
 

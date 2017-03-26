@@ -14,7 +14,7 @@ impl<'a> ConfigurationWrapper<'a> {
         ConfigurationWrapper { slice: slice }
     }
 
-    pub fn to_owned(&self) -> Result<ConfigurationBuf> {
+    pub fn to_buffer(&self) -> Result<ConfigurationBuf> {
         ConfigurationBuf::from_cursor(self.slice.into())
     }
 }

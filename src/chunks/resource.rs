@@ -41,7 +41,8 @@ impl<'a> ResourceWrapper<'a> {
         Ok(resources)
     }
 
-    pub fn to_owned(self) -> Result<ResourcesBuf> {
+
+    pub fn to_buffer(&self) -> Result<ResourcesBuf> {
         let mut owned = ResourcesBuf::default();
 
         for r in &self.get_resources()? {
