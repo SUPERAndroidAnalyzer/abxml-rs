@@ -86,7 +86,7 @@ impl TagStart for XmlTagStartBuf {
             return Err("Requested attribute out of bounds".into());
         }
 
-        let ref attr = self.attributes[index as usize];
+        let attr = &self.attributes[index as usize];
 
         Ok(attr.clone())
     }
