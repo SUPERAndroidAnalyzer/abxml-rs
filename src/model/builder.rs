@@ -12,12 +12,12 @@ impl Arsc {
         self.chunks.push(chunk);
     }
 
-    pub fn to_vec(self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;
 
-        for c in self.chunks {
+        for c in &self.chunks {
             let encoded_chunk = c.to_vec().chain_err(|| "Could not encode a chunk")?;
             file_size += encoded_chunk.len();
 

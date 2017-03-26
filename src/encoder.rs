@@ -44,11 +44,8 @@ impl Xml {
 
         for uri in prefixes {
             let prefix = namespaces.get(&uri.deref().clone());
-            match prefix {
-                Some(p) => {
-                    xml_element = xml_element.ns(p.as_str(), uri.as_str());
-                }
-                _ => (),
+            if let Some(p) = prefix {
+                xml_element = xml_element.ns(p.as_str(), uri.as_str());
             }
         }
 
