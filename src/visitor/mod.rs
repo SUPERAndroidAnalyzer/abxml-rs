@@ -34,7 +34,8 @@ impl Executor {
     /// given visitor.
     pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], mut visitor: &mut V) -> Result<()> {
         let mut cursor = Cursor::new(buffer);
-        let token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+        let token = cursor.read_u16::<LittleEndian>()
+            .chain_err(|| "Error reading first token")?;
 
         if token != 0x2 {
             return Err(format!("File does not start with ARSC token: {:X}", token).into());
@@ -81,7 +82,8 @@ impl Executor {
     pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>,
                                         mut visitor: &mut V)
                                         -> Result<()> {
-        let token = cursor.read_u16::<LittleEndian>().chain_err(|| "Error reading first token")?;
+        let token = cursor.read_u16::<LittleEndian>()
+            .chain_err(|| "Error reading first token")?;
 
         if token != 0x3 {
             return Err(format!("Document does not start with XML token: {:X}", token).into());

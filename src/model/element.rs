@@ -69,7 +69,9 @@ impl Element {
 
 impl Display for Element {
     fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
-        let tabs = iter::repeat("\t").take(self.level as usize).collect::<String>();
+        let tabs = iter::repeat("\t")
+            .take(self.level as usize)
+            .collect::<String>();
         write!(formatter, "{}Element: {}\n", tabs, self.tag.get_name())?;
 
         for c in &self.children {
