@@ -34,7 +34,7 @@ before_script:
   - |
       cargo install cargo-travis || true  &&
       export PATH=$HOME/.cargo/bin:$PATH
-  - which rustfmt || cargo install rustfmt
+  - cargo install rustfmt --force
 
 script:
   - |
