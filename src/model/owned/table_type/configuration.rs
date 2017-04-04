@@ -283,7 +283,9 @@ mod tests {
 
     #[test]
     fn identity() {
-        let owned = ConfigurationWrapper::new(EXAMPLE_CONFIGURATION).to_buffer().unwrap();
+        let owned = ConfigurationWrapper::new(EXAMPLE_CONFIGURATION)
+            .to_buffer()
+            .unwrap();
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(EXAMPLE_CONFIGURATION, &new_raw);

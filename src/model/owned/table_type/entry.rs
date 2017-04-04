@@ -72,7 +72,8 @@ impl SimpleEntry {
         out.write_u16::<LittleEndian>(0).unwrap();
 
         // Key index
-        out.write_u32::<LittleEndian>(self.get_key() as u32).unwrap();
+        out.write_u32::<LittleEndian>(self.get_key() as u32)
+            .unwrap();
 
         // Value type
         out.write_u16::<LittleEndian>(8).unwrap();
@@ -80,7 +81,8 @@ impl SimpleEntry {
         out.write_u8(self.get_type()).unwrap();
 
         // Value
-        out.write_u32::<LittleEndian>(self.get_value() as u32).unwrap();
+        out.write_u32::<LittleEndian>(self.get_value() as u32)
+            .unwrap();
 
         out
     }
@@ -139,14 +141,16 @@ impl ComplexEntry {
         out.write_u32::<LittleEndian>(self.key_index).unwrap();
 
         // Parent entry
-        out.write_u32::<LittleEndian>(self.parent_entry_id).unwrap();
+        out.write_u32::<LittleEndian>(self.parent_entry_id)
+            .unwrap();
 
         // Children entry amount
         let children_amount = self.entries.len() as u32;
         if children_amount == 0 {
             out.write_u32::<LittleEndian>(0xFFFFFFFF).unwrap();
         } else {
-            out.write_u32::<LittleEndian>(self.entries.len() as u32).unwrap();
+            out.write_u32::<LittleEndian>(self.entries.len() as u32)
+                .unwrap();
         }
 
         for e in &self.entries {
@@ -160,7 +164,8 @@ impl ComplexEntry {
             out.write_u8(e.get_type()).unwrap();
 
             // Value
-            out.write_u32::<LittleEndian>(e.get_value() as u32).unwrap();
+            out.write_u32::<LittleEndian>(e.get_value() as u32)
+                .unwrap();
         }
 
         out

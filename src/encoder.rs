@@ -13,14 +13,16 @@ pub struct Xml;
 impl Xml {
     pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
         let target: Vec<u8> = Vec::new();
-        let mut writer = EmitterConfig::new().perform_indent(true).create_writer(target);
+        let mut writer = EmitterConfig::new()
+            .perform_indent(true)
+            .create_writer(target);
 
         let version = XmlVersion::Version10;
         writer.write(XmlEvent::StartDocument {
-                         version: version,
-                         encoding: None,
-                         standalone: Some(false),
-                     })?;
+                       version: version,
+                       encoding: None,
+                       standalone: Some(false),
+                   })?;
         Self::encode_element(&mut writer, namespaces, element)
             .chain_err(|| "Error decoding an element")?;
 
