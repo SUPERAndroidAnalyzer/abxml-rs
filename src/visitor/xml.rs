@@ -98,7 +98,8 @@ impl<'a> XmlVisitor<'a> {
                         string_table: &StringTableCache<StringTableWrapper<'a>>,
                         tag_start: &XmlTagStartWrapper)
                         -> Result<(Tag, HashMap<String, String>)> {
-        let name_index = tag_start.get_element_name_index().chain_err(|| "Name index not found")?;
+        let name_index = tag_start.get_element_name_index()
+            .chain_err(|| "Name index not found")?;
         let rc_string = string_table.get_string(name_index)
             .chain_err(|| "Element name is not on the string table")?;
         let tag = Tag::new(rc_string.clone(), self.namespace_prefixes.clone());
@@ -178,7 +179,8 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
             match (namespace_start.get_namespace(string_table),
                    namespace_start.get_prefix(string_table)) {
                 (Ok(namespace), Ok(prefix)) => {
-                    self.namespaces.insert((*namespace).clone(), (*prefix).clone());
+                    self.namespaces
+                        .insert((*namespace).clone(), (*prefix).clone());
                     self.namespace_prefixes.push(namespace.clone());
                 }
                 _ => {
@@ -231,7 +233,10 @@ impl AttributeHelper {
         let package = resources.get_package(package_id)
             .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
-        let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
+        let entry_key = package
+            .get_entry(res_id)
+            .and_then(|e| Ok(e.get_key()))
+            .ok();
 
         if let Some(key) = entry_key {
             let namespace = if !is_main { package.get_name() } else { None };
@@ -270,16 +275,15 @@ impl AttributeHelper {
         };
 
         let package_id = entry_ref.get_package() as u8;
-        resources.get_package(package_id).and_then(|package| {
-                                                       Self::search_flags(flags,
-                                                                          *entry_ref,
-                                                                          package)
-                                                   })
+        resources
+            .get_package(package_id)
+            .and_then(|package| Self::search_flags(flags, *entry_ref, package))
     }
 
     fn search_flags(flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
         let str_indexes = Self::get_strings(flags, entry_ref, package);
-        let str_strs: Vec<String> = str_indexes.iter()
+        let str_strs: Vec<String> = str_indexes
+            .iter()
             .map(|si| match package.get_entries_string(*si) {
                      Ok(str) => (*str).clone(),
                      Err(_) => {
@@ -302,7 +306,8 @@ impl AttributeHelper {
         let mut strs = Vec::new();
         let mut masks = Vec::new();
 
-        let inner_entries = package.get_entry(entry_ref)
+        let inner_entries = package
+            .get_entry(entry_ref)
             .and_then(|e| e.complex())
             .and_then(|c| Ok(c.get_entries().to_vec()))
             .unwrap_or_else(|_| Vec::new());
@@ -453,7 +458,9 @@ mod tests {
         }
 
         fn get_entry(&self, id: u32) -> Result<&Entry> {
-            self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
+            self.entries
+                .get(&id)
+                .ok_or_else(|| "Could not find entry".into())
         }
 
         fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
@@ -491,7 +498,10 @@ mod tests {
         fn get_flag(&self, index: u32) -> Result<u32> {
             let flags = vec![0, 4, 16];
 
-            flags.get(index as usize).map(|x| *x).ok_or("Flag out of bounds".into())
+            flags
+                .get(index as usize)
+                .map(|x| *x)
+                .ok_or("Flag out of bounds".into())
         }
     }
 
