@@ -37,8 +37,7 @@ impl<'a> TableTypeWrapper<'a> {
     pub fn to_buffer(&self) -> Result<TableTypeBuf> {
         let id = self.get_id()?;
         let amount = self.get_amount()?;
-        let config = self.get_configuration()?
-            .to_buffer()?;
+        let config = self.get_configuration()?.to_buffer()?;
         let mut owned = TableTypeBuf::new((id & 0xF) as u8, config);
 
         for i in 0..amount {
@@ -185,6 +184,9 @@ impl<'a> TableType for TableTypeWrapper<'a> {
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
         let entries = self.get_entries()?;
-        entries.get(index as usize).cloned().ok_or_else(|| "Entry not found".into())
+        entries
+            .get(index as usize)
+            .cloned()
+            .ok_or_else(|| "Entry not found".into())
     }
 }

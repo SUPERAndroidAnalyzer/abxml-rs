@@ -80,7 +80,9 @@ mod tests {
         assert_eq!("Ones",
                    &*namespace_start.get_prefix(&fake_string_table).unwrap());
         assert_eq!("Threes",
-                   &*namespace_start.get_namespace(&fake_string_table).unwrap());
+                   &*namespace_start
+                         .get_namespace(&fake_string_table)
+                         .unwrap());
     }
 
     #[test]

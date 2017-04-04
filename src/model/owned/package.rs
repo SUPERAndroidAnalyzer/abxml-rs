@@ -140,7 +140,9 @@ mod tests {
 
     #[test]
     fn it_can_not_create_a_package_with_a_too_large_package_name() {
-        let target = iter::repeat('\u{1F624}').take((256 / 4) + 1).collect::<String>();
+        let target = iter::repeat('\u{1F624}')
+            .take((256 / 4) + 1)
+            .collect::<String>();
         let package = PackageBuf::new(1, target);
 
         assert!(package.is_err());
@@ -148,7 +150,9 @@ mod tests {
 
     #[test]
     fn it_can_create_a_package_with_the_maximum_length() {
-        let target = iter::repeat('\u{1F624}').take((256 / 4)).collect::<String>();
+        let target = iter::repeat('\u{1F624}')
+            .take((256 / 4))
+            .collect::<String>();
         let package = PackageBuf::new(1, target);
 
         assert!(package.is_ok());
