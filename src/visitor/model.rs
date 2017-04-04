@@ -36,16 +36,19 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, origin: Origin) {
         match origin {
             Origin::Global => {
-                self.tables.insert(origin, StringTableCache::new(string_table));
+                self.tables
+                    .insert(origin, StringTableCache::new(string_table));
             }
             _ => {
                 let package_id = self.package_mask.get_package();
 
-                let st_res = self.resources.get_mut_package(package_id)
+                let st_res = self.resources
+                    .get_mut_package(package_id)
                     .and_then(|package| {
-                         package.set_string_table(StringTableCache::new(string_table), origin);
-                         Some(())
-                    });
+                                  package.set_string_table(StringTableCache::new(string_table),
+                                                           origin);
+                                  Some(())
+                              });
 
                 if st_res.is_none() {
                     error!("Could not retrieve target package");
@@ -86,8 +89,9 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         let mut entries = Entries::new();
 
         if let Some(ref ts) = self.current_spec {
-            let mask =
-                ts.get_id().and_then(|id| Ok(self.package_mask | ((id as u32) << 16))).unwrap_or(0);
+            let mask = ts.get_id()
+                .and_then(|id| Ok(self.package_mask | ((id as u32) << 16)))
+                .unwrap_or(0);
 
             let entries_result = table_type.get_entries();
 
@@ -107,10 +111,12 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         let package_id = self.package_mask.get_package();
 
-        self.resources.get_mut_package(package_id).and_then(|package| {
-                                                                package.add_entries(entries);
-                                                                Some(())
-                                                            });
+        self.resources
+            .get_mut_package(package_id)
+            .and_then(|package| {
+                          package.add_entries(entries);
+                          Some(())
+                      });
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpecWrapper<'a>) {
@@ -241,7 +247,9 @@ impl<'a> LibraryTrait for Library<'a> {
     }
 
     fn get_entry(&self, id: u32) -> Result<&Entry> {
-        self.entries.get(&id).ok_or_else(|| "Could not find entry".into())
+        self.entries
+            .get(&id)
+            .ok_or_else(|| "Could not find entry".into())
     }
 
     fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {

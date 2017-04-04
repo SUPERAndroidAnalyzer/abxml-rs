@@ -59,7 +59,8 @@ impl Apk {
             let contents = if (file_name.starts_with("res/") && file_name.ends_with(".xml")) ||
                               file_name == "AndroidManifest.xml" {
 
-                decoder.xml_visitor(&contents)
+                decoder
+                    .xml_visitor(&contents)
                     .and_then(|visitor| visitor.into_string())
                     .and_then(|string| Ok(string.into_bytes()))
                     .unwrap_or(contents)
@@ -89,7 +90,8 @@ impl Apk {
             .open(full_path)
             .chain_err(|| "Could not open file to write")?;
 
-        descriptor.write_all(content).chain_err(|| "Could not write to target file")?;
+        descriptor.write_all(content)
+            .chain_err(|| "Could not write to target file")?;
 
         Ok(())
     }
