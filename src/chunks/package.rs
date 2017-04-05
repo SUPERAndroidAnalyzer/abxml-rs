@@ -26,6 +26,11 @@ impl<'a> PackageWrapper<'a> {
         let initial_position = cursor.position();
         let final_position = self.find_end_position(initial_position as usize);
 
+        if self.raw_data.len() < (initial_position + 256) as usize {
+            return Err("Not enough bytes to retrieve package name".into());
+        }
+
+
         let raw_str = &cursor.get_ref()[initial_position as usize..final_position];
         let mut decoder = utf_16::UTF16Decoder::<Little>::new();
         let mut o = String::new();
