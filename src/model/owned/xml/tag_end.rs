@@ -68,8 +68,7 @@ mod tests {
     #[test]
     fn identity() {
         let raw = raw_chunks::EXAMPLE_TAG_END;
-        let chunk_header = ChunkHeader::new(0, 8, 24, 0x103);
-        let wrapper = XmlTagEndWrapper::new(&raw, chunk_header);
+        let wrapper = XmlTagEndWrapper::new(&raw);
 
         let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();

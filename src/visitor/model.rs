@@ -96,7 +96,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             let entries_result = table_type.get_entries();
 
             if entries_result.is_err() {
-                error!("Error visiting table_type");
+                error!("Error visiting table_type: {}",
+                       entries_result.err().unwrap().description());
             } else {
                 let ventries = entries_result.unwrap();
                 for e in &ventries {

@@ -1,4 +1,3 @@
-use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
@@ -9,28 +8,18 @@ use model::owned::{Entry, SimpleEntry, ComplexEntry, EntryHeader};
 pub use self::configuration::ConfigurationWrapper;
 pub use self::configuration::Region;
 
-pub struct TableTypeDecoder;
-
 mod configuration;
-
-impl TableTypeDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-        let ttw = TableTypeWrapper::new(cursor.get_ref(), *header);
-
-        Ok(Chunk::TableType(ttw))
-    }
-}
 
 pub struct TableTypeWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
+    data_offset: u64,
 }
 
 impl<'a> TableTypeWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
+    pub fn new(slice: &'a [u8], data_offset: u64) -> Self {
         TableTypeWrapper {
-            raw_data: raw_data,
-            header: header,
+            raw_data: slice,
+            data_offset: data_offset,
         }
     }
 
@@ -50,7 +39,7 @@ impl<'a> TableTypeWrapper<'a> {
 
     pub fn get_entries(&self) -> Result<Vec<Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.get_data_offset());
+        cursor.set_position(self.data_offset);
 
         self.decode_entries(&mut cursor)
     }
@@ -155,7 +144,7 @@ impl<'a> TableType for TableTypeWrapper<'a> {
 
     fn get_id(&self) -> Result<u8> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
         let out_value = cursor.read_u32::<LittleEndian>()? & 0xF;
 
         Ok(out_value as u8)
@@ -163,14 +152,14 @@ impl<'a> TableType for TableTypeWrapper<'a> {
 
     fn get_amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
+        cursor.set_position(12);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     fn get_configuration(&self) -> Result<Self::Configuration> {
-        let ini = self.header.absolute(20) as usize;
-        let end = self.header.get_data_offset() as usize;
+        let ini = 20 as usize;
+        let end = self.data_offset as usize;
 
         if ini > end || (end - ini) <= 28 {
             return Err("Configuration slice is not valid".into());

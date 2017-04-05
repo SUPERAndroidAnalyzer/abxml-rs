@@ -1,4 +1,3 @@
-use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
@@ -10,32 +9,18 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 
-pub struct StringTableDecoder;
-
-impl StringTableDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-        let stw = StringTableWrapper::new(cursor.get_ref(), *header);
-
-        Ok(Chunk::StringTable(stw))
-    }
-}
-
 pub struct StringTableWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> StringTableWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        StringTableWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(slice: &'a [u8]) -> Self {
+        StringTableWrapper { raw_data: slice }
     }
 
     pub fn get_flags(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+        cursor.set_position(16);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
@@ -57,10 +42,10 @@ impl<'a> StringTableWrapper<'a> {
 
     fn get_string_position(&self, idx: u32) -> Result<u64> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(20));
-        let str_offset = self.header.get_offset() as u32 + cursor.read_u32::<LittleEndian>()?;
+        cursor.set_position(20);
+        let str_offset = cursor.read_u32::<LittleEndian>()?;
 
-        cursor.set_position(self.header.absolute(28));
+        cursor.set_position(28);
 
         let mut position = str_offset;
         let mut max_offset = 0;
@@ -165,14 +150,14 @@ impl<'a> StringTableWrapper<'a> {
 impl<'a> StringTable for StringTableWrapper<'a> {
     fn get_strings_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
     fn get_styles_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
+        cursor.set_position(12);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }

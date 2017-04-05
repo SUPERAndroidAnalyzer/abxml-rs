@@ -68,7 +68,6 @@ impl OwnedBuf for XmlNamespaceEndBuf {
 mod tests {
     use super::*;
     use chunks::XmlNamespaceEndWrapper;
-    use chunks::ChunkHeader;
     use test::compare_chunks;
     use raw_chunks::EXAMPLE_NAMESPACE_END;
 
@@ -81,8 +80,7 @@ mod tests {
 
     #[test]
     fn identity() {
-        let header = ChunkHeader::new(0, 8, 23, 0x101);
-        let wrapper = XmlNamespaceEndWrapper::new(EXAMPLE_NAMESPACE_END, header);
+        let wrapper = XmlNamespaceEndWrapper::new(EXAMPLE_NAMESPACE_END);
 
         let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
