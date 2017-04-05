@@ -182,8 +182,7 @@ mod tests {
     #[test]
     fn identity() {
         let raw = raw_chunks::EXAMPLE_STRING_TABLE;
-        let chunk_header = ChunkHeader::new(0, 8, raw.len() as u32, TOKEN_STRING_TABLE);
-        let wrapper = StringTableWrapper::new(&raw, chunk_header);
+        let wrapper = StringTableWrapper::new(&raw);
 
         let owned = wrapper.to_buffer().unwrap();
         let owned_as_vec = owned.to_vec().unwrap();

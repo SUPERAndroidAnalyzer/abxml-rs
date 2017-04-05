@@ -78,7 +78,7 @@ impl OwnedBuf for PackageBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::{PackageWrapper, ChunkHeader, ChunkLoaderStream, Chunk};
+    use chunks::{PackageWrapper, ChunkLoaderStream, Chunk};
     use model::owned::StringTableBuf;
     use std::io::Cursor;
     use std::iter;
@@ -91,9 +91,7 @@ mod tests {
         package.add_chunk(Box::new(some_other_chunk));
         let out = package.to_vec().unwrap();
 
-
-        let header = ChunkHeader::new(0, 288, out.len() as u32, 0x0200);
-        let wrapper = PackageWrapper::new(&out, header);
+        let wrapper = PackageWrapper::new(&out);
 
         assert_eq!(3, wrapper.get_id().unwrap());
         assert_eq!("com.test.test", wrapper.get_name().unwrap());

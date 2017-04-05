@@ -8,68 +8,25 @@ use model::owned::{XmlTagStartBuf, XmlTagEndBuf, XmlNamespaceStartBuf, XmlNamesp
                    AttributeBuf};
 use model::{TagStart, TagEnd, NamespaceStart, NamespaceEnd, AttributeTrait};
 
-pub struct XmlDecoder;
-
-impl XmlDecoder {
-    pub fn decode_xml_namespace_start<'a>(cursor: &mut Cursor<&'a [u8]>,
-                                          header: &ChunkHeader)
-                                          -> Result<Chunk<'a>> {
-        let xnsw = XmlNamespaceStartWrapper::new(cursor.get_ref(), *header);
-        Ok(Chunk::XmlNamespaceStart(xnsw))
-    }
-
-    pub fn decode_xml_namespace_end<'a>(cursor: &mut Cursor<&'a [u8]>,
-                                        header: &ChunkHeader)
-                                        -> Result<Chunk<'a>> {
-        let xnsw = XmlNamespaceEndWrapper::new(cursor.get_ref(), *header);
-        Ok(Chunk::XmlNamespaceEnd(xnsw))
-    }
-
-    pub fn decode_xml_tag_start<'a>(cursor: &mut Cursor<&'a [u8]>,
-                                    header: &ChunkHeader)
-                                    -> Result<Chunk<'a>> {
-        let xnsw = XmlTagStartWrapper::new(cursor.get_ref(), *header);
-        Ok(Chunk::XmlTagStart(xnsw))
-    }
-
-    pub fn decode_xml_tag_end<'a>(cursor: &mut Cursor<&'a [u8]>,
-                                  header: &ChunkHeader)
-                                  -> Result<Chunk<'a>> {
-        let xnsw = XmlTagEndWrapper::new(cursor.get_ref(), *header);
-        Ok(Chunk::XmlTagEnd(xnsw))
-    }
-
-    pub fn decode_xml_text<'a>(cursor: &mut Cursor<&'a [u8]>,
-                               header: &ChunkHeader)
-                               -> Result<Chunk<'a>> {
-        let xnsw = XmlTextWrapper::new(cursor.get_ref(), *header);
-        Ok(Chunk::XmlText(xnsw))
-    }
-}
-
 pub struct XmlNamespaceStartWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> XmlNamespaceStartWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        XmlNamespaceStartWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        XmlNamespaceStartWrapper { raw_data: raw_data }
     }
 
     pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+        cursor.set_position(16);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     pub fn get_namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(20));
+        cursor.set_position(20);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
@@ -100,7 +57,7 @@ impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
 
     fn get_line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
@@ -109,27 +66,23 @@ impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
 #[allow(dead_code)]
 pub struct XmlNamespaceEndWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> XmlNamespaceEndWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        XmlNamespaceEndWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        XmlNamespaceEndWrapper { raw_data: raw_data }
     }
 
     pub fn get_prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+        cursor.set_position(16);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     pub fn get_namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(20));
+        cursor.set_position(20);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
@@ -146,7 +99,7 @@ impl<'a> XmlNamespaceEndWrapper<'a> {
 impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
     fn get_line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
@@ -169,7 +122,6 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
 /// Contains a reference to the whole buffer and the chunk header of a `TagStart`
 pub struct XmlTagStartWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> TagStart for XmlTagStartWrapper<'a> {
@@ -177,7 +129,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -186,7 +138,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_field1(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
+        cursor.set_position(12);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -195,7 +147,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+        cursor.set_position(16);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -204,7 +156,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_element_name_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(20));
+        cursor.set_position(20);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -213,7 +165,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_field2(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(24));
+        cursor.set_position(24);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -222,7 +174,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_attributes_amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(28));
+        cursor.set_position(28);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -231,7 +183,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_class(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(32));
+        cursor.set_position(32);
 
         cursor
             .read_u32::<LittleEndian>()
@@ -240,8 +192,8 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
     fn get_attribute(&self, index: u32) -> Result<Self::Attribute> {
         let offset = 36 + (index * (5 * 4)) as u64;
-        let initial_position: usize = self.header.absolute(offset) as usize;
-        let final_position: usize = self.header.absolute(offset + (5 * 4)) as usize;
+        let initial_position: usize = offset as usize;
+        let final_position: usize = (offset + (5 * 4)) as usize;
         let slice = &self.raw_data[initial_position..final_position];
 
         let out = AttributeWrapper::new(slice);
@@ -252,11 +204,8 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
 
 impl<'a> XmlTagStartWrapper<'a> {
     /// Creates a new `XmlTagStartWrapper`
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        XmlTagStartWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        XmlTagStartWrapper { raw_data: raw_data }
     }
 
     /// It converts the wrapper into a `XmlTagStartBuf` which can be later manipulated
@@ -351,15 +300,11 @@ impl<'a> AttributeWrapper<'a> {
 #[allow(dead_code)]
 pub struct XmlTagEndWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> XmlTagEndWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        XmlTagEndWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        XmlTagEndWrapper { raw_data: raw_data }
     }
 
     pub fn to_buffer(&self) -> Result<XmlTagEndBuf> {
@@ -370,7 +315,7 @@ impl<'a> XmlTagEndWrapper<'a> {
 impl<'a> TagEnd for XmlTagEndWrapper<'a> {
     fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(5 * 4));
+        cursor.set_position(5 * 4);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
@@ -379,20 +324,16 @@ impl<'a> TagEnd for XmlTagEndWrapper<'a> {
 #[allow(dead_code)]
 pub struct XmlTextWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> XmlTextWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        XmlTextWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        XmlTextWrapper { raw_data: raw_data }
     }
 
     pub fn get_text_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(16));
+        cursor.set_position(16);
 
         cursor
             .read_u32::<LittleEndian>()
