@@ -63,7 +63,7 @@ impl OwnedBuf for PackageBuf {
         buffer.extend(encoded_string);
 
         // Padding package name up to 256 characters
-        for _ in 0..(255 - size) {
+        for _ in 0..(256 - size) {
             buffer.push(0);
         }
 
