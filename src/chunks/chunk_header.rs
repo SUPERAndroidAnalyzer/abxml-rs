@@ -43,6 +43,10 @@ impl ChunkHeader {
 
         absolute
     }
+
+    pub fn get_token(&self) -> u16 {
+        self.chunk_type
+    }
 }
 
 impl fmt::Display for ChunkHeader {

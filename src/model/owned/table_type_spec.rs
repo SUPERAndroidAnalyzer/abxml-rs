@@ -79,8 +79,7 @@ mod tests {
 
     #[test]
     fn identity() {
-        let header = ChunkHeader::new(0, 16, raw_chunks::EXAMPLE_TYPE_SPEC.len() as u32, 0x202);
-        let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC, header);
+        let wrapper = TypeSpecWrapper::new(raw_chunks::EXAMPLE_TYPE_SPEC);
 
         let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
