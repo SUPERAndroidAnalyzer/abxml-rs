@@ -48,8 +48,7 @@ mod tests {
 
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(0, 8, 2 * 8, 0x0180);
-        let wrapper = ResourceWrapper::new(&out, chunk_header);
+        let wrapper = ResourceWrapper::new(&out);
 
         let expected_resources: Vec<u32> = vec![111, 222];
 
@@ -61,8 +60,7 @@ mod tests {
         let resources = ResourcesBuf::default();
         let out = resources.to_vec().unwrap();
 
-        let chunk_header = ChunkHeader::new(0, 8, (0 * 8) + 8, 0x0180);
-        let wrapper = ResourceWrapper::new(&out, chunk_header);
+        let wrapper = ResourceWrapper::new(&out);
 
         let expected_resources: Vec<u32> = vec![];
 
@@ -72,9 +70,8 @@ mod tests {
     #[test]
     fn identity() {
         let raw = raw_chunks::EXAMPLE_RESOURCES;
-        let chunk_header = ChunkHeader::new(0, 8, 24, 0x180);
 
-        let wrapper = ResourceWrapper::new(&raw, chunk_header);
+        let wrapper = ResourceWrapper::new(&raw);
         let owned = wrapper.to_buffer().unwrap();
         let new_raw = owned.to_vec().unwrap();
 

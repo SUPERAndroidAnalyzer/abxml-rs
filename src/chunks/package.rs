@@ -1,43 +1,28 @@
-use chunks::{Chunk, ChunkHeader};
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use encoding::codec::utf_16;
 use encoding::codec::utf_16::Little;
 
-pub struct PackageDecoder;
-
-impl PackageDecoder {
-    pub fn decode<'a>(cursor: &mut Cursor<&'a [u8]>, header: &ChunkHeader) -> Result<Chunk<'a>> {
-        let pw = PackageWrapper::new(cursor.get_ref(), *header);
-
-        Ok(Chunk::Package(pw))
-    }
-}
-
 pub struct PackageWrapper<'a> {
     raw_data: &'a [u8],
-    header: ChunkHeader,
 }
 
 impl<'a> PackageWrapper<'a> {
-    pub fn new(raw_data: &'a [u8], header: ChunkHeader) -> Self {
-        PackageWrapper {
-            raw_data: raw_data,
-            header: header,
-        }
+    pub fn new(slice: &'a [u8]) -> Self {
+        PackageWrapper { raw_data: slice }
     }
 
     pub fn get_id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(8));
+        cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
     pub fn get_name(&self) -> Result<String> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(self.header.absolute(12));
+        cursor.set_position(12);
         let initial_position = cursor.position();
         let final_position = self.find_end_position(initial_position as usize);
 
