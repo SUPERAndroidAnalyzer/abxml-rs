@@ -132,8 +132,7 @@ mod tests {
 
     #[test]
     fn identity() {
-        let header = ChunkHeader::new(0, 68, raw_chunks::EXAMPLE_TABLE_TYPE.len() as u32, 0x201);
-        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE, header);
+        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE, 68);
         let _ = wrapper.get_entries();
 
         let owned = wrapper.to_buffer().unwrap();
@@ -144,11 +143,7 @@ mod tests {
 
     #[test]
     fn identity_with_mixed_complex_and_simple_entries() {
-        let header = ChunkHeader::new(0,
-                                      76,
-                                      raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX.len() as u32,
-                                      0x201);
-        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX, header);
+        let wrapper = TableTypeWrapper::new(raw_chunks::EXAMPLE_TABLE_TYPE_WITH_COMPLEX, 76);
         let _ = wrapper.get_entries();
 
         let owned = wrapper.to_buffer().unwrap();

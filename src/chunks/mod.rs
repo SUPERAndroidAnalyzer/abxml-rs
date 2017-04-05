@@ -10,7 +10,6 @@ mod resource;
 mod table_type_spec;
 mod xml;
 
-pub use self::string_table::StringTableDecoder;
 pub use self::string_table::StringTableWrapper;
 pub use self::string_table::StringTableCache;
 pub use self::chunk_header::ChunkHeader;
@@ -26,12 +25,6 @@ pub use self::xml::XmlTagStartWrapper;
 pub use self::xml::XmlTagEndWrapper;
 pub use self::xml::XmlText;
 pub use self::xml::XmlTextWrapper;
-
-use self::package::PackageDecoder;
-use self::table_type_spec::TableTypeSpecDecoder;
-use self::table_type::TableTypeDecoder;
-use self::xml::XmlDecoder;
-use self::resource::ResourceDecoder;
 
 use errors::*;
 
@@ -80,23 +73,38 @@ impl<'a> ChunkLoaderStream<'a> {
         let chunk_size = self.cursor.read_u32::<LittleEndian>()?;
         let chunk_header = ChunkHeader::new(initial_position, header_size, chunk_size, token);
 
-        let chunk = match token {
-            TOKEN_STRING_TABLE => StringTableDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_PACKAGE => PackageDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_TABLE_SPEC => TableTypeSpecDecoder::decode(&mut self.cursor, &chunk_header)?,
-            TOKEN_TABLE_TYPE => TableTypeDecoder::decode(&mut self.cursor, &chunk_header)?,
+        let chunk = self.get_chunk(&chunk_header);
+
+        if let Chunk::Package(_) = chunk {
+            self.cursor.set_position(chunk_header.get_data_offset());
+        } else {
+            self.cursor.set_position(chunk_header.get_chunk_end());
+        }
+
+        Ok(chunk)
+    }
+
+    fn get_chunk(&self, header: &ChunkHeader) -> Chunk<'a> {
+        let raw_data = self.cursor.get_ref();
+        let slice = &raw_data[header.get_offset() as usize..header.get_chunk_end() as usize];
+
+
+        let chunk = match header.get_token() {
+            TOKEN_STRING_TABLE => Chunk::StringTable(StringTableWrapper::new(slice)),
+            TOKEN_PACKAGE => Chunk::Package(PackageWrapper::new(slice)),
+            TOKEN_TABLE_SPEC => Chunk::TableTypeSpec(TypeSpecWrapper::new(slice)),
+            TOKEN_TABLE_TYPE => {
+                let current_chunk_data_offset = header.get_data_offset() - header.get_offset();
+                Chunk::TableType(TableTypeWrapper::new(slice, current_chunk_data_offset))
+            }
             TOKEN_XML_START_NAMESPACE => {
-                XmlDecoder::decode_xml_namespace_start(&mut self.cursor, &chunk_header)?
+                Chunk::XmlNamespaceStart(XmlNamespaceStartWrapper::new(slice))
             }
-            TOKEN_XML_END_NAMESPACE => {
-                XmlDecoder::decode_xml_namespace_end(&mut self.cursor, &chunk_header)?
-            }
-            TOKEN_XML_TAG_START => {
-                XmlDecoder::decode_xml_tag_start(&mut self.cursor, &chunk_header)?
-            }
-            TOKEN_XML_TAG_END => XmlDecoder::decode_xml_tag_end(&mut self.cursor, &chunk_header)?,
-            TOKEN_XML_TEXT => XmlDecoder::decode_xml_text(&mut self.cursor, &chunk_header)?,
-            TOKEN_RESOURCE => ResourceDecoder::decode(&mut self.cursor, &chunk_header)?,
+            TOKEN_XML_END_NAMESPACE => Chunk::XmlNamespaceEnd(XmlNamespaceEndWrapper::new(slice)),
+            TOKEN_XML_TAG_START => Chunk::XmlTagStart(XmlTagStartWrapper::new(slice)),
+            TOKEN_XML_TAG_END => Chunk::XmlTagEnd(XmlTagEndWrapper::new(slice)),
+            TOKEN_XML_TEXT => Chunk::XmlText(XmlTextWrapper::new(slice)),
+            TOKEN_RESOURCE => Chunk::Resource(ResourceWrapper::new(slice)),
             t => {
                 error!("Unknown chunk: 0x{:X}", t);
 
@@ -104,12 +112,7 @@ impl<'a> ChunkLoaderStream<'a> {
             }
         };
 
-        if let Chunk::Package(_) = chunk {
-            self.cursor.set_position(chunk_header.get_data_offset());
-        } else {
-            self.cursor.set_position(chunk_header.get_chunk_end());
-        }
-        Ok(chunk)
+        chunk
     }
 }
 
