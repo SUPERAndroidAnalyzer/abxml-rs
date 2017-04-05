@@ -52,7 +52,7 @@ impl<'a> StringTableWrapper<'a> {
 
         for _ in 0..(idx + 1) {
             let current_offset = cursor.read_u32::<LittleEndian>()?;
-            position = str_offset + current_offset;
+            position = str_offset.wrapping_add(current_offset);
 
             if current_offset > max_offset {
                 max_offset = current_offset
