@@ -256,7 +256,8 @@ impl<'a> LibraryTrait for Library<'a> {
     fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
         if let Some(ref string_table) = self.entries_string_table {
             let out_string =
-                string_table.get_string(str_id)
+                string_table
+                    .get_string(str_id)
                     .chain_err(|| {
                                    format!("Could not find string {} on entries string table",
                                            str_id)

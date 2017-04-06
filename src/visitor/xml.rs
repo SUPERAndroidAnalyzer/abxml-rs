@@ -98,19 +98,23 @@ impl<'a> XmlVisitor<'a> {
                         string_table: &StringTableCache<StringTableWrapper<'a>>,
                         tag_start: &XmlTagStartWrapper)
                         -> Result<(Tag, HashMap<String, String>)> {
-        let name_index = tag_start.get_element_name_index()
+        let name_index = tag_start
+            .get_element_name_index()
             .chain_err(|| "Name index not found")?;
-        let rc_string = string_table.get_string(name_index)
+        let rc_string = string_table
+            .get_string(name_index)
             .chain_err(|| "Element name is not on the string table")?;
         let tag = Tag::new(rc_string.clone(), self.namespace_prefixes.clone());
 
         let mut attributes = HashMap::new();
-        let num_attributes = tag_start.get_attributes_amount()
+        let num_attributes = tag_start
+            .get_attributes_amount()
             .chain_err(|| "Could not get the amount of attributes")?;
 
         for i in 0..num_attributes {
             let mut final_name = String::new();
-            let current_attribute = tag_start.get_attribute(i)
+            let current_attribute = tag_start
+                .get_attribute(i)
                 .chain_err(|| format!("Could not read attribute {} ", i))?;
 
             let namespace_index = current_attribute.get_namespace()?;
@@ -230,7 +234,8 @@ impl AttributeHelper {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id)
+        let package = resources
+            .get_package(package_id)
             .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
         let entry_key = package

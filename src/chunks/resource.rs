@@ -18,9 +18,19 @@ impl<'a> ResourceWrapper<'a> {
         cursor.set_position(4);
 
         let count = cursor.read_u32::<LittleEndian>()?;
-        let mut resources = Vec::with_capacity(count as usize);
+        let amount_of_resources = (count / 4) - 2;
 
-        for _ in 0..(count / 4) - 2 {
+        if count > self.raw_data.len() as u32 {
+            return Err(format!("There is not enough data on the buffer ({}) to read \
+                    the reported resources count ({})",
+                               self.raw_data.len(),
+                               count)
+                               .into());
+        }
+
+        let mut resources = Vec::with_capacity(amount_of_resources as usize);
+
+        for _ in 0..amount_of_resources {
             resources.push(cursor.read_u32::<LittleEndian>()?);
         }
 
@@ -58,7 +68,8 @@ mod tests {
 
         let result = wrapper.get_resources();
         assert!(result.is_err());
-        assert_eq!("failed to fill whole buffer",
+        assert_eq!("There is not enough data on the buffer (16) to read the \
+                    reported resources count (255)",
                    result.err().unwrap().to_string());
     }
 }
