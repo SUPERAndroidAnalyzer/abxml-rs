@@ -28,3 +28,7 @@ path = "fuzzers/string_table.rs"
 [[bin]]
 name = "package"
 path = "fuzzers/package.rs"
+
+[[bin]]
+name = "resources"
+path = "fuzzers/resources.rs"
