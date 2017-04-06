@@ -19,7 +19,8 @@ impl Apk {
         let mut buffer = Vec::new();
         let file = std::fs::File::open(&path)?;
         let mut zip_handler = ZipArchive::new(file)?;
-        zip_handler.by_name("resources.arsc")?
+        zip_handler
+            .by_name("resources.arsc")?
             .read_to_end(&mut buffer)?;
 
         let apk = Apk {
@@ -38,8 +39,10 @@ impl Apk {
             .chain_err(|| "Could not get the decoder")?;
 
         if fs::create_dir(&output_path).is_err() && force {
-            fs::remove_dir_all(&output_path).chain_err(|| "Could not clean target directory")?;
-            fs::create_dir(&output_path).chain_err(|| "Error creating the output folder")?;
+            fs::remove_dir_all(&output_path)
+                .chain_err(|| "Could not clean target directory")?;
+            fs::create_dir(&output_path)
+                .chain_err(|| "Error creating the output folder")?;
         }
 
         // Iterate over all the files on the ZIP and extract them
@@ -49,7 +52,8 @@ impl Apk {
                     .by_index(i)
                     .chain_err(|| "Could not read ZIP entry")?;
                 let mut contents = Vec::new();
-                current_file.read_to_end(&mut contents)
+                current_file
+                    .read_to_end(&mut contents)
                     .chain_err(|| format!("Could not read: {}", current_file.name()))?;
                 let is_xml = current_file.name().to_string();
 
@@ -85,12 +89,14 @@ impl Apk {
         fs::create_dir_all(full_path.parent().unwrap())
             .chain_err(|| "Could not create the output dir")?;
 
-        let mut descriptor = fs::OpenOptions::new().write(true)
+        let mut descriptor = fs::OpenOptions::new()
+            .write(true)
             .create_new(true)
             .open(full_path)
             .chain_err(|| "Could not open file to write")?;
 
-        descriptor.write_all(content)
+        descriptor
+            .write_all(content)
             .chain_err(|| "Could not write to target file")?;
 
         Ok(())
