@@ -40,3 +40,11 @@ path = "fuzzers/table_type_spec.rs"
 [[bin]]
 name = "table_type"
 path = "fuzzers/table_type.rs"
+
+[[bin]]
+name = "xml_namespace_start"
+path = "fuzzers/xml_namespace_start.rs"
+
+[[bin]]
+name = "xml_namespace_end"
+path = "fuzzers/xml_namespace_end.rs"
