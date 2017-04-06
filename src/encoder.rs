@@ -18,7 +18,8 @@ impl Xml {
             .create_writer(target);
 
         let version = XmlVersion::Version10;
-        writer.write(XmlEvent::StartDocument {
+        writer
+            .write(XmlEvent::StartDocument {
                        version: version,
                        encoding: None,
                        standalone: Some(false),
