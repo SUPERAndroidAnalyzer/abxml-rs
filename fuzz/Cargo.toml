@@ -52,3 +52,11 @@ path = "fuzzers/xml_namespace_end.rs"
 [[bin]]
 name = "xml_tag_start"
 path = "fuzzers/xml_tag_start.rs"
+
+[[bin]]
+name = "xml_tag_end"
+path = "fuzzers/xml_tag_end.rs"
+
+[[bin]]
+name = "xml_text"
+path = "fuzzers/xml_text.rs"
