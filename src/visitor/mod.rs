@@ -22,7 +22,7 @@ pub trait ChunkVisitor<'a> {
     fn visit_xml_namespace_end(&mut self, _namespace_end: XmlNamespaceEndWrapper<'a>) {}
     fn visit_xml_tag_start(&mut self, _tag_start: XmlTagStartWrapper<'a>) {}
     fn visit_xml_tag_end(&mut self, _tag_end: XmlTagEndWrapper<'a>) {}
-    fn visit_xml_text(&mut self, _text: XmlText<'a>) {}
+    fn visit_xml_text(&mut self, _text: XmlTextWrapper<'a>) {}
     fn visit_resource(&mut self, _resource: ResourceWrapper<'a>) {}
 }
 
@@ -121,8 +121,7 @@ impl Executor {
                     visitor.visit_xml_tag_end(xnsw);
                 }
                 Chunk::XmlText(xsnw) => {
-                    let ts = XmlText::new(xsnw);
-                    visitor.visit_xml_text(ts);
+                    visitor.visit_xml_text(xsnw);
                 }
                 Chunk::Resource(rw) => {
                     visitor.visit_resource(rw);
