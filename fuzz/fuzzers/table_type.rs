@@ -12,5 +12,6 @@ fuzz_target!(|data: &[u8]| {
     ttw.get_amount();
     ttw.get_configuration();
     ttw.get_entry(213514); // Replace with random
+    ttw.get_entry(1);
     ttw.get_entries();
 });
