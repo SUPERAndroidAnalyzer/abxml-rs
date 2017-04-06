@@ -161,7 +161,8 @@ impl<'a> TableType for TableTypeWrapper<'a> {
         let ini = 20 as usize;
         let end = self.data_offset as usize;
 
-        if ini > end || (end - ini) <= 28 {
+        if ini > end || (end - ini) <= 28 || self.raw_data.len() < ini ||
+           self.raw_data.len() < end {
             return Err("Configuration slice is not valid".into());
         }
 
