@@ -1,4 +1,3 @@
-use chunks::*;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::rc::Rc;
@@ -194,6 +193,11 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
         let offset = 36 + (index * (5 * 4)) as u64;
         let initial_position: usize = offset as usize;
         let final_position: usize = (offset + (5 * 4)) as usize;
+
+        if self.raw_data.len() < initial_position || self.raw_data.len() < final_position {
+            return Err("Requested attribute out of bounds".into());
+        }
+
         let slice = &self.raw_data[initial_position..final_position];
 
         let out = AttributeWrapper::new(slice);
@@ -321,7 +325,6 @@ impl<'a> TagEnd for XmlTagEndWrapper<'a> {
     }
 }
 
-#[allow(dead_code)]
 pub struct XmlTextWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -338,21 +341,5 @@ impl<'a> XmlTextWrapper<'a> {
         cursor
             .read_u32::<LittleEndian>()
             .chain_err(|| "Could not get data")
-    }
-}
-
-#[allow(dead_code)]
-pub struct XmlText<'a> {
-    wrapper: XmlTextWrapper<'a>,
-}
-
-impl<'a> XmlText<'a> {
-    pub fn new(wrapper: XmlTextWrapper<'a>) -> Self {
-        XmlText { wrapper: wrapper }
-    }
-
-    pub fn get_text(&self, string_table: &StringTableWrapper) -> Result<Rc<String>> {
-        let index = self.wrapper.get_text_index()?;
-        string_table.get_string(index)
     }
 }
