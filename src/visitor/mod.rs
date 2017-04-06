@@ -34,18 +34,22 @@ impl Executor {
     /// given visitor.
     pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], mut visitor: &mut V) -> Result<()> {
         let mut cursor = Cursor::new(buffer);
-        let token = cursor.read_u16::<LittleEndian>()
+        let token = cursor
+            .read_u16::<LittleEndian>()
             .chain_err(|| "Error reading first token")?;
 
         if token != 0x2 {
             return Err(format!("File does not start with ARSC token: {:X}", token).into());
         }
 
-        let _header_size = cursor.read_u16::<LittleEndian>()
+        let _header_size = cursor
+            .read_u16::<LittleEndian>()
             .chain_err(|| "Error reading header size")?;
-        let _chunk_size = cursor.read_u32::<LittleEndian>()
+        let _chunk_size = cursor
+            .read_u32::<LittleEndian>()
             .chain_err(|| "Error reading chunk size")?;
-        let _package_amount = cursor.read_u32::<LittleEndian>()
+        let _package_amount = cursor
+            .read_u32::<LittleEndian>()
             .chain_err(|| "Error reading package amount")?;
         // TODO: Avoid infinite loop
         cursor.set_position(_header_size as u64);
@@ -82,16 +86,19 @@ impl Executor {
     pub fn xml<'a, V: ChunkVisitor<'a>>(mut cursor: Cursor<&'a [u8]>,
                                         mut visitor: &mut V)
                                         -> Result<()> {
-        let token = cursor.read_u16::<LittleEndian>()
+        let token = cursor
+            .read_u16::<LittleEndian>()
             .chain_err(|| "Error reading first token")?;
 
         if token != 0x3 {
             return Err(format!("Document does not start with XML token: {:X}", token).into());
         }
 
-        let header_size = cursor.read_u16::<LittleEndian>()
+        let header_size = cursor
+            .read_u16::<LittleEndian>()
             .chain_err(|| "Error reading header size")?;
-        let _chunk_size = cursor.read_u32::<LittleEndian>()
+        let _chunk_size = cursor
+            .read_u32::<LittleEndian>()
             .chain_err(|| "Error reading chunk size")?;
         cursor.set_position(header_size as u64);
         let stream = ChunkLoaderStream::new(cursor);
