@@ -194,6 +194,11 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
         let offset = 36 + (index * (5 * 4)) as u64;
         let initial_position: usize = offset as usize;
         let final_position: usize = (offset + (5 * 4)) as usize;
+
+        if self.raw_data.len() < initial_position || self.raw_data.len() < final_position {
+            return Err("Requested attribute out of bounds".into());
+        }
+
         let slice = &self.raw_data[initial_position..final_position];
 
         let out = AttributeWrapper::new(slice);
