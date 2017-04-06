@@ -60,7 +60,8 @@ fn run() -> Result<()> {
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
     let mut resources_content = Vec::new();
-    archive.by_name("resources.arsc")
+    archive
+        .by_name("resources.arsc")
         .unwrap()
         .read_to_end(&mut resources_content)?;
 
