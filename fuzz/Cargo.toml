@@ -32,3 +32,11 @@ path = "fuzzers/package.rs"
 [[bin]]
 name = "resources"
 path = "fuzzers/resources.rs"
+
+[[bin]]
+name = "table_type_spec"
+path = "fuzzers/table_type_spec.rs"
+
+[[bin]]
+name = "table_type"
+path = "fuzzers/table_type.rs"
