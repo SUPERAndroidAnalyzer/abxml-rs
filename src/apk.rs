@@ -38,10 +38,10 @@ impl Apk {
             .get_decoder()
             .chain_err(|| "Could not get the decoder")?;
 
-        if fs::create_dir(&output_path).is_err() && force {
+        if fs::create_dir_all(&output_path).is_err() && force {
             fs::remove_dir_all(&output_path)
                 .chain_err(|| "Could not clean target directory")?;
-            fs::create_dir(&output_path)
+            fs::create_dir_all(&output_path)
                 .chain_err(|| "Error creating the output folder")?;
         }
 
