@@ -66,9 +66,8 @@ impl<'a> XmlVisitor<'a> {
             Some(ref root) => {
                 match *self.get_string_table() {
                     Some(_) => {
-                        return Xml::encode(self.get_namespaces(),
-                                           root)
-                                       .chain_err(|| "Could note encode XML");
+                        return Xml::encode(self.get_namespaces(), root)
+                                   .chain_err(|| "Could note encode XML");
                     }
                     None => {
                         warn!("No string table found");
@@ -238,10 +237,7 @@ impl AttributeHelper {
             .get_package(package_id)
             .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
-        let entry_key = package
-            .get_entry(res_id)
-            .and_then(|e| Ok(e.get_key()))
-            .ok();
+        let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
 
         if let Some(key) = entry_key {
             let namespace = if !is_main { package.get_name() } else { None };
@@ -292,10 +288,10 @@ impl AttributeHelper {
             .map(|si| match package.get_entries_string(*si) {
                      Ok(str) => (*str).clone(),
                      Err(_) => {
-                error!("Key not found on the string table");
+                         error!("Key not found on the string table");
 
-                "".to_string()
-            }
+                         "".to_string()
+                     }
                  })
             .collect();
 
@@ -338,13 +334,14 @@ impl AttributeHelper {
                         }
 
                         if has_to_add {
-                            entry.simple()
+                            entry
+                                .simple()
                                 .and_then(|s| Ok(s.get_key()))
                                 .and_then(|key| {
-                                    strs.push(key);
-                                    masks.push(mask);
-                                    Ok(())
-                                })
+                                              strs.push(key);
+                                              masks.push(mask);
+                                              Ok(())
+                                          })
                                 .unwrap_or_else(|_| {
                                     error!("Value should be added but there was an issue reading \
                                             the entry");
