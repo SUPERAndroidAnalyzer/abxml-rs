@@ -141,8 +141,7 @@ impl ComplexEntry {
         out.write_u32::<LittleEndian>(self.key_index).unwrap();
 
         // Parent entry
-        out.write_u32::<LittleEndian>(self.parent_entry_id)
-            .unwrap();
+        out.write_u32::<LittleEndian>(self.parent_entry_id).unwrap();
 
         // Children entry amount
         let children_amount = self.entries.len() as u32;
@@ -164,8 +163,7 @@ impl ComplexEntry {
             out.write_u8(e.get_type()).unwrap();
 
             // Value
-            out.write_u32::<LittleEndian>(e.get_value() as u32)
-                .unwrap();
+            out.write_u32::<LittleEndian>(e.get_value() as u32).unwrap();
         }
 
         out
