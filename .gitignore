@@ -2,3 +2,5 @@ target
 Cargo.lock
 AndroidManifest*.xml
 *.bk
+.vagrant
+fuzz    
