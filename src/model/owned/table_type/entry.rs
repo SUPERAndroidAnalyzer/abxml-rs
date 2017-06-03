@@ -62,29 +62,27 @@ impl SimpleEntry {
         self.value_data
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // Header size
-        out.write_u16::<LittleEndian>(8).unwrap();
+        out.write_u16::<LittleEndian>(8)?;
 
         // Flags => Simple entry
-        out.write_u16::<LittleEndian>(0).unwrap();
+        out.write_u16::<LittleEndian>(0)?;
 
         // Key index
-        out.write_u32::<LittleEndian>(self.get_key() as u32)
-            .unwrap();
+        out.write_u32::<LittleEndian>(self.get_key() as u32)?;
 
         // Value type
-        out.write_u16::<LittleEndian>(8).unwrap();
-        out.write_u8(0).unwrap();
-        out.write_u8(self.get_type()).unwrap();
+        out.write_u16::<LittleEndian>(8)?;
+        out.write_u8(0)?;
+        out.write_u8(self.get_type())?;
 
         // Value
-        out.write_u32::<LittleEndian>(self.get_value() as u32)
-            .unwrap();
+        out.write_u32::<LittleEndian>(self.get_value() as u32)?;
 
-        out
+        Ok(out)
     }
 }
 
@@ -128,45 +126,44 @@ impl ComplexEntry {
         &self.entries
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // Header size
-        out.write_u16::<LittleEndian>(16).unwrap();
+        out.write_u16::<LittleEndian>(16)?;
 
         // Flags => Complex entry
-        out.write_u16::<LittleEndian>(1).unwrap();
+        out.write_u16::<LittleEndian>(1)?;
 
         // Key index
-        out.write_u32::<LittleEndian>(self.key_index).unwrap();
+        out.write_u32::<LittleEndian>(self.key_index)?;
 
         // Parent entry
-        out.write_u32::<LittleEndian>(self.parent_entry_id).unwrap();
+        out.write_u32::<LittleEndian>(self.parent_entry_id)?;
 
         // Children entry amount
         let children_amount = self.entries.len() as u32;
         if children_amount == 0 {
-            out.write_u32::<LittleEndian>(0xFFFFFFFF).unwrap();
+            out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
         } else {
-            out.write_u32::<LittleEndian>(self.entries.len() as u32)
-                .unwrap();
+            out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
         }
 
         for e in &self.entries {
             // TODO: Unify this with simple entry without header
             // Key index
-            out.write_u32::<LittleEndian>(e.get_id()).unwrap();
+            out.write_u32::<LittleEndian>(e.get_id())?;
 
             // Value type
-            out.write_u16::<LittleEndian>(8).unwrap();
-            out.write_u8(0).unwrap();
-            out.write_u8(e.get_type()).unwrap();
+            out.write_u16::<LittleEndian>(8)?;
+            out.write_u8(0)?;
+            out.write_u8(e.get_type())?;
 
             // Value
-            out.write_u32::<LittleEndian>(e.get_value() as u32).unwrap();
+            out.write_u32::<LittleEndian>(e.get_value() as u32)?;
         }
 
-        out
+        Ok(out)
     }
 }
 
@@ -215,11 +212,11 @@ impl Entry {
         }
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         match *self {
             Entry::Complex(ref complex) => complex.to_vec(),
             Entry::Simple(ref simple) => simple.to_vec(),
-            Entry::Empty(_, _) => Vec::new(),
+            Entry::Empty(_, _) => Ok(Vec::new()),
         }
     }
 }

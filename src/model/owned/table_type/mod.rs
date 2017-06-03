@@ -41,7 +41,7 @@ impl OwnedBuf for TableTypeBuf {
         let mut entries_body = Vec::new();
 
         for e in &self.entries {
-            let current_entry = e.to_vec();
+            let current_entry = e.to_vec()?;
 
             if e.is_empty() {
                 out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
