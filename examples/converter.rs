@@ -100,9 +100,8 @@ fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String>
         Some(ref root) => {
             match *visitor.get_string_table() {
                 Some(_) => {
-                    return Xml::encode(visitor.get_namespaces(),
-                                       root)
-                                   .chain_err(|| "Could note encode XML");
+                    return Xml::encode(visitor.get_namespaces(), root)
+                               .chain_err(|| "Could note encode XML");
                 }
                 None => {
                     println!("No string table found");

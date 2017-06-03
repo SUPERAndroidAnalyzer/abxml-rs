@@ -38,11 +38,17 @@ impl Apk {
             .get_decoder()
             .chain_err(|| "Could not get the decoder")?;
 
-        if fs::create_dir(&output_path).is_err() && force {
+        if fs::create_dir_all(&output_path).is_err() && force {
             fs::remove_dir_all(&output_path)
-                .chain_err(|| "Could not clean target directory")?;
-            fs::create_dir(&output_path)
-                .chain_err(|| "Error creating the output folder")?;
+                .chain_err(|| {
+                               format!("Could not clean target directory: {}",
+                                       output_path.as_ref().display())
+                           })?;
+            fs::create_dir_all(&output_path)
+                .chain_err(|| {
+                               format!("Error creating the output folder: {}",
+                                       output_path.as_ref().display())
+                           })?;
         }
 
         // Iterate over all the files on the ZIP and extract them
