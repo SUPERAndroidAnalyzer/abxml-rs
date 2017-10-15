@@ -26,13 +26,14 @@ pub struct XmlTagStartBuf {
 
 impl XmlTagStartBuf {
     /// Creates a new `XmlTagStartBuf` with the given data
-    pub fn new(line: u32,
-               field1: u32,
-               namespace: u32,
-               name_index: u32,
-               field2: u32,
-               class: u32)
-               -> Self {
+    pub fn new(
+        line: u32,
+        field1: u32,
+        namespace: u32,
+        name_index: u32,
+        field2: u32,
+        class: u32,
+    ) -> Self {
         XmlTagStartBuf {
             attributes: Vec::new(),
             name: name_index,

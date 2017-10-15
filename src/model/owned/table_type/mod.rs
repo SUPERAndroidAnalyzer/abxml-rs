@@ -65,7 +65,9 @@ impl OwnedBuf for TableTypeBuf {
         let header_size = (5 * 4) + vec_config.len() as u32;
         out.write_u32::<LittleEndian>(self.id as u32)?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
-        out.write_u32::<LittleEndian>(header_size + (self.entries.len() as u32 * 4))?;
+        out.write_u32::<LittleEndian>(
+            header_size + (self.entries.len() as u32 * 4),
+        )?;
         out.extend(&vec_config);
 
         Ok(out)
@@ -88,10 +90,9 @@ impl TableType for TableTypeBuf {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        self.entries
-            .get(index as usize)
-            .cloned()
-            .ok_or_else(|| "Entry out of bound".into())
+        self.entries.get(index as usize).cloned().ok_or_else(|| {
+            "Entry out of bound".into()
+        })
     }
 }
 
@@ -121,8 +122,10 @@ mod tests {
 
         assert_eq!(5, table_type.get_id().unwrap());
         assert_eq!(3, table_type.get_amount().unwrap());
-        assert_eq!(10,
-                   table_type.get_entry(1).unwrap().complex().unwrap().get_id())
+        assert_eq!(
+            10,
+            table_type.get_entry(1).unwrap().complex().unwrap().get_id()
+        )
     }
 
     #[test]

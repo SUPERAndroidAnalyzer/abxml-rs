@@ -52,8 +52,9 @@ fn run() -> Result<()> {
 
     let path = Path::new(&apk_path);
     let mut apk = Apk::new(path).chain_err(|| "Error loading APK")?;
-    apk.export(Path::new(&output), true)
-        .chain_err(|| "APK could not be exported")?;
+    apk.export(Path::new(&output), true).chain_err(
+        || "APK could not be exported",
+    )?;
 
     Ok(())
 }

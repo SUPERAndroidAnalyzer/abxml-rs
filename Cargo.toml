@@ -10,14 +10,14 @@ Parser for resources.arsc contained on APKs and binary XML decompresser
 keywords = ["android", "arsc", "apk", "parser"]
 
 [dependencies]
-byteorder = "^1.0"
-error-chain = "^0.10"
-ansi_term = "^0.9"
-log = "^0.3"
-env_logger = "^0.4"
-zip = { version = "^0.2", optional = true}
-encoding = "^0.2"
-xml-rs = "^0.4"
+byteorder = "1.1"
+error-chain = "0.11"
+ansi_term = "0.10"
+log = "0.3"
+env_logger = "0.4"
+zip = { version = "0.2", optional = true}
+encoding = "0.2"
+xml-rs = "0.6"
 
 [features]
 default = ["zip_decode"]

@@ -30,7 +30,9 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     let out = xml_visitor.into_string().unwrap();
 
     let inner_expected = "<start_tag key=\"value\" />";
-    let expected = format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n{}",
-                           inner_expected);
+    let expected = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n{}",
+        inner_expected
+    );
     assert_eq!(expected, out);
 }

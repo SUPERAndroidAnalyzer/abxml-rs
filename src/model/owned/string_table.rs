@@ -59,7 +59,7 @@ impl OwnedBuf for StringTableBuf {
 
         let header_size = 7 * 4;
         let string_offset = header_size + (self.get_strings_len() as u32 * 4) +
-                            (self.get_styles_len() as u32 * 4);
+            (self.get_styles_len() as u32 * 4);
 
         out.write_u32::<LittleEndian>(self.strings.len() as u32)?;
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;

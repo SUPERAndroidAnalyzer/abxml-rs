@@ -13,17 +13,16 @@ pub struct Xml;
 impl Xml {
     pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
         let target: Vec<u8> = Vec::new();
-        let mut writer = EmitterConfig::new()
-            .perform_indent(true)
-            .create_writer(target);
+        let mut writer = EmitterConfig::new().perform_indent(true).create_writer(
+            target,
+        );
 
         let version = XmlVersion::Version10;
-        writer
-            .write(XmlEvent::StartDocument {
-                       version: version,
-                       encoding: None,
-                       standalone: Some(false),
-                   })?;
+        writer.write(XmlEvent::StartDocument {
+            version: version,
+            encoding: None,
+            standalone: Some(false),
+        })?;
         Self::encode_element(&mut writer, namespaces, element)
             .chain_err(|| "Error decoding an element")?;
 
@@ -31,10 +30,11 @@ impl Xml {
         String::from_utf8(inner).chain_err(|| "Could not export XML")
     }
 
-    fn encode_element<W: Write>(writer: &mut EventWriter<W>,
-                                namespaces: &Namespaces,
-                                element: &AbxmlElement)
-                                -> Result<()> {
+    fn encode_element<W: Write>(
+        writer: &mut EventWriter<W>,
+        namespaces: &Namespaces,
+        element: &AbxmlElement,
+    ) -> Result<()> {
 
         let tag = element.get_tag();
         let tag_name = tag.get_name();

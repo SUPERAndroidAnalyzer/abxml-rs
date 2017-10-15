@@ -36,19 +36,20 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, origin: Origin) {
         match origin {
             Origin::Global => {
-                self.tables
-                    .insert(origin, StringTableCache::new(string_table));
+                self.tables.insert(
+                    origin,
+                    StringTableCache::new(string_table),
+                );
             }
             _ => {
                 let package_id = self.package_mask.get_package();
 
-                let st_res = self.resources
-                    .get_mut_package(package_id)
-                    .and_then(|package| {
-                                  package.set_string_table(StringTableCache::new(string_table),
-                                                           origin);
-                                  Some(())
-                              });
+                let st_res = self.resources.get_mut_package(package_id).and_then(
+                    |package| {
+                        package.set_string_table(StringTableCache::new(string_table), origin);
+                        Some(())
+                    },
+                );
 
                 if st_res.is_none() {
                     error!("Could not retrieve target package");
@@ -68,17 +69,19 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
             if self.tables.contains_key(&Origin::Global) {
                 if let Some(st) = self.tables.remove(&Origin::Global) {
-                    let set_result = self.resources
-                        .get_mut_package(package_id)
-                        .and_then(|package| {
-                                      package.set_string_table(st, Origin::Global);
+                    let set_result = self.resources.get_mut_package(package_id).and_then(
+                        |package| {
+                            package.set_string_table(st, Origin::Global);
 
-                                      Some(())
-                                  });
+                            Some(())
+                        },
+                    );
 
                     if set_result.is_none() {
-                        error!("Could not set the string table because it refers to a \
-                                non-existing package");
+                        error!(
+                            "Could not set the string table because it refers to a \
+                                non-existing package"
+                        );
                     }
                 }
             }
@@ -96,8 +99,10 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             let entries_result = table_type.get_entries();
 
             if entries_result.is_err() {
-                error!("Error visiting table_type: {}",
-                       entries_result.err().unwrap().description());
+                error!(
+                    "Error visiting table_type: {}",
+                    entries_result.err().unwrap().description()
+                );
             } else {
                 let ventries = entries_result.unwrap();
                 for e in &ventries {
@@ -112,12 +117,12 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
         let package_id = self.package_mask.get_package();
 
-        self.resources
-            .get_mut_package(package_id)
-            .and_then(|package| {
-                          package.add_entries(entries);
-                          Some(())
-                      });
+        self.resources.get_mut_package(package_id).and_then(
+            |package| {
+                package.add_entries(entries);
+                Some(())
+            },
+        );
     }
 
     fn visit_type_spec(&mut self, type_spec: TypeSpecWrapper<'a>) {
@@ -222,18 +227,20 @@ impl<'a> LibraryTrait for Library<'a> {
         self.package.get_name().ok()
     }
 
-    fn format_reference(&self,
-                        id: u32,
-                        key: u32,
-                        namespace: Option<String>,
-                        prefix: &str)
-                        -> Result<String> {
+    fn format_reference(
+        &self,
+        id: u32,
+        key: u32,
+        namespace: Option<String>,
+        prefix: &str,
+    ) -> Result<String> {
         let spec_id = id.get_spec() as u32;
-        let spec_str = self.get_spec_as_str(spec_id)
-            .chain_err(|| format!("Could not find spec: {}", spec_id))?;
-        let string =
-            self.get_entries_string(key)
-                .chain_err(|| format!("Could not find key {} on entries string table", key))?;
+        let spec_str = self.get_spec_as_str(spec_id).chain_err(|| {
+            format!("Could not find spec: {}", spec_id)
+        })?;
+        let string = self.get_entries_string(key).chain_err(|| {
+            format!("Could not find key {} on entries string table", key)
+        })?;
 
         let ending = if spec_str == "attr" {
             string
@@ -248,20 +255,16 @@ impl<'a> LibraryTrait for Library<'a> {
     }
 
     fn get_entry(&self, id: u32) -> Result<&Entry> {
-        self.entries
-            .get(&id)
-            .ok_or_else(|| "Could not find entry".into())
+        self.entries.get(&id).ok_or_else(
+            || "Could not find entry".into(),
+        )
     }
 
     fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
         if let Some(ref string_table) = self.entries_string_table {
-            let out_string =
-                string_table
-                    .get_string(str_id)
-                    .chain_err(|| {
-                                   format!("Could not find string {} on entries string table",
-                                           str_id)
-                               })?;
+            let out_string = string_table.get_string(str_id).chain_err(|| {
+                format!("Could not find string {} on entries string table", str_id)
+            })?;
 
             return Ok(out_string);
         }
@@ -271,8 +274,9 @@ impl<'a> LibraryTrait for Library<'a> {
 
     fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>> {
         if let Some(ref string_table) = self.spec_string_table {
-            let out_string = string_table.get_string(str_id)
-                .chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
+            let out_string = string_table.get_string(str_id).chain_err(|| {
+                format!("Could not find string {} on spec string table", str_id)
+            })?;
 
             return Ok(out_string);
         }

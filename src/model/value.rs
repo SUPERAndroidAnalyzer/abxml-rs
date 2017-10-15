@@ -97,7 +97,9 @@ impl Value {
                         Value::Dimension(formatted)
                     }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                        return Err(
+                            format!("Expected a valid unit index. Got: {}", unit_idx).into(),
+                        )
                     }
                 }
             }
@@ -119,7 +121,9 @@ impl Value {
                         Value::Fraction(formatted_fraction)
                     }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                        return Err(
+                            format!("Expected a valid unit index. Got: {}", unit_idx).into(),
+                        )
                     }
                 }
             }
@@ -170,10 +174,12 @@ impl Value {
         let m = ivalue as f32;
         let mm = 1.0 / ((1 << 8) as f32);
 
-        let radix = [1.0 * mm,
-                     1.0 / ((1 << 7) as f32) * mm,
-                     1.0 / ((1 << 15) as f32) * mm,
-                     1.0 / ((1 << 23) as f32) * mm];
+        let radix = [
+            1.0 * mm,
+            1.0 / ((1 << 7) as f32) * mm,
+            1.0 / ((1 << 15) as f32) * mm,
+            1.0 / ((1 << 23) as f32) * mm,
+        ];
 
         let idx = (data >> 4) & 0x3;
 

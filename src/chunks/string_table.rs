@@ -167,8 +167,9 @@ impl<'a> StringTable for StringTableWrapper<'a> {
             return Err("Index out of bounds".into());
         }
 
-        let string = self.get_string_position(idx)
-            .and_then(|position| self.parse_string(position as u32))?;
+        let string = self.get_string_position(idx).and_then(|position| {
+            self.parse_string(position as u32)
+        })?;
 
         Ok(Rc::new(string))
     }
