@@ -27,8 +27,9 @@ impl From<Box<[u8]>> for BufferedDecoder {
 impl BufferedDecoder {
     pub fn from_read<R: Read>(mut read: R) -> Result<BufferedDecoder> {
         let mut buffer = Vec::new();
-        read.read_to_end(&mut buffer)
-            .chain_err(|| "could not read buffer")?;
+        read.read_to_end(&mut buffer).chain_err(
+            || "could not read buffer",
+        )?;
         Ok(BufferedDecoder { buffer: buffer.into_boxed_slice() })
     }
 

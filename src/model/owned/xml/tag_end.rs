@@ -59,8 +59,32 @@ mod tests {
     fn it_can_generate_an_empty_chunk() {
         let tag_end = XmlTagEndBuf::new(0);
         let out = tag_end.to_vec().unwrap();
-        let expected = [3, 1, 16, 0, 24, 0, 0, 0, 3, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255,
-                        255, 0, 0, 0, 0];
+        let expected = [
+            3,
+            1,
+            16,
+            0,
+            24,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            0,
+            0,
+            0,
+            0,
+        ];
 
         assert_eq!(expected, out.as_slice());
     }

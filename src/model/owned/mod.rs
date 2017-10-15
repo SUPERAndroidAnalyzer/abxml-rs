@@ -37,11 +37,13 @@ pub trait OwnedBuf {
     /// Convert the given `OwnedBuf` to a well formed chunk in form of vector of bytes
     fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
-        let body = self.get_body_data()
-            .chain_err(|| "Could not read chunk body")?;
+        let body = self.get_body_data().chain_err(
+            || "Could not read chunk body",
+        )?;
 
-        self.write_header(&mut out, &body)
-            .chain_err(|| "Could not write header")?;
+        self.write_header(&mut out, &body).chain_err(
+            || "Could not write header",
+        )?;
 
         out.extend(body.iter());
 
@@ -56,8 +58,9 @@ pub trait OwnedBuf {
 
         buffer.write_u16::<LittleEndian>(self.get_token())?;
         buffer.write_u16::<LittleEndian>(header_size)?;
-        buffer
-            .write_u32::<LittleEndian>(body.len() as u32 + header_size as u32)?;
+        buffer.write_u32::<LittleEndian>(
+            body.len() as u32 + header_size as u32,
+        )?;
         buffer.extend(&header);
 
         Ok(())

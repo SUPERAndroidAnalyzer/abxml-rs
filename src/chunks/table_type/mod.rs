@@ -44,7 +44,7 @@ impl<'a> TableTypeWrapper<'a> {
         self.decode_entries(&mut cursor)
     }
 
-    fn decode_entries(&self, mut cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>> {
+    fn decode_entries(&self, cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>> {
         let mut offsets = Vec::new();
         let mut entries = Vec::new();
 
@@ -87,10 +87,11 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
-    fn decode_simple_entry(cursor: &mut Cursor<&[u8]>,
-                           header: &EntryHeader,
-                           id: u32)
-                           -> Result<Option<Entry>> {
+    fn decode_simple_entry(
+        cursor: &mut Cursor<&[u8]>,
+        header: &EntryHeader,
+        id: u32,
+    ) -> Result<Option<Entry>> {
         cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
@@ -103,10 +104,11 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(Some(entry))
     }
 
-    fn decode_complex_entry(cursor: &mut Cursor<&[u8]>,
-                            header: &EntryHeader,
-                            id: u32)
-                            -> Result<Option<Entry>> {
+    fn decode_complex_entry(
+        cursor: &mut Cursor<&[u8]>,
+        header: &EntryHeader,
+        id: u32,
+    ) -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
@@ -116,10 +118,12 @@ impl<'a> TableTypeWrapper<'a> {
         }
 
         for j in 0..value_count {
-            debug!("Parsing value: {}/{} (@{})",
-                   j,
-                   value_count - 1,
-                   cursor.position());
+            debug!(
+                "Parsing value: {}/{} (@{})",
+                j,
+                value_count - 1,
+                cursor.position()
+            );
             let val_id = cursor.read_u32::<LittleEndian>()?;
             cursor.read_u16::<LittleEndian>()?;
             // Padding
@@ -162,7 +166,8 @@ impl<'a> TableType for TableTypeWrapper<'a> {
         let end = self.data_offset as usize;
 
         if ini > end || (end - ini) <= 28 || self.raw_data.len() < ini ||
-           self.raw_data.len() < end {
+            self.raw_data.len() < end
+        {
             return Err("Configuration slice is not valid".into());
         }
 
@@ -174,9 +179,8 @@ impl<'a> TableType for TableTypeWrapper<'a> {
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
         let entries = self.get_entries()?;
-        entries
-            .get(index as usize)
-            .cloned()
-            .ok_or_else(|| "Entry not found".into())
+        entries.get(index as usize).cloned().ok_or_else(|| {
+            "Entry not found".into()
+        })
     }
 }

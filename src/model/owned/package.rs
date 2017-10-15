@@ -16,7 +16,9 @@ pub struct PackageBuf {
 impl PackageBuf {
     pub fn new(id: u32, package_name: String) -> Result<Self> {
         if package_name.as_bytes().len() > 256 {
-            return Err("Can not create a package with a length greater than 256".into());
+            return Err(
+                "Can not create a package with a length greater than 256".into(),
+            );
         }
 
         let package = PackageBuf {

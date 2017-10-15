@@ -46,7 +46,9 @@ impl<'a> TypeSpec for TypeSpecWrapper<'a> {
         let amount = self.get_amount()?;
 
         if index >= amount {
-            return Err(format!("Invalid flag on index {} out of {}", index, amount).into());
+            return Err(
+                format!("Invalid flag on index {} out of {}", index, amount).into(),
+            );
         }
 
         let mut cursor = Cursor::new(self.raw_data);
@@ -75,7 +77,9 @@ mod tests {
 
         let errored_flag = wrapper.get_flag(1541);
         assert!(errored_flag.is_err());
-        assert_eq!("Invalid flag on index 1541 out of 1541",
-                   errored_flag.err().unwrap().to_string());
+        assert_eq!(
+            "Invalid flag on index 1541 out of 1541",
+            errored_flag.err().unwrap().to_string()
+        );
     }
 }

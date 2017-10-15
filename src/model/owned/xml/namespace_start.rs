@@ -76,10 +76,14 @@ mod tests {
         let fake_string_table = FakeStringTable;
         let namespace_start = XmlNamespaceStartBuf::new(99, 11, 33);
 
-        assert_eq!("Ones",
-                   &*namespace_start.get_prefix(&fake_string_table).unwrap());
-        assert_eq!("Threes",
-                   &*namespace_start.get_namespace(&fake_string_table).unwrap());
+        assert_eq!(
+            "Ones",
+            &*namespace_start.get_prefix(&fake_string_table).unwrap()
+        );
+        assert_eq!(
+            "Threes",
+            &*namespace_start.get_namespace(&fake_string_table).unwrap()
+        );
     }
 
     #[test]
