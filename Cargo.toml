@@ -17,7 +17,7 @@ log = "0.3"
 env_logger = "0.4"
 zip = { version = "0.2", optional = true}
 encoding = "0.2"
-xml-rs = "0.7w"
+xml-rs = "0.7"
 
 [features]
 default = ["zip_decode"]
