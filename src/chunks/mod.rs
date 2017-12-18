@@ -87,7 +87,6 @@ impl<'a> ChunkLoaderStream<'a> {
         let raw_data = self.cursor.get_ref();
         let slice = &raw_data[header.get_offset() as usize..header.get_chunk_end() as usize];
 
-
         let chunk = match header.get_token() {
             TOKEN_STRING_TABLE => Chunk::StringTable(StringTableWrapper::new(slice)),
             TOKEN_PACKAGE => Chunk::Package(PackageWrapper::new(slice)),
@@ -140,7 +139,7 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
 mod tests {
     use super::*;
     use std::io::Cursor;
-    use model::owned::{StringTableBuf, ResourcesBuf, OwnedBuf};
+    use model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
 
     #[test]
     fn it_can_detect_loops() {

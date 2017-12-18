@@ -30,7 +30,6 @@ impl<'a> PackageWrapper<'a> {
             return Err("Not enough bytes to retrieve package name".into());
         }
 
-
         let raw_str = &cursor.get_ref()[initial_position as usize..final_position];
         let mut decoder = utf_16::UTF16Decoder::<Little>::new();
         let mut o = String::new();

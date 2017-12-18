@@ -63,18 +63,15 @@ impl<'a> XmlVisitor<'a> {
     // TODO: Convert to TryInto once it will be stable
     pub fn into_string(self) -> Result<String> {
         match *self.get_root() {
-            Some(ref root) => {
-                match *self.get_string_table() {
-                    Some(_) => {
-                        return Xml::encode(self.get_namespaces(), root).chain_err(
-                            || "Could note encode XML",
-                        );
-                    }
-                    None => {
-                        warn!("No string table found");
-                    }
+            Some(ref root) => match *self.get_string_table() {
+                Some(_) => {
+                    return Xml::encode(self.get_namespaces(), root)
+                        .chain_err(|| "Could note encode XML");
                 }
-            }
+                None => {
+                    warn!("No string table found");
+                }
+            },
             None => {
                 warn!("No root on target XML");
             }
@@ -86,9 +83,8 @@ impl<'a> XmlVisitor<'a> {
     fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element> {
         match self.main_string_table {
             Some(ref string_table) => {
-                let (tag, attributes) = self.get_element_data(string_table, tag_start).chain_err(
-                    || "Could not get element data",
-                )?;
+                let (tag, attributes) = self.get_element_data(string_table, tag_start)
+                    .chain_err(|| "Could not get element data")?;
                 Ok(Element::new(tag, attributes))
             }
             None => Err("No main string table found!".into()),
@@ -100,29 +96,31 @@ impl<'a> XmlVisitor<'a> {
         string_table: &StringTableCache<StringTableWrapper<'a>>,
         tag_start: &XmlTagStartWrapper,
     ) -> Result<(Tag, HashMap<String, String>)> {
-        let name_index = tag_start.get_element_name_index().chain_err(
-            || "Name index not found",
-        )?;
-        let rc_string = string_table.get_string(name_index).chain_err(
-            || "Element name is not on the string table",
-        )?;
+        let name_index = tag_start
+            .get_element_name_index()
+            .chain_err(|| "Name index not found")?;
+        let rc_string = string_table
+            .get_string(name_index)
+            .chain_err(|| "Element name is not on the string table")?;
         let tag = Tag::new(rc_string.clone(), self.namespace_prefixes.clone());
 
         let mut attributes = HashMap::new();
-        let num_attributes = tag_start.get_attributes_amount().chain_err(
-            || "Could not get the amount of attributes",
-        )?;
+        let num_attributes = tag_start
+            .get_attributes_amount()
+            .chain_err(|| "Could not get the amount of attributes")?;
 
         for i in 0..num_attributes {
             let mut final_name = String::new();
-            let current_attribute = tag_start.get_attribute(i).chain_err(|| {
-                format!("Could not read attribute {} ", i)
-            })?;
+            let current_attribute = tag_start
+                .get_attribute(i)
+                .chain_err(|| format!("Could not read attribute {} ", i))?;
 
             let namespace_index = current_attribute.get_namespace()?;
             if namespace_index != 0xFFFFFFFF {
                 let namespace = (*string_table.get_string(namespace_index)?).clone();
-                let prefix = self.namespaces.get(&namespace).ok_or("Namespace not found")?;
+                let prefix = self.namespaces
+                    .get(&namespace)
+                    .ok_or("Namespace not found")?;
                 final_name.push_str(prefix);
                 final_name.push(':');
             }
@@ -142,8 +140,7 @@ impl<'a> XmlVisitor<'a> {
                     AttributeHelper::resolve_reference(self.resources, *id, "?")
                         .chain_err(|| "Could not resolve attribute reference")?
                 }
-                Value::Integer(ref value) |
-                Value::Flags(ref value) => {
+                Value::Integer(ref value) | Value::Flags(ref value) => {
                     let flag_resolution = AttributeHelper::resolve_flags(
                         &current_attribute,
                         *value as u32,
@@ -159,7 +156,6 @@ impl<'a> XmlVisitor<'a> {
                 }
                 _ => current_value.to_string(),
             };
-
 
             attributes.insert(final_name, value);
         }
@@ -187,10 +183,8 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
                 namespace_start.get_prefix(string_table),
             ) {
                 (Ok(namespace), Ok(prefix)) => {
-                    self.namespaces.insert(
-                        (*namespace).clone(),
-                        (*prefix).clone(),
-                    );
+                    self.namespaces
+                        .insert((*namespace).clone(), (*prefix).clone());
                     self.namespace_prefixes.push(namespace.clone());
                 }
                 _ => {
@@ -241,9 +235,9 @@ impl AttributeHelper {
         }
 
         let is_main = resources.is_main_package(package_id);
-        let package = resources.get_package(package_id).ok_or_else(|| {
-            ErrorKind::Msg("Package not found".into())
-        })?;
+        let package = resources
+            .get_package(package_id)
+            .ok_or_else(|| ErrorKind::Msg("Package not found".into()))?;
 
         let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
 
@@ -286,9 +280,9 @@ impl AttributeHelper {
         };
 
         let package_id = entry_ref.get_package() as u8;
-        resources.get_package(package_id).and_then(|package| {
-            Self::search_flags(flags, *entry_ref, package)
-        })
+        resources
+            .get_package(package_id)
+            .and_then(|package| Self::search_flags(flags, *entry_ref, package))
     }
 
     fn search_flags(flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
@@ -355,7 +349,7 @@ impl AttributeHelper {
                                 .unwrap_or_else(|_| {
                                     error!(
                                         "Value should be added but there was an issue reading \
-                                            the entry"
+                                         the entry"
                                     );
                                 });
                         }
@@ -399,9 +393,9 @@ impl AttributeHelper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::{StringTable, Resources, Library, LibraryBuilder};
+    use model::{Library, LibraryBuilder, Resources, StringTable};
     use model::Entries;
-    use model::owned::{Entry, SimpleEntry, ComplexEntry, AttributeBuf};
+    use model::owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry};
     use visitor::Origin;
     use model::TypeSpec;
     use test::FakeStringTable;
@@ -473,9 +467,9 @@ mod tests {
         }
 
         fn get_entry(&self, id: u32) -> Result<&Entry> {
-            self.entries.get(&id).ok_or_else(
-                || "Could not find entry".into(),
-            )
+            self.entries
+                .get(&id)
+                .ok_or_else(|| "Could not find entry".into())
         }
 
         fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
@@ -513,10 +507,10 @@ mod tests {
         fn get_flag(&self, index: u32) -> Result<u32> {
             let flags = vec![0, 4, 16];
 
-            flags.get(index as usize).map(|x| *x).ok_or(
-                "Flag out of bounds"
-                    .into(),
-            )
+            flags
+                .get(index as usize)
+                .map(|x| *x)
+                .ok_or("Flag out of bounds".into())
         }
     }
 

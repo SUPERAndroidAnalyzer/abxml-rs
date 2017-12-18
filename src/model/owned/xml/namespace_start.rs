@@ -68,7 +68,7 @@ impl OwnedBuf for XmlNamespaceStartBuf {
 mod tests {
     use super::*;
     use chunks::XmlNamespaceStartWrapper;
-    use test::{FakeStringTable, compare_chunks};
+    use test::{compare_chunks, FakeStringTable};
     use raw_chunks::EXAMPLE_NAMESPACE_START;
 
     #[test]
@@ -94,6 +94,5 @@ mod tests {
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &EXAMPLE_NAMESPACE_START);
-
     }
 }

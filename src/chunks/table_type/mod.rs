@@ -3,7 +3,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use model::TableType;
 use model::owned::TableTypeBuf;
-use model::owned::{Entry, SimpleEntry, ComplexEntry, EntryHeader};
+use model::owned::{ComplexEntry, Entry, EntryHeader, SimpleEntry};
 
 pub use self::configuration::ConfigurationWrapper;
 pub use self::configuration::Region;
@@ -165,8 +165,7 @@ impl<'a> TableType for TableTypeWrapper<'a> {
         let ini = 20 as usize;
         let end = self.data_offset as usize;
 
-        if ini > end || (end - ini) <= 28 || self.raw_data.len() < ini ||
-            self.raw_data.len() < end
+        if ini > end || (end - ini) <= 28 || self.raw_data.len() < ini || self.raw_data.len() < end
         {
             return Err("Configuration slice is not valid".into());
         }
@@ -179,8 +178,9 @@ impl<'a> TableType for TableTypeWrapper<'a> {
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
         let entries = self.get_entries()?;
-        entries.get(index as usize).cloned().ok_or_else(|| {
-            "Entry not found".into()
-        })
+        entries
+            .get(index as usize)
+            .cloned()
+            .ok_or_else(|| "Entry not found".into())
     }
 }
