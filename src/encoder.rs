@@ -1,6 +1,6 @@
 //! Exports the decoded binary XMLs to string XMLs
 
-use xml::writer::{EventWriter, EmitterConfig, XmlEvent};
+use xml::writer::{EmitterConfig, EventWriter, XmlEvent};
 use xml::common::XmlVersion;
 use model::Element as AbxmlElement;
 use std::ops::Deref;
@@ -13,9 +13,9 @@ pub struct Xml;
 impl Xml {
     pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
         let target: Vec<u8> = Vec::new();
-        let mut writer = EmitterConfig::new().perform_indent(true).create_writer(
-            target,
-        );
+        let mut writer = EmitterConfig::new()
+            .perform_indent(true)
+            .create_writer(target);
 
         let version = XmlVersion::Version10;
         writer.write(XmlEvent::StartDocument {
@@ -35,7 +35,6 @@ impl Xml {
         namespaces: &Namespaces,
         element: &AbxmlElement,
     ) -> Result<()> {
-
         let tag = element.get_tag();
         let tag_name = tag.get_name();
         let prefixes = tag.get_prefixes();

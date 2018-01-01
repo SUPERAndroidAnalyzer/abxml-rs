@@ -4,7 +4,7 @@ use std::rc::Rc;
 use errors::*;
 use model::StringTable;
 use encoding::codec::{utf_16, utf_8};
-use model::owned::{StringTableBuf, Encoding as EncodingType};
+use model::owned::{Encoding as EncodingType, StringTableBuf};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -123,7 +123,6 @@ impl<'a> StringTableWrapper<'a> {
             let a = offset + 2;
             let b = offset + 2 + (val * 2);
 
-
             if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
                 return Err("Sub-slice out of raw_data range".into());
             }
@@ -167,9 +166,8 @@ impl<'a> StringTable for StringTableWrapper<'a> {
             return Err("Index out of bounds".into());
         }
 
-        let string = self.get_string_position(idx).and_then(|position| {
-            self.parse_string(position as u32)
-        })?;
+        let string = self.get_string_position(idx)
+            .and_then(|position| self.parse_string(position as u32))?;
 
         Ok(Rc::new(string))
     }

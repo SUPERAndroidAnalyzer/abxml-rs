@@ -7,12 +7,12 @@
 //! depending on the type of chunk.
 
 extern crate byteorder;
-extern crate xml;
+extern crate encoding;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
 extern crate log;
-extern crate encoding;
+extern crate xml;
 #[cfg(feature = "zip_decode")]
 extern crate zip;
 

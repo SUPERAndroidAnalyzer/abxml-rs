@@ -55,9 +55,10 @@ impl TypeSpec for TableTypeSpecBuf {
     }
 
     fn get_flag(&self, index: u32) -> Result<u32> {
-        self.flags.get(index as usize).cloned().ok_or_else(|| {
-            "Flag out of bounds".into()
-        })
+        self.flags
+            .get(index as usize)
+            .cloned()
+            .ok_or_else(|| "Flag out of bounds".into())
     }
 }
 

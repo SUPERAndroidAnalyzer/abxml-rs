@@ -58,8 +58,8 @@ impl OwnedBuf for StringTableBuf {
         };
 
         let header_size = 7 * 4;
-        let string_offset = header_size + (self.get_strings_len() as u32 * 4) +
-            (self.get_styles_len() as u32 * 4);
+        let string_offset =
+            header_size + (self.get_strings_len() as u32 * 4) + (self.get_styles_len() as u32 * 4);
 
         out.write_u32::<LittleEndian>(self.strings.len() as u32)?;
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;
@@ -87,7 +87,6 @@ impl OwnedBuf for StringTableBuf {
         } else {
             utf_16::UTF_16LE_ENCODING.raw_encoder()
         };
-
 
         // Encode strings and save offsets
         for string in &self.strings {
@@ -177,7 +176,6 @@ mod tests {
         assert_eq!("忠犬ハチ公", *(string_table.get_string(1).unwrap()));
         assert!(string_table.get_string(2).is_err());
     }
-
 
     #[test]
     fn identity() {

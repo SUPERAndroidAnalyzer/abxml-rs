@@ -86,6 +86,5 @@ mod tests {
         let new_raw = owned.to_vec().unwrap();
 
         compare_chunks(&new_raw, &EXAMPLE_NAMESPACE_END);
-
     }
 }

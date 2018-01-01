@@ -34,7 +34,7 @@ before_script:
   - |
       cargo install cargo-travis || true  &&
       export PATH=$HOME/.cargo/bin:$PATH
-  - (test $TRAVIS_RUST_VERSION != "stable" || cargo install rustfmt --force)
+  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo install rustfmt-nightly --force)
 
 script:
   - |
@@ -42,7 +42,7 @@ script:
     cargo build --example converter &&
     cargo build --example exporter &&
     cargo test
-  - (test $TRAVIS_RUST_VERSION != "stable" || cargo fmt -- --write-mode=diff)
+  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo fmt -- --write-mode=diff)
 
 after_success:
   - cargo coveralls

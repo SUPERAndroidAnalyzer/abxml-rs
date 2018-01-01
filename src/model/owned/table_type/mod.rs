@@ -7,7 +7,7 @@ mod configuration;
 mod entry;
 
 pub use self::configuration::ConfigurationBuf;
-pub use self::entry::{Entry, ComplexEntry, SimpleEntry, EntryHeader};
+pub use self::entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry};
 
 pub struct TableTypeBuf {
     id: u8,
@@ -65,9 +65,7 @@ impl OwnedBuf for TableTypeBuf {
         let header_size = (5 * 4) + vec_config.len() as u32;
         out.write_u32::<LittleEndian>(self.id as u32)?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
-        out.write_u32::<LittleEndian>(
-            header_size + (self.entries.len() as u32 * 4),
-        )?;
+        out.write_u32::<LittleEndian>(header_size + (self.entries.len() as u32 * 4))?;
         out.extend(&vec_config);
 
         Ok(out)
@@ -90,9 +88,10 @@ impl TableType for TableTypeBuf {
     }
 
     fn get_entry(&self, index: u32) -> Result<Entry> {
-        self.entries.get(index as usize).cloned().ok_or_else(|| {
-            "Entry out of bound".into()
-        })
+        self.entries
+            .get(index as usize)
+            .cloned()
+            .ok_or_else(|| "Entry out of bound".into())
     }
 }
 

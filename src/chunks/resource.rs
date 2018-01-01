@@ -21,14 +21,12 @@ impl<'a> ResourceWrapper<'a> {
         let amount_of_resources = (count / 4) - 2;
 
         if count > self.raw_data.len() as u32 {
-            return Err(
-                format!(
-                    "There is not enough data on the buffer ({}) to read \
-                    the reported resources count ({})",
-                    self.raw_data.len(),
-                    count
-                ).into(),
-            );
+            return Err(format!(
+                "There is not enough data on the buffer ({}) to read \
+                 the reported resources count ({})",
+                self.raw_data.len(),
+                count
+            ).into());
         }
 
         let mut resources = Vec::with_capacity(amount_of_resources as usize);
@@ -39,7 +37,6 @@ impl<'a> ResourceWrapper<'a> {
 
         Ok(resources)
     }
-
 
     pub fn to_buffer(&self) -> Result<ResourcesBuf> {
         let mut owned = ResourcesBuf::default();
@@ -73,7 +70,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             "There is not enough data on the buffer (16) to read the \
-                    reported resources count (255)",
+             reported resources count (255)",
             result.err().unwrap().to_string()
         );
     }

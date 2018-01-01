@@ -80,7 +80,6 @@ impl Xml {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

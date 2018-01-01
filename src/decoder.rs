@@ -14,7 +14,9 @@ pub struct BufferedDecoder {
 
 impl From<Vec<u8>> for BufferedDecoder {
     fn from(buffer: Vec<u8>) -> BufferedDecoder {
-        BufferedDecoder { buffer: buffer.into_boxed_slice() }
+        BufferedDecoder {
+            buffer: buffer.into_boxed_slice(),
+        }
     }
 }
 
@@ -27,10 +29,11 @@ impl From<Box<[u8]>> for BufferedDecoder {
 impl BufferedDecoder {
     pub fn from_read<R: Read>(mut read: R) -> Result<BufferedDecoder> {
         let mut buffer = Vec::new();
-        read.read_to_end(&mut buffer).chain_err(
-            || "could not read buffer",
-        )?;
-        Ok(BufferedDecoder { buffer: buffer.into_boxed_slice() })
+        read.read_to_end(&mut buffer)
+            .chain_err(|| "could not read buffer")?;
+        Ok(BufferedDecoder {
+            buffer: buffer.into_boxed_slice(),
+        })
     }
 
     pub fn get_decoder(&self) -> Result<Decoder> {

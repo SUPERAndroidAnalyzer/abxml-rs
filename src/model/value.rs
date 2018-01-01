@@ -59,15 +59,14 @@ impl ToString for Value {
     fn to_string(&self) -> String {
         match *self {
             Value::StringReference(i) => format!("@string/{}", i),
-            Value::Dimension(ref s) |
-            Value::Fraction(ref s) |
-            Value::ColorARGB8(ref s) |
-            Value::ColorRGB8(ref s) |
-            Value::ColorARGB4(ref s) |
-            Value::ColorRGB4(ref s) => s.clone(),
+            Value::Dimension(ref s)
+            | Value::Fraction(ref s)
+            | Value::ColorARGB8(ref s)
+            | Value::ColorRGB8(ref s)
+            | Value::ColorARGB4(ref s)
+            | Value::ColorRGB4(ref s) => s.clone(),
             Value::Float(f) => format!("{:.*}", 1, f),
-            Value::Integer(i) |
-            Value::Flags(i) => i.to_string(),
+            Value::Integer(i) | Value::Flags(i) => i.to_string(),
             Value::Boolean(b) => b.to_string(),
             Value::ReferenceId(ref s) => format!("@id/0x{:x}", s),
             Value::AttributeReferenceId(ref s) => format!("@id/0x{:x}", s),
@@ -81,10 +80,10 @@ impl Value {
     /// will return an error. If the type is not know, it will return `Value::Unknown`
     pub fn new(value_type: u8, data: u32) -> Result<Self> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID |
-            TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
-            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID |
-            TOKEN_TYPE_DYN_ATTRIBUTE => Value::AttributeReferenceId(data),
+            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
+            TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
+                Value::AttributeReferenceId(data)
+            }
             TOKEN_TYPE_STRING => Value::StringReference(data),
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dip", "sp", "pt", "in", "mm"];
@@ -97,9 +96,7 @@ impl Value {
                         Value::Dimension(formatted)
                     }
                     None => {
-                        return Err(
-                            format!("Expected a valid unit index. Got: {}", unit_idx).into(),
-                        )
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
                     }
                 }
             }
@@ -121,9 +118,7 @@ impl Value {
                         Value::Fraction(formatted_fraction)
                     }
                     None => {
-                        return Err(
-                            format!("Expected a valid unit index. Got: {}", unit_idx).into(),
-                        )
+                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
                     }
                 }
             }
@@ -160,7 +155,6 @@ impl Value {
                 Value::ColorRGB4(formatted_color)
             }
             _ => Value::Unknown(value_type, data),
-
         };
 
         Ok(value)
