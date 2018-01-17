@@ -11,7 +11,7 @@ use std::path::Path;
 use abxml::apk::Apk;
 
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::try_init().unwrap();
 
     if let Err(ref e) = run() {
         println!("error: {}", e);
