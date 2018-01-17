@@ -1,8 +1,11 @@
 [package]
 name = "abxml"
-version = "0.2.1"
+version = "0.3.0"
 license = "MIT/Apache-2.0"
-authors = ["Guillem Nieto <gnieto.talo@gmail.com>"]
+authors = [
+    "Guillem Nieto <gnieto.talo@gmail.com>",
+    "Iban Eguia <razican@protonmail.ch>"
+]
 repository = "https://github.com/gnieto/abxml-rs"
 description = """
 Parser for resources.arsc contained on APKs and binary XML decompresser
@@ -10,14 +13,14 @@ Parser for resources.arsc contained on APKs and binary XML decompresser
 keywords = ["android", "arsc", "apk", "parser"]
 
 [dependencies]
-byteorder = "1.1"
-error-chain = "0.11"
-ansi_term = "0.10"
-log = "0.3"
-env_logger = "0.4"
-zip = { version = "0.2", optional = true}
-encoding = "0.2"
-xml-rs = "0.7"
+byteorder = "1.2.1"
+error-chain = "0.11.0"
+ansi_term = "0.10.2"
+log = "0.4.1"
+env_logger = "0.5.0"
+zip = { version = "0.3.0", optional = true}
+encoding = "0.2.33"
+xml-rs = "0.7.0"
 
 [features]
 default = ["zip_decode"]
