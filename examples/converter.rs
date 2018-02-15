@@ -1,9 +1,9 @@
 extern crate abxml;
-extern crate error_chain;
 extern crate byteorder;
-extern crate zip;
-extern crate log;
 extern crate env_logger;
+extern crate error_chain;
+extern crate log;
+extern crate zip;
 
 use std::env;
 use abxml::encoder::Xml;
@@ -60,9 +60,10 @@ fn run() -> Result<()> {
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
     let mut resources_content = Vec::new();
-    archive.by_name("resources.arsc").unwrap().read_to_end(
-        &mut resources_content,
-    )?;
+    archive
+        .by_name("resources.arsc")
+        .unwrap()
+        .read_to_end(&mut resources_content)?;
 
     let mut resources_visitor = ModelVisitor::default();
     Executor::arsc(&resources_content, &mut resources_visitor)?;
@@ -79,9 +80,8 @@ fn run() -> Result<()> {
                 let new_content = xml_content.clone();
 
                 let resources = resources_visitor.get_resources();
-                let out = parse_xml(&new_content, resources).chain_err(
-                    || "Could not decode target file",
-                )?;
+                let out = parse_xml(&new_content, resources)
+                    .chain_err(|| "Could not decode target file")?;
                 println!("{}", out);
             }
         }
@@ -97,18 +97,15 @@ fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String>
     Executor::xml(cursor, &mut visitor)?;
 
     match *visitor.get_root() {
-        Some(ref root) => {
-            match *visitor.get_string_table() {
-                Some(_) => {
-                    return Xml::encode(visitor.get_namespaces(), root).chain_err(
-                        || "Could note encode XML",
-                    );
-                }
-                None => {
-                    println!("No string table found");
-                }
+        Some(ref root) => match *visitor.get_string_table() {
+            Some(_) => {
+                return Xml::encode(visitor.get_namespaces(), root)
+                    .chain_err(|| "Could note encode XML");
             }
-        }
+            None => {
+                println!("No string table found");
+            }
+        },
         None => {
             println!("No root on target XML");
         }

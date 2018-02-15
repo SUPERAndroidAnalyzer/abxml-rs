@@ -2,7 +2,7 @@ extern crate abxml;
 
 use abxml::decoder::Decoder;
 use abxml::model::builder::Xml;
-use abxml::model::owned::{XmlTagStartBuf, XmlTagEndBuf, StringTableBuf, AttributeBuf};
+use abxml::model::owned::{AttributeBuf, StringTableBuf, XmlTagEndBuf, XmlTagStartBuf};
 
 #[test]
 fn it_can_generate_a_decoder_from_a_buffer() {

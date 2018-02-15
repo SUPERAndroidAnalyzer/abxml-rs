@@ -1,9 +1,9 @@
 extern crate abxml;
-extern crate error_chain;
 extern crate byteorder;
-extern crate zip;
-extern crate log;
 extern crate env_logger;
+extern crate error_chain;
+extern crate log;
+extern crate zip;
 
 use std::env;
 use abxml::errors::*;
@@ -52,9 +52,8 @@ fn run() -> Result<()> {
 
     let path = Path::new(&apk_path);
     let mut apk = Apk::new(path).chain_err(|| "Error loading APK")?;
-    apk.export(Path::new(&output), true).chain_err(
-        || "APK could not be exported",
-    )?;
+    apk.export(Path::new(&output), true)
+        .chain_err(|| "APK could not be exported")?;
 
     Ok(())
 }
