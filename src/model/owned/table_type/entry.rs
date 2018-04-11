@@ -1,5 +1,5 @@
-use errors::*;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
 
 const MASK_COMPLEX: u16 = 0x0001;
 
@@ -12,10 +12,10 @@ pub struct EntryHeader {
 
 impl EntryHeader {
     pub fn new(header_size: u16, flags: u16, key_index: u32) -> Self {
-        EntryHeader {
-            header_size: header_size,
-            flags: flags,
-            key_index: key_index,
+        Self {
+            header_size,
+            flags,
+            key_index,
         }
     }
 
@@ -38,11 +38,11 @@ pub struct SimpleEntry {
 
 impl SimpleEntry {
     pub fn new(id: u32, key_index: u32, value_type: u8, value_data: u32) -> Self {
-        SimpleEntry {
-            id: id,
-            key_index: key_index,
-            value_type: value_type,
-            value_data: value_data,
+        Self {
+            id,
+            key_index,
+            value_type,
+            value_data,
         }
     }
 
@@ -62,7 +62,7 @@ impl SimpleEntry {
         self.value_data
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         // Header size
@@ -96,11 +96,11 @@ pub struct ComplexEntry {
 
 impl ComplexEntry {
     pub fn new(id: u32, key_index: u32, parent_entry_id: u32, entries: Vec<SimpleEntry>) -> Self {
-        ComplexEntry {
-            id: id,
-            key_index: key_index,
-            parent_entry_id: parent_entry_id,
-            entries: entries,
+        Self {
+            id,
+            key_index,
+            parent_entry_id,
+            entries,
         }
     }
 
@@ -126,7 +126,7 @@ impl ComplexEntry {
         &self.entries
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         // Header size
@@ -175,17 +175,17 @@ pub enum Entry {
 }
 
 impl Entry {
-    pub fn simple(&self) -> Result<&SimpleEntry> {
+    pub fn simple(&self) -> Result<&SimpleEntry, Error> {
         match *self {
             Entry::Simple(ref simple) => Ok(simple),
-            _ => Err("Asked for a complex entry on a simple one".into()),
+            _ => Err(format_err!("asked for a complex entry on a simple one")),
         }
     }
 
-    pub fn complex(&self) -> Result<&ComplexEntry> {
+    pub fn complex(&self) -> Result<&ComplexEntry, Error> {
         match *self {
             Entry::Complex(ref complex) => Ok(complex),
-            _ => Err("Asked for a simple entry on a complex one".into()),
+            _ => Err(format_err!("asked for a simple entry on a complex one")),
         }
     }
 
@@ -212,7 +212,7 @@ impl Entry {
         }
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         match *self {
             Entry::Complex(ref complex) => complex.to_vec(),
             Entry::Simple(ref simple) => simple.to_vec(),

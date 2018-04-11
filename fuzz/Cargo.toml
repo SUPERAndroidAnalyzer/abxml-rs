@@ -18,10 +18,6 @@ git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
 members = ["."]
 
 [[bin]]
-name = "fuzzer_script_1"
-path = "fuzzers/fuzzer_script_1.rs"
-
-[[bin]]
 name = "string_table"
 path = "fuzzers/string_table.rs"
 

@@ -1,34 +1,41 @@
 use std::io::Cursor;
+
 use byteorder::{LittleEndian, ReadBytesExt};
-use errors::*;
 use encoding::codec::utf_16;
 use encoding::codec::utf_16::Little;
+use failure::Error;
 
 pub struct PackageWrapper<'a> {
     raw_data: &'a [u8],
 }
 
 impl<'a> PackageWrapper<'a> {
-    pub fn new(slice: &'a [u8]) -> Self {
-        PackageWrapper { raw_data: slice }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        Self { raw_data }
     }
 
-    pub fn get_id(&self) -> Result<u32> {
+    pub fn get_id(&self) -> Result<u32, Error> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_name(&self) -> Result<String> {
+    pub fn get_name(&self) -> Result<String, Error> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
         let initial_position = cursor.position();
+        ensure!(
+            ((initial_position + 256) as usize) < self.raw_data.len(),
+            "cursor position out of bounds"
+        );
+
         let final_position = self.find_end_position(initial_position as usize);
 
-        if self.raw_data.len() < (initial_position + 256) as usize {
-            return Err("Not enough bytes to retrieve package name".into());
-        }
+        ensure!(
+            self.raw_data.len() >= (initial_position + 256) as usize,
+            "not enough bytes to retrieve package name"
+        );
 
         let raw_str = &cursor.get_ref()[initial_position as usize..final_position];
         let mut decoder = utf_16::UTF16Decoder::<Little>::new();
@@ -38,7 +45,7 @@ impl<'a> PackageWrapper<'a> {
 
         match decode_error {
             None => Ok(o),
-            Some(_) => Err("Error decoding UTF8 string".into()),
+            Some(_) => Err(format_err!("error decoding UTF8 string")),
         }
     }
 

@@ -1,15 +1,17 @@
-use chunks::*;
-use errors::*;
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use model::{Entries, Identifier};
-use model::Resources as ResourcesTrait;
-use model::Library as LibraryTrait;
-use model::StringTable as StringTableTrait;
-use model::LibraryBuilder;
-use model::TypeSpec as TypeSpecTrait;
+use std::rc::Rc;
+
+use failure::{Error, ResultExt};
+
+use chunks::*;
 use model::owned::Entry;
+use model::Library as LibraryTrait;
+use model::LibraryBuilder;
+use model::Resources as ResourcesTrait;
+use model::StringTable as StringTableTrait;
+use model::TypeSpec as TypeSpecTrait;
+use model::{Entries, Identifier};
 
 use super::ChunkVisitor;
 use super::Origin;
@@ -77,8 +79,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
                     if set_result.is_none() {
                         error!(
-                            "Could not set the string table because it refers to a \
-                             non-existing package"
+                            "could not set the string table because it refers to a non-existing \
+                             package"
                         );
                     }
                 }
@@ -96,20 +98,15 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
             let entries_result = table_type.get_entries();
 
-            if entries_result.is_err() {
-                error!(
-                    "Error visiting table_type: {}",
-                    entries_result.err().unwrap().description()
-                );
-            } else {
-                let ventries = entries_result.unwrap();
-                for e in &ventries {
+            match entries_result {
+                Ok(ventries) => for e in &ventries {
                     let id = mask | e.get_id();
 
                     if !e.is_empty() {
                         entries.insert(id, e.clone());
                     }
-                }
+                },
+                Err(err) => error!("Error visiting table_type: {}", err),
             }
         }
 
@@ -194,9 +191,9 @@ pub struct Library<'a> {
 }
 
 impl<'a> Library<'a> {
-    pub fn new(package: PackageWrapper<'a>) -> Library {
-        Library {
-            package: package,
+    pub fn new(package: PackageWrapper<'a>) -> Self {
+        Self {
+            package,
             specs: Vec::new(),
             string_table: None,
             spec_string_table: None,
@@ -205,7 +202,7 @@ impl<'a> Library<'a> {
         }
     }
 
-    fn get_spec_as_str(&self, spec_id: u32) -> Result<String> {
+    fn get_spec_as_str(&self, spec_id: u32) -> Result<String, Error> {
         if self.specs.get((spec_id - 1) as usize).is_some() {
             if let Some(ref spec_string_table) = self.spec_string_table {
                 if let Ok(spec_str) = spec_string_table.get_string((spec_id - 1) as u32) {
@@ -214,7 +211,7 @@ impl<'a> Library<'a> {
             }
         }
 
-        Err("Could not retrieve spec as string".into())
+        Err(format_err!("could not retrieve spec as string"))
     }
 }
 
@@ -229,12 +226,14 @@ impl<'a> LibraryTrait for Library<'a> {
         key: u32,
         namespace: Option<String>,
         prefix: &str,
-    ) -> Result<String> {
+    ) -> Result<String, Error> {
         let spec_id = id.get_spec() as u32;
         let spec_str = self.get_spec_as_str(spec_id)
-            .chain_err(|| format!("Could not find spec: {}", spec_id))?;
-        let string = self.get_entries_string(key)
-            .chain_err(|| format!("Could not find key {} on entries string table", key))?;
+            .context(format_err!("could not find spec: {}", spec_id))?;
+        let string = self.get_entries_string(key).context(format_err!(
+            "could not find key {} on entries string table",
+            key
+        ))?;
 
         let ending = if spec_str == "attr" {
             string
@@ -248,34 +247,36 @@ impl<'a> LibraryTrait for Library<'a> {
         }
     }
 
-    fn get_entry(&self, id: u32) -> Result<&Entry> {
+    fn get_entry(&self, id: u32) -> Result<&Entry, Error> {
         self.entries
             .get(&id)
-            .ok_or_else(|| "Could not find entry".into())
+            .ok_or_else(|| format_err!("could not find entry"))
     }
 
-    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>> {
+    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>, Error> {
         if let Some(ref string_table) = self.entries_string_table {
-            let out_string = string_table
-                .get_string(str_id)
-                .chain_err(|| format!("Could not find string {} on entries string table", str_id))?;
+            let out_string = string_table.get_string(str_id).context(format_err!(
+                "could not find string {} on entries string table",
+                str_id
+            ))?;
 
             return Ok(out_string);
         }
 
-        Err("String not found on entries string table".into())
+        Err(format_err!("string not found on entries string table"))
     }
 
-    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>> {
+    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>, Error> {
         if let Some(ref string_table) = self.spec_string_table {
-            let out_string = string_table
-                .get_string(str_id)
-                .chain_err(|| format!("Could not find string {} on spec string table", str_id))?;
+            let out_string = string_table.get_string(str_id).context(format_err!(
+                "could not find string {} on spec string table",
+                str_id
+            ))?;
 
             return Ok(out_string);
         }
 
-        Err("String not found on spec string table".into())
+        Err(format_err!("string not found on spec string table"))
     }
 }
 

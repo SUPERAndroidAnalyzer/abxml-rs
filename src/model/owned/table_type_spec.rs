@@ -1,7 +1,8 @@
-use model::owned::OwnedBuf;
-use errors::*;
-use model::TypeSpec;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
+use model::owned::OwnedBuf;
+use model::TypeSpec;
 
 pub struct TableTypeSpecBuf {
     id: u16,
@@ -10,8 +11,8 @@ pub struct TableTypeSpecBuf {
 
 impl TableTypeSpecBuf {
     pub fn new(id: u16) -> Self {
-        TableTypeSpecBuf {
-            id: id,
+        Self {
+            id,
             flags: Vec::new(),
         }
     }
@@ -26,7 +27,7 @@ impl OwnedBuf for TableTypeSpecBuf {
         0x202
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         for flag in &self.flags {
@@ -36,7 +37,7 @@ impl OwnedBuf for TableTypeSpecBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.id as u32)?;
@@ -47,28 +48,28 @@ impl OwnedBuf for TableTypeSpecBuf {
 }
 
 impl TypeSpec for TableTypeSpecBuf {
-    fn get_id(&self) -> Result<u16> {
+    fn get_id(&self) -> Result<u16, Error> {
         Ok(self.id)
     }
-    fn get_amount(&self) -> Result<u32> {
+    fn get_amount(&self) -> Result<u32, Error> {
         Ok(self.flags.len() as u32)
     }
 
-    fn get_flag(&self, index: u32) -> Result<u32> {
+    fn get_flag(&self, index: u32) -> Result<u32, Error> {
         self.flags
             .get(index as usize)
             .cloned()
-            .ok_or_else(|| "Flag out of bounds".into())
+            .ok_or_else(|| format_err!("flag out of bounds"))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::owned::OwnedBuf;
-    use test::compare_chunks;
-    use raw_chunks;
     use chunks::*;
+    use model::owned::OwnedBuf;
+    use raw_chunks;
+    use test::compare_chunks;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

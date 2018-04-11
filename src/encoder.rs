@@ -1,17 +1,18 @@
 //! Exports the decoded binary XMLs to string XMLs
 
-use xml::writer::{EmitterConfig, EventWriter, XmlEvent};
-use xml::common::XmlVersion;
-use model::Element as AbxmlElement;
-use std::ops::Deref;
 use std::io::Write;
-use errors::*;
-use model::Namespaces;
+use std::ops::Deref;
+
+use failure::{Error, ResultExt};
+use xml::common::XmlVersion;
+use xml::writer::{EmitterConfig, EventWriter, XmlEvent};
+
+use model::{Element as AbxmlElement, Namespaces};
 
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String, Error> {
         let target: Vec<u8> = Vec::new();
         let mut writer = EmitterConfig::new()
             .perform_indent(true)
@@ -24,17 +25,17 @@ impl Xml {
             standalone: Some(false),
         })?;
         Self::encode_element(&mut writer, namespaces, element)
-            .chain_err(|| "Error decoding an element")?;
+            .context("error decoding an element")?;
 
         let inner = writer.into_inner();
-        String::from_utf8(inner).chain_err(|| "Could not export XML")
+        Ok(String::from_utf8(inner).context("could not export XML")?)
     }
 
     fn encode_element<W: Write>(
         writer: &mut EventWriter<W>,
         namespaces: &Namespaces,
         element: &AbxmlElement,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
         let tag = element.get_tag();
         let tag_name = tag.get_name();
         let prefixes = tag.get_prefixes();

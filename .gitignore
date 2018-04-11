@@ -4,4 +4,3 @@ AndroidManifest*.xml
 *.bk
 .vagrant
 fuzz/crash-*
-

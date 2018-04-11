@@ -1,7 +1,8 @@
-use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
 use chunks::*;
-use errors::*;
+use model::owned::OwnedBuf;
 
 #[derive(Default)]
 pub struct ResourcesBuf {
@@ -23,7 +24,7 @@ impl OwnedBuf for ResourcesBuf {
         TOKEN_RESOURCE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         for r in &self.resources {
@@ -37,8 +38,8 @@ impl OwnedBuf for ResourcesBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::compare_chunks;
     use raw_chunks;
+    use test::compare_chunks;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

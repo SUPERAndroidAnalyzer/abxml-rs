@@ -1,11 +1,13 @@
-use model::owned::OwnedBuf;
-use byteorder::{LittleEndian, WriteBytesExt};
-use errors::*;
-use chunks::*;
-use model::StringTable;
 use std::rc::Rc;
+
+use byteorder::{LittleEndian, WriteBytesExt};
 use encoding::codec::{utf_16, utf_8};
 use encoding::Encoding as EncodingTrait;
+use failure::Error;
+
+use chunks::*;
+use model::owned::OwnedBuf;
+use model::StringTable;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Encoding {
@@ -20,8 +22,8 @@ pub struct StringTableBuf {
 }
 
 impl Default for StringTableBuf {
-    fn default() -> StringTableBuf {
-        StringTableBuf {
+    fn default() -> Self {
+        Self {
             strings: Vec::new(),
             styles: Vec::new(),
             encoding: Encoding::Utf8,
@@ -48,7 +50,7 @@ impl OwnedBuf for StringTableBuf {
         TOKEN_STRING_TABLE
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         let flags = if self.encoding == Encoding::Utf8 {
@@ -73,7 +75,7 @@ impl OwnedBuf for StringTableBuf {
         Ok(out)
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         let mut string_offsets: Vec<u32> = Vec::new();
@@ -94,9 +96,7 @@ impl OwnedBuf for StringTableBuf {
             let mut encoded_string = Vec::new();
             let (size, error) = encoder.raw_feed(string, &mut encoded_string);
 
-            if error.is_some() {
-                return Err("Error encoding string".into());
-            }
+            ensure!(error.is_none(), "error encoding string");
 
             // Write size
             let low = (size & 0xFF) as u8;
@@ -141,10 +141,11 @@ impl StringTable for StringTableBuf {
         self.styles.len() as u32
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-        match self.strings.get(idx as usize) {
-            None => Err("String not found".into()),
-            Some(s) => Ok(s.clone()),
+    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
+        if let Some(s) = self.strings.get(idx as usize) {
+            Ok(s.clone())
+        } else {
+            bail!("string not found")
         }
     }
 }
@@ -152,8 +153,8 @@ impl StringTable for StringTableBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::compare_chunks;
     use raw_chunks;
+    use test::compare_chunks;
 
     #[test]
     fn it_can_generate_an_empty_chunk() {

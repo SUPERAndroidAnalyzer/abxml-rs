@@ -2,17 +2,19 @@
 
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
-use model::owned::Entry;
-use errors::*;
 
-mod element;
-mod value;
-pub mod owned;
+use failure::Error;
+
+use model::owned::Entry;
+
 pub mod builder;
+mod element;
+pub mod owned;
+mod value;
 
 pub use self::element::Element;
-pub use self::element::Tag;
 pub use self::element::ElementContainer;
+pub use self::element::Tag;
 pub use self::value::Value;
 
 use visitor::Origin;
@@ -51,13 +53,13 @@ impl Identifier for u32 {
 pub trait StringTable {
     fn get_strings_len(&self) -> u32;
     fn get_styles_len(&self) -> u32;
-    fn get_string(&self, idx: u32) -> Result<Rc<String>>;
+    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error>;
 }
 
 // TODO: Decide if the trait should return Results or not
 pub trait Package {
-    fn get_id(&self) -> Result<u32>;
-    fn get_name(&self) -> Result<String>;
+    fn get_id(&self) -> Result<u32, Error>;
+    fn get_name(&self) -> Result<String, Error>;
 }
 
 pub trait Library {
@@ -68,11 +70,11 @@ pub trait Library {
         key: u32,
         namespace: Option<String>,
         prefix: &str,
-    ) -> Result<String>;
+    ) -> Result<String, Error>;
     // fn get_entries(&self) -> &Entries;
-    fn get_entry(&self, id: u32) -> Result<&Entry>;
-    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>>;
-    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>>;
+    fn get_entry(&self, id: u32) -> Result<&Entry, Error>;
+    fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>, Error>;
+    fn get_spec_string(&self, str_id: u32) -> Result<Rc<String>, Error>;
 }
 
 pub trait LibraryBuilder<'a> {
@@ -99,38 +101,38 @@ pub trait TagStart {
     type Attribute: AttributeTrait;
 
     /// Return the ¿line in which the tag appear?
-    fn get_line(&self) -> Result<u32>;
+    fn get_line(&self) -> Result<u32, Error>;
     /// Return the content of the unknown field1
-    fn get_field1(&self) -> Result<u32>;
+    fn get_field1(&self) -> Result<u32, Error>;
     /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
-    fn get_namespace_index(&self) -> Result<u32>;
+    fn get_namespace_index(&self) -> Result<u32, Error>;
     /// Returns the index of the tag name on the string table
-    fn get_element_name_index(&self) -> Result<u32>;
+    fn get_element_name_index(&self) -> Result<u32, Error>;
     /// Return the content of the unknown field1
-    fn get_field2(&self) -> Result<u32>;
+    fn get_field2(&self) -> Result<u32, Error>;
     /// Return the amount of attributes this tag contains
-    fn get_attributes_amount(&self) -> Result<u32>;
+    fn get_attributes_amount(&self) -> Result<u32, Error>;
     /// Returns the ¿class?
-    fn get_class(&self) -> Result<u32>;
+    fn get_class(&self) -> Result<u32, Error>;
     /// Returns the attribute on the `index` position or error if it is greater than
     /// `get_attributes_amount`
-    fn get_attribute(&self, index: u32) -> Result<Self::Attribute>;
+    fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error>;
 }
 
 pub trait AttributeTrait {
     /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
-    fn get_namespace(&self) -> Result<u32>;
+    fn get_namespace(&self) -> Result<u32, Error>;
     /// Returns the index of the attribute on the string table
-    fn get_name(&self) -> Result<u32>;
+    fn get_name(&self) -> Result<u32, Error>;
     /// Returns the ¿class?
-    fn get_class(&self) -> Result<u32>;
+    fn get_class(&self) -> Result<u32, Error>;
     /// Returns the data type (see `Values`)
-    fn get_resource_value(&self) -> Result<u32>;
+    fn get_resource_value(&self) -> Result<u32, Error>;
     /// Returns the value (see `Values`)
-    fn get_data(&self) -> Result<u32>;
+    fn get_data(&self) -> Result<u32, Error>;
 
     /// Creates a `Value` depending on the data type and data value
-    fn get_value(&self) -> Result<Value> {
+    fn get_value(&self) -> Result<Value, Error> {
         let data_type = ((self.get_resource_value()? >> 24) & 0xFF) as u8;
         let data_value = self.get_data()?;
         let class = self.get_class()?;
@@ -146,60 +148,60 @@ pub trait AttributeTrait {
 }
 
 pub trait TagEnd {
-    fn get_id(&self) -> Result<u32>;
+    fn get_id(&self) -> Result<u32, Error>;
 }
 
 pub trait NamespaceStart {
-    fn get_line(&self) -> Result<u32>;
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
+    fn get_line(&self) -> Result<u32, Error>;
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error>;
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error>;
 }
 
 pub trait NamespaceEnd {
-    fn get_line(&self) -> Result<u32>;
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>>;
+    fn get_line(&self) -> Result<u32, Error>;
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error>;
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error>;
 }
 
 pub trait TypeSpec {
-    fn get_id(&self) -> Result<u16>;
-    fn get_amount(&self) -> Result<u32>;
-    fn get_flag(&self, index: u32) -> Result<u32>;
+    fn get_id(&self) -> Result<u16, Error>;
+    fn get_amount(&self) -> Result<u32, Error>;
+    fn get_flag(&self, index: u32) -> Result<u32, Error>;
 }
 
 pub trait TableType {
     type Configuration: Configuration;
 
-    fn get_id(&self) -> Result<u8>;
-    fn get_amount(&self) -> Result<u32>;
-    fn get_configuration(&self) -> Result<Self::Configuration>;
-    fn get_entry(&self, index: u32) -> Result<Entry>;
+    fn get_id(&self) -> Result<u8, Error>;
+    fn get_amount(&self) -> Result<u32, Error>;
+    fn get_configuration(&self) -> Result<Self::Configuration, Error>;
+    fn get_entry(&self, index: u32) -> Result<Entry, Error>;
 }
 
 pub trait Configuration {
-    fn get_size(&self) -> Result<u32>;
-    fn get_mcc(&self) -> Result<u16>;
-    fn get_mnc(&self) -> Result<u16>;
-    fn get_language(&self) -> Result<String>;
-    fn get_region(&self) -> Result<String>;
-    fn get_orientation(&self) -> Result<u8>;
-    fn get_touchscreen(&self) -> Result<u8>;
-    fn get_density(&self) -> Result<u16>;
-    fn get_keyboard(&self) -> Result<u8>;
-    fn get_navigation(&self) -> Result<u8>;
-    fn get_input_flags(&self) -> Result<u8>;
-    fn get_width(&self) -> Result<u16>;
-    fn get_height(&self) -> Result<u16>;
-    fn get_sdk_version(&self) -> Result<u16>;
-    fn get_min_sdk_version(&self) -> Result<u16>;
-    fn get_screen_layout(&self) -> Result<u8>;
-    fn get_ui_mode(&self) -> Result<u8>;
-    fn get_smallest_screen(&self) -> Result<u16>;
-    fn get_screen_width(&self) -> Result<u16>;
-    fn get_screen_height(&self) -> Result<u16>;
-    fn get_locale_script(&self) -> Result<Option<String>>;
-    fn get_locale_variant(&self) -> Result<Option<String>>;
-    fn get_secondary_layout(&self) -> Result<Option<u8>>;
+    fn get_size(&self) -> Result<u32, Error>;
+    fn get_mcc(&self) -> Result<u16, Error>;
+    fn get_mnc(&self) -> Result<u16, Error>;
+    fn get_language(&self) -> Result<String, Error>;
+    fn get_region(&self) -> Result<String, Error>;
+    fn get_orientation(&self) -> Result<u8, Error>;
+    fn get_touchscreen(&self) -> Result<u8, Error>;
+    fn get_density(&self) -> Result<u16, Error>;
+    fn get_keyboard(&self) -> Result<u8, Error>;
+    fn get_navigation(&self) -> Result<u8, Error>;
+    fn get_input_flags(&self) -> Result<u8, Error>;
+    fn get_width(&self) -> Result<u16, Error>;
+    fn get_height(&self) -> Result<u16, Error>;
+    fn get_sdk_version(&self) -> Result<u16, Error>;
+    fn get_min_sdk_version(&self) -> Result<u16, Error>;
+    fn get_screen_layout(&self) -> Result<u8, Error>;
+    fn get_ui_mode(&self) -> Result<u8, Error>;
+    fn get_smallest_screen(&self) -> Result<u16, Error>;
+    fn get_screen_width(&self) -> Result<u16, Error>;
+    fn get_screen_height(&self) -> Result<u16, Error>;
+    fn get_locale_script(&self) -> Result<Option<String>, Error>;
+    fn get_locale_variant(&self) -> Result<Option<String>, Error>;
+    fn get_secondary_layout(&self) -> Result<Option<u8>, Error>;
 }
 
 #[cfg(test)]

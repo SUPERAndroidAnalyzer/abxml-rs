@@ -1,21 +1,23 @@
-use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
-use std::rc::Rc;
-use errors::*;
-use model::StringTable;
-use encoding::codec::{utf_16, utf_8};
-use model::owned::{Encoding as EncodingType, StringTableBuf};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::collections::HashMap;
+use std::io::Cursor;
+use std::rc::Rc;
+
+use byteorder::{LittleEndian, ReadBytesExt};
+use encoding::codec::{utf_16, utf_8};
+use failure::Error;
+
+use model::owned::{Encoding as EncodingType, StringTableBuf};
+use model::StringTable;
 
 pub struct StringTableWrapper<'a> {
     raw_data: &'a [u8],
 }
 
 impl<'a> StringTableWrapper<'a> {
-    pub fn new(slice: &'a [u8]) -> Self {
-        StringTableWrapper { raw_data: slice }
+    pub fn new(raw_data: &'a [u8]) -> Self {
+        Self { raw_data }
     }
 
     pub fn get_flags(&self) -> u32 {
@@ -25,7 +27,7 @@ impl<'a> StringTableWrapper<'a> {
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    pub fn to_buffer(&self) -> Result<StringTableBuf> {
+    pub fn to_buffer(&self) -> Result<StringTableBuf, Error> {
         let mut owned = StringTableBuf::default();
 
         if !self.is_utf8() {
@@ -40,7 +42,7 @@ impl<'a> StringTableWrapper<'a> {
         Ok(owned)
     }
 
-    fn get_string_position(&self, idx: u32) -> Result<u64> {
+    fn get_string_position(&self, idx: u32) -> Result<u64, Error> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(20);
         let str_offset = cursor.read_u32::<LittleEndian>()?;
@@ -62,7 +64,7 @@ impl<'a> StringTableWrapper<'a> {
         Ok(position as u64)
     }
 
-    fn parse_string(&self, offset: u32) -> Result<String> {
+    fn parse_string(&self, offset: u32) -> Result<String, Error> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(offset as u64);
 
@@ -99,9 +101,10 @@ impl<'a> StringTableWrapper<'a> {
             let a = ini_offset;
             let b = ini_offset + length;
 
-            if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
-                return Err("Sub-slice out of raw_data range".into());
-            }
+            ensure!(
+                a <= self.raw_data.len() as u32 && b <= self.raw_data.len() as u32 && a <= b,
+                "sub-slice out of raw_data range"
+            );
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
@@ -112,7 +115,7 @@ impl<'a> StringTableWrapper<'a> {
 
             match decode_error {
                 None => Ok(o),
-                Some(_) => Err("Error decoding UTF8 string".into()),
+                Some(_) => Err(format_err!("error decoding UTF8 string")),
             }
         } else {
             let size1 = cursor.read_u8()? as u32;
@@ -123,9 +126,10 @@ impl<'a> StringTableWrapper<'a> {
             let a = offset + 2;
             let b = offset + 2 + (val * 2);
 
-            if a > self.raw_data.len() as u32 || b > self.raw_data.len() as u32 || a > b {
-                return Err("Sub-slice out of raw_data range".into());
-            }
+            ensure!(
+                a <= self.raw_data.len() as u32 && b <= self.raw_data.len() as u32 && a <= b,
+                "sub-slice out of raw_data range"
+            );
 
             let subslice: &[u8] = &self.raw_data[a as usize..b as usize];
 
@@ -136,7 +140,7 @@ impl<'a> StringTableWrapper<'a> {
 
             match decode_error {
                 None => Ok(o),
-                Some(_) => Err("Error decoding UTF16 string".into()),
+                Some(_) => Err(format_err!("error decoding UTF16 string")),
             }
         }
     }
@@ -161,10 +165,8 @@ impl<'a> StringTable for StringTableWrapper<'a> {
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
-        if idx > self.get_strings_len() {
-            return Err("Index out of bounds".into());
-        }
+    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
+        ensure!(idx <= self.get_strings_len(), "index out of bounds");
 
         let string = self.get_string_position(idx)
             .and_then(|position| self.parse_string(position as u32))?;
@@ -180,8 +182,8 @@ pub struct StringTableCache<S: StringTable> {
 
 impl<S: StringTable> StringTableCache<S> {
     pub fn new(inner: S) -> Self {
-        StringTableCache {
-            inner: inner,
+        Self {
+            inner,
             cache: RefCell::new(HashMap::new()),
         }
     }
@@ -196,7 +198,7 @@ impl<S: StringTable> StringTable for StringTableCache<S> {
         self.inner.get_styles_len()
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
         let mut cache = self.cache.borrow_mut();
         let entry = cache.entry(idx);
 

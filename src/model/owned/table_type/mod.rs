@@ -1,7 +1,8 @@
-use model::owned::OwnedBuf;
-use errors::*;
-use model::TableType;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
+use model::owned::OwnedBuf;
+use model::TableType;
 
 mod configuration;
 mod entry;
@@ -17,9 +18,9 @@ pub struct TableTypeBuf {
 
 impl TableTypeBuf {
     pub fn new(id: u8, config: ConfigurationBuf) -> Self {
-        TableTypeBuf {
-            id: id,
-            config: config,
+        Self {
+            id,
+            config,
             entries: Vec::new(),
         }
     }
@@ -34,7 +35,7 @@ impl OwnedBuf for TableTypeBuf {
         0x201
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         let mut i = 0;
@@ -58,7 +59,7 @@ impl OwnedBuf for TableTypeBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         let vec_config = self.config.to_vec()?;
@@ -75,23 +76,23 @@ impl OwnedBuf for TableTypeBuf {
 impl TableType for TableTypeBuf {
     type Configuration = ConfigurationBuf;
 
-    fn get_id(&self) -> Result<u8> {
+    fn get_id(&self) -> Result<u8, Error> {
         Ok(self.id)
     }
 
-    fn get_amount(&self) -> Result<u32> {
+    fn get_amount(&self) -> Result<u32, Error> {
         Ok(self.entries.len() as u32)
     }
 
-    fn get_configuration(&self) -> Result<Self::Configuration> {
+    fn get_configuration(&self) -> Result<Self::Configuration, Error> {
         Ok(self.config.clone())
     }
 
-    fn get_entry(&self, index: u32) -> Result<Entry> {
+    fn get_entry(&self, index: u32) -> Result<Entry, Error> {
         self.entries
             .get(index as usize)
             .cloned()
-            .ok_or_else(|| "Entry out of bound".into())
+            .ok_or_else(|| format_err!("entry out of bound"))
     }
 }
 
@@ -99,10 +100,10 @@ impl TableType for TableTypeBuf {
 mod tests {
     use super::*;
     use chunks::*;
+    use model::owned::OwnedBuf;
     use model::TableType;
     use raw_chunks;
     use test::compare_chunks;
-    use model::owned::OwnedBuf;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

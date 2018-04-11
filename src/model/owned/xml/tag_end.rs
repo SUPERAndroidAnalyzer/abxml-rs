@@ -1,7 +1,8 @@
-use model::owned::OwnedBuf;
-use chunks::TOKEN_XML_TAG_END;
 use byteorder::{LittleEndian, WriteBytesExt};
-use errors::*;
+use failure::Error;
+
+use chunks::TOKEN_XML_TAG_END;
+use model::owned::OwnedBuf;
 use model::TagEnd;
 
 pub struct XmlTagEndBuf {
@@ -10,7 +11,7 @@ pub struct XmlTagEndBuf {
 
 impl XmlTagEndBuf {
     pub fn new(id: u32) -> Self {
-        XmlTagEndBuf { id: id }
+        Self { id }
     }
 }
 
@@ -19,7 +20,7 @@ impl OwnedBuf for XmlTagEndBuf {
         TOKEN_XML_TAG_END
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         // ??
@@ -30,7 +31,7 @@ impl OwnedBuf for XmlTagEndBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         // Amount of writes
@@ -43,7 +44,7 @@ impl OwnedBuf for XmlTagEndBuf {
 }
 
 impl TagEnd for XmlTagEndBuf {
-    fn get_id(&self) -> Result<u32> {
+    fn get_id(&self) -> Result<u32, Error> {
         Ok(self.id)
     }
 }
@@ -52,8 +53,8 @@ impl TagEnd for XmlTagEndBuf {
 mod tests {
     use super::*;
     use chunks::*;
-    use test::compare_chunks;
     use raw_chunks;
+    use test::compare_chunks;
 
     #[test]
     fn it_can_generate_an_empty_chunk() {
