@@ -1,12 +1,13 @@
 //! Structs which contains the read data from binary documents
 
-use visitor::ModelVisitor;
-use std::io::Cursor;
+use std::io::{Cursor, Read};
+
+use failure::{Error, ResultExt};
+
 use visitor::Executor;
-use errors::*;
+use visitor::ModelVisitor;
 use visitor::*;
 use STR_ARSC;
-use std::io::Read;
 
 pub struct BufferedDecoder {
     buffer: Box<[u8]>,
@@ -27,16 +28,16 @@ impl From<Box<[u8]>> for BufferedDecoder {
 }
 
 impl BufferedDecoder {
-    pub fn from_read<R: Read>(mut read: R) -> Result<BufferedDecoder> {
+    pub fn from_read<R: Read>(mut read: R) -> Result<BufferedDecoder, Error> {
         let mut buffer = Vec::new();
         read.read_to_end(&mut buffer)
-            .chain_err(|| "could not read buffer")?;
+            .context("could not read buffer")?;
         Ok(BufferedDecoder {
             buffer: buffer.into_boxed_slice(),
         })
     }
 
-    pub fn get_decoder(&self) -> Result<Decoder> {
+    pub fn get_decoder(&self) -> Result<Decoder, Error> {
         Decoder::new(&self.buffer)
     }
 }
@@ -48,19 +49,19 @@ pub struct Decoder<'a> {
 }
 
 impl<'a> Decoder<'a> {
-    pub fn new(data: &'a [u8]) -> Result<Decoder<'a>> {
+    pub fn new(buffer_apk: &'a [u8]) -> Result<Self, Error> {
         let visitor = ModelVisitor::default();
 
-        let mut decoder = Decoder {
-            visitor: visitor,
+        let mut decoder = Self {
+            visitor,
             buffer_android: STR_ARSC,
-            buffer_apk: data,
+            buffer_apk,
         };
 
         Executor::arsc(decoder.buffer_android, &mut decoder.visitor)
-            .chain_err(|| "Could not read android lib resources")?;
+            .context("could not read Android lib resources")?;
         Executor::arsc(decoder.buffer_apk, &mut decoder.visitor)
-            .chain_err(|| "Could not read target APK resources")?;
+            .context("could not read target APK resources")?;
 
         Ok(decoder)
     }
@@ -69,7 +70,7 @@ impl<'a> Decoder<'a> {
         self.visitor.get_resources()
     }
 
-    pub fn xml_visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor> {
+    pub fn xml_visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor, Error> {
         let cursor = Cursor::new(content.as_ref());
         let mut visitor = XmlVisitor::new(self.get_resources());
 

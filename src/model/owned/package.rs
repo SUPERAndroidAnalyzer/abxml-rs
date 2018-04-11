@@ -1,9 +1,10 @@
-use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
 use chunks::*;
-use errors::*;
 use encoding::codec::utf_16;
 use encoding::Encoding;
+use model::owned::OwnedBuf;
 
 #[derive(Default)]
 pub struct PackageBuf {
@@ -14,18 +15,17 @@ pub struct PackageBuf {
 
 #[allow(dead_code)]
 impl PackageBuf {
-    pub fn new(id: u32, package_name: String) -> Result<Self> {
-        if package_name.as_bytes().len() > 256 {
-            return Err("Can not create a package with a length greater than 256".into());
-        }
+    pub fn new(id: u32, package_name: String) -> Result<Self, Error> {
+        ensure!(
+            package_name.as_bytes().len() <= 256,
+            "can not create a package with a length greater than 256"
+        );
 
-        let package = PackageBuf {
-            id: id,
-            package_name: package_name,
+        Ok(Self {
+            id,
+            package_name,
             inner_chunks: Vec::new(),
-        };
-
-        Ok(package)
+        })
     }
 
     pub fn add_chunk(&mut self, chunk: Box<OwnedBuf>) {
@@ -38,7 +38,7 @@ impl OwnedBuf for PackageBuf {
         TOKEN_PACKAGE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         for c in &self.inner_chunks {
@@ -49,15 +49,13 @@ impl OwnedBuf for PackageBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut buffer = Vec::new();
         let mut encoder = utf_16::UTF_16LE_ENCODING.raw_encoder();
         let mut encoded_string = Vec::new();
         let (size, error) = encoder.raw_feed(&self.package_name, &mut encoded_string);
 
-        if error.is_some() {
-            return Err("Error encoding package name as UTF-16".into());
-        }
+        ensure!(error.is_none(), "error encoding package name as UTF-16");
 
         buffer.write_u32::<LittleEndian>(self.id)?;
         buffer.extend(encoded_string);
@@ -80,9 +78,9 @@ mod tests {
     use super::*;
     use chunks::{Chunk, ChunkLoaderStream, PackageWrapper};
     use model::owned::StringTableBuf;
+    use model::StringTable;
     use std::io::Cursor;
     use std::iter;
-    use model::StringTable;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
@@ -148,9 +146,7 @@ mod tests {
 
     #[test]
     fn it_can_create_a_package_with_the_maximum_length() {
-        let target = iter::repeat('\u{1F624}')
-            .take((256 / 4))
-            .collect::<String>();
+        let target = iter::repeat('\u{1F624}').take(256 / 4).collect::<String>();
         let package = PackageBuf::new(1, target);
 
         assert!(package.is_ok());

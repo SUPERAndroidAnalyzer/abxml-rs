@@ -1,6 +1,7 @@
 use std::mem;
 use std::string::ToString;
-use errors::*;
+
+use failure::Error;
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
@@ -78,7 +79,7 @@ impl ToString for Value {
 impl Value {
     /// Creates a new `Value`. If the payload can not be interpreted by the given `value_type`, it
     /// will return an error. If the type is not know, it will return `Value::Unknown`
-    pub fn new(value_type: u8, data: u32) -> Result<Self> {
+    pub fn new(value_type: u8, data: u32) -> Result<Self, Error> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
@@ -96,7 +97,10 @@ impl Value {
                         Value::Dimension(formatted)
                     }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                        return Err(format_err!(
+                            "expected a valid unit index, got: {}",
+                            unit_idx
+                        ))
                     }
                 }
             }
@@ -118,7 +122,10 @@ impl Value {
                         Value::Fraction(formatted_fraction)
                     }
                     None => {
-                        return Err(format!("Expected a valid unit index. Got: {}", unit_idx).into())
+                        return Err(format_err!(
+                            "expected a valid unit index, got: {}",
+                            unit_idx
+                        ))
                     }
                 }
             }

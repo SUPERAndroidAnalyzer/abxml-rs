@@ -4,6 +4,7 @@ dist: trusty
 sudo: false
 os:
   - linux
+  - osx
 
 env:
   global:
@@ -34,7 +35,7 @@ before_script:
   - |
       cargo install cargo-travis || true  &&
       export PATH=$HOME/.cargo/bin:$PATH
-  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo install rustfmt-nightly --force)
+  - (test $TRAVIS_RUST_VERSION != "nightly" || rustup component add rustfmt-preview)
 
 script:
   - |

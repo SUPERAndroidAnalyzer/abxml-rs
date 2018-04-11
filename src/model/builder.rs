@@ -1,6 +1,7 @@
-use model::owned::OwnedBuf;
 use byteorder::{LittleEndian, WriteBytesExt};
-use errors::*;
+use failure::{Error, ResultExt};
+
+use model::owned::OwnedBuf;
 
 #[derive(Default)]
 pub struct Arsc {
@@ -12,13 +13,13 @@ impl Arsc {
         self.chunks.push(chunk);
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;
 
         for c in &self.chunks {
-            let encoded_chunk = c.to_vec().chain_err(|| "Could not encode a chunk")?;
+            let encoded_chunk = c.to_vec().context("could not encode a chunk")?;
             file_size += encoded_chunk.len();
 
             inner.extend(encoded_chunk);
@@ -53,13 +54,13 @@ impl Xml {
         self.chunks.push(chunk);
     }
 
-    pub fn into_vec(self) -> Result<Vec<u8>> {
+    pub fn into_vec(self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;
 
         for c in self.chunks {
-            let encoded_chunk = c.to_vec().chain_err(|| "Could not encode a chunk")?;
+            let encoded_chunk = c.to_vec().context("could not encode a chunk")?;
             file_size += encoded_chunk.len();
 
             inner.extend(encoded_chunk);
@@ -83,16 +84,16 @@ impl Xml {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use visitor::Executor;
-    use std::io::Cursor;
     use model::owned::*;
+    use std::io::Cursor;
     use test::*;
+    use visitor::Executor;
 
     #[test]
     fn it_can_generate_a_resources_arsc_file_content() {
         let arsc = Arsc::default();
         let content = arsc.to_vec().unwrap();
-        let mut visitor = CounterChunkVisitor::new();
+        let mut visitor = CounterChunkVisitor::default();
 
         assert_eq!(vec![2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], content);
 
@@ -110,7 +111,7 @@ mod tests {
         arsc.push_owned(Box::new(ResourcesBuf::default()));
 
         let content = arsc.to_vec().unwrap();
-        let mut visitor = CounterChunkVisitor::new();
+        let mut visitor = CounterChunkVisitor::default();
 
         Executor::arsc(&content, &mut visitor).unwrap();
 
@@ -122,7 +123,7 @@ mod tests {
     fn it_can_generate_a_resources_xml_file_content() {
         let xml = Xml::default();
         let content = xml.into_vec().unwrap();
-        let mut visitor = CounterChunkVisitor::new();
+        let mut visitor = CounterChunkVisitor::default();
 
         assert_eq!(vec![3, 0, 8, 0, 0, 0, 0, 0], content);
 
@@ -140,7 +141,7 @@ mod tests {
         xml.push_owned(Box::new(ResourcesBuf::default()));
 
         let content = xml.into_vec().unwrap();
-        let mut visitor = CounterChunkVisitor::new();
+        let mut visitor = CounterChunkVisitor::default();
 
         let _ = Executor::xml(Cursor::new(&content), &mut visitor);
 

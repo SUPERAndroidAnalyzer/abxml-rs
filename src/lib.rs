@@ -9,7 +9,7 @@
 extern crate byteorder;
 extern crate encoding;
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 #[macro_use]
 extern crate log;
 extern crate xml;
@@ -30,16 +30,3 @@ pub mod apk;
 
 /// Contents of android's resources.arsc
 pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");
-
-/// Representation of library errors
-pub mod errors {
-    // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain! {
-        foreign_links {
-            Io(::std::io::Error);
-            Xml(::xml::writer::Error);
-            Utf8(::std::string::FromUtf8Error);
-            Zip(::zip::result::ZipError) #[cfg(feature = "zip_decode")];
-        }
-    }
-}
