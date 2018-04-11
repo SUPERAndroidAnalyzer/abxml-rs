@@ -1,5 +1,5 @@
-[![Coverage Status](https://coveralls.io/repos/github/gnieto/abxml-rs/badge.svg?branch=develop)](https://coveralls.io/github/gnieto/abxml-rs?branch=develop)
-[![Build Status](https://travis-ci.org/gnieto/abxml-rs.svg?branch=develop)](https://travis-ci.org/gnieto/abxml-rs)
+[![Coverage Status][coverage_badge]][coverage_link]
+[![Build Status][status_badge]][status_link]
 
 # ABXML
 
@@ -9,7 +9,7 @@ The code is deeply inspired on Apktool: Without it, this library wouldn't exist.
 
 ## Quick example
 
-The easiest way to use the library is using the helper struct `APK` to decompress and decode it to the filesystem. 
+The easiest way to use the library is using the helper struct `APK` to decompress and decode it to the filesystem.
 
 ```rust
 extern crate abxml;
@@ -48,7 +48,7 @@ impl<'a> ChunkVisitor<'a> for PrintVisitor {
 fn main() {
     let data = [];
     let mut visitor = PrintVisitor;
-    
+
     Executor::xml(&data, &mut visitor);
 }
 ```
@@ -80,3 +80,8 @@ After that, you should be able to run:
 
 You should see, per each file, if the output of the library matches with the output of Apktool.
 In case that there is some difference, it will print the diff of the outputs.
+
+[coverage_badge]: https://coveralls.io/repos/github/gnieto/abxml-rs/badge.svg?branch=develop
+[coverage_link]: https://coveralls.io/github/gnieto/abxml-rs?branch=develop
+[status_badge]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs.svg?branch=develop
+[status_link]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs
