@@ -1,14 +1,9 @@
 language: rust
-cache: cargo
 dist: trusty
 sudo: false
 os:
   - linux
   - osx
-
-env:
-  global:
-    -cache: cargo
 
 addons:
   apt:
@@ -27,15 +22,11 @@ rust:
   - stable
   - 1.20.0
 
-matrix:
-  allow_failures:
-    - rust: nightly
-
 before_script:
   - |
       cargo install cargo-travis || true  &&
       export PATH=$HOME/.cargo/bin:$PATH
-  - (test $TRAVIS_RUST_VERSION != "nightly" || rustup component add rustfmt-preview)
+  - (test $TRAVIS_RUST_VERSION != "stable" || rustup component add rustfmt-preview)
 
 script:
   - |
@@ -43,7 +34,7 @@ script:
     cargo build --example converter &&
     cargo build --example exporter &&
     cargo test
-  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo fmt -- --write-mode=diff)
+  - (test $TRAVIS_RUST_VERSION != "stable" || cargo fmt -- --write-mode=diff)
 
 after_success:
   - cargo coveralls
@@ -51,6 +42,9 @@ after_success:
 notifications:
   email:
     recipients:
-      - gnieto.talo@gmail.com
+      - razican@protonmail.ch
+      - brunoop@protonmail.ch
+      - sergiodlo@protonmail.com
+      - jaimesr@protonmail.ch
     on_success: change
     on_failure: always

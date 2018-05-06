@@ -1,6 +1,7 @@
 #![no_main]
-#[macro_use] extern crate libfuzzer_sys;
 extern crate abxml;
+#[macro_use]
+extern crate libfuzzer_sys;
 
 use abxml::chunks::TypeSpecWrapper;
 use abxml::model::TypeSpec;
