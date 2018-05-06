@@ -1,10 +1,11 @@
-use model::owned::OwnedBuf;
-use byteorder::{LittleEndian, WriteBytesExt};
-use chunks::*;
-use errors::*;
 use std::rc::Rc;
-use model::NamespaceEnd;
-use model::StringTable;
+
+use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
+use chunks::*;
+use model::owned::OwnedBuf;
+use model::{NamespaceEnd, StringTable};
 
 pub struct XmlNamespaceEndBuf {
     line: u32,
@@ -14,26 +15,26 @@ pub struct XmlNamespaceEndBuf {
 
 impl XmlNamespaceEndBuf {
     pub fn new(line: u32, prefix_index: u32, namespace_index: u32) -> Self {
-        XmlNamespaceEndBuf {
-            line: line,
-            prefix_index: prefix_index,
-            namespace_index: namespace_index,
+        Self {
+            line,
+            prefix_index,
+            namespace_index,
         }
     }
 }
 
 impl NamespaceEnd for XmlNamespaceEndBuf {
-    fn get_line(&self) -> Result<u32> {
+    fn get_line(&self) -> Result<u32, Error> {
         Ok(self.line)
     }
 
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
         let string = string_table.get_string(self.prefix_index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
         let string = string_table.get_string(self.namespace_index)?;
 
         Ok(string)
@@ -45,7 +46,7 @@ impl OwnedBuf for XmlNamespaceEndBuf {
         TOKEN_XML_END_NAMESPACE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.prefix_index)?;
@@ -54,7 +55,7 @@ impl OwnedBuf for XmlNamespaceEndBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.line)?;
@@ -68,8 +69,8 @@ impl OwnedBuf for XmlNamespaceEndBuf {
 mod tests {
     use super::*;
     use chunks::XmlNamespaceEndWrapper;
-    use test::compare_chunks;
     use raw_chunks::EXAMPLE_NAMESPACE_END;
+    use test::compare_chunks;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

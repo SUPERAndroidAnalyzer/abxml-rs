@@ -1,9 +1,11 @@
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
-use errors::*;
-use model::Configuration;
 use std::string::ToString;
+
+use byteorder::{LittleEndian, ReadBytesExt};
+use failure::Error;
+
 use model::owned::ConfigurationBuf;
+use model::Configuration;
 
 pub struct ConfigurationWrapper<'a> {
     slice: &'a [u8],
@@ -11,37 +13,37 @@ pub struct ConfigurationWrapper<'a> {
 
 impl<'a> ConfigurationWrapper<'a> {
     pub fn new(slice: &'a [u8]) -> Self {
-        ConfigurationWrapper { slice: slice }
+        Self { slice }
     }
 
-    pub fn to_buffer(&self) -> Result<ConfigurationBuf> {
+    pub fn to_buffer(&self) -> Result<ConfigurationBuf, Error> {
         ConfigurationBuf::from_cursor(self.slice.into())
     }
 }
 
 impl<'a> Configuration for ConfigurationWrapper<'a> {
-    fn get_size(&self) -> Result<u32> {
+    fn get_size(&self) -> Result<u32, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(0);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_mcc(&self) -> Result<u16> {
+    fn get_mcc(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(4);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_mnc(&self) -> Result<u16> {
+    fn get_mnc(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(6);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_language(&self) -> Result<String> {
+    fn get_language(&self) -> Result<String, Error> {
         let lang_low = self.slice[8];
         let lang_high = self.slice[9];
 
@@ -50,7 +52,7 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(region.to_string())
     }
 
-    fn get_region(&self) -> Result<String> {
+    fn get_region(&self) -> Result<String, Error> {
         let lang_low = self.slice[10];
         let lang_high = self.slice[11];
 
@@ -59,130 +61,115 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(region.to_string())
     }
 
-    fn get_orientation(&self) -> Result<u8> {
+    fn get_orientation(&self) -> Result<u8, Error> {
         Ok(self.slice[12])
     }
 
-    fn get_touchscreen(&self) -> Result<u8> {
+    fn get_touchscreen(&self) -> Result<u8, Error> {
         Ok(self.slice[13])
     }
 
-    fn get_density(&self) -> Result<u16> {
+    fn get_density(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(14);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_keyboard(&self) -> Result<u8> {
+    fn get_keyboard(&self) -> Result<u8, Error> {
         Ok(self.slice[16])
     }
 
-    fn get_navigation(&self) -> Result<u8> {
+    fn get_navigation(&self) -> Result<u8, Error> {
         Ok(self.slice[17])
     }
 
-    fn get_input_flags(&self) -> Result<u8> {
+    fn get_input_flags(&self) -> Result<u8, Error> {
         Ok(self.slice[18])
     }
 
-    fn get_width(&self) -> Result<u16> {
+    fn get_width(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(20);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_height(&self) -> Result<u16> {
+    fn get_height(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(22);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_sdk_version(&self) -> Result<u16> {
+    fn get_sdk_version(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(24);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_min_sdk_version(&self) -> Result<u16> {
+    fn get_min_sdk_version(&self) -> Result<u16, Error> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(26);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_layout(&self) -> Result<u8> {
+    fn get_screen_layout(&self) -> Result<u8, Error> {
         let size = self.get_size()?;
+        ensure!(size >= 28, "not enough bytes to retrieve the field");
 
-        if size >= 28 {
-            Ok(self.slice[28])
-        } else {
-            Err("Not enough bytes to retrieve the field".into())
-        }
+        Ok(self.slice[28])
     }
 
-    fn get_ui_mode(&self) -> Result<u8> {
+    fn get_ui_mode(&self) -> Result<u8, Error> {
         let size = self.get_size()?;
+        ensure!(size >= 29, "not enough bytes to retrieve the field");
 
-        if size >= 29 {
-            Ok(self.slice[29])
-        } else {
-            Err("Not enough bytes to retrieve the field".into())
-        }
+        Ok(self.slice[29])
     }
 
-    fn get_smallest_screen(&self) -> Result<u16> {
+    fn get_smallest_screen(&self) -> Result<u16, Error> {
         let size = self.get_size()?;
+        ensure!(size >= 30, "not enough bytes to retrieve the field");
 
-        if size >= 30 {
-            let mut cursor = Cursor::new(self.slice);
-            cursor.set_position(30);
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(30);
 
-            Ok(cursor.read_u16::<LittleEndian>()?)
-        } else {
-            Err("Not enough bytes to retrieve the field".into())
-        }
+        Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_width(&self) -> Result<u16> {
+    fn get_screen_width(&self) -> Result<u16, Error> {
         let size = self.get_size()?;
+        ensure!(size >= 32, "not enough bytes to retrieve the field");
 
-        if size >= 32 {
-            let mut cursor = Cursor::new(self.slice);
-            cursor.set_position(32);
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(32);
 
-            Ok(cursor.read_u16::<LittleEndian>()?)
-        } else {
-            Err("Not enough bytes to retrieve the field".into())
-        }
+        Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_height(&self) -> Result<u16> {
+    fn get_screen_height(&self) -> Result<u16, Error> {
         let size = self.get_size()?;
+        ensure!(size >= 34, "not enough bytes to retrieve the field");
 
-        if size >= 34 {
-            let mut cursor = Cursor::new(self.slice);
-            cursor.set_position(34);
+        let mut cursor = Cursor::new(self.slice);
+        cursor.set_position(34);
 
-            Ok(cursor.read_u16::<LittleEndian>()?)
-        } else {
-            Err("Not enough bytes to retrieve the field".into())
-        }
+        Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_locale_script(&self) -> Result<Option<String>> {
-        Err("Not enough bytes to retrieve the field".into())
+    fn get_locale_script(&self) -> Result<Option<String>, Error> {
+        bail!("not enough bytes to retrieve the field")
     }
 
-    fn get_locale_variant(&self) -> Result<Option<String>> {
-        Err("Not enough bytes to retrieve the field".into())
+    fn get_locale_variant(&self) -> Result<Option<String>, Error> {
+        bail!("not enough bytes to retrieve the field")
     }
 
-    fn get_secondary_layout(&self) -> Result<Option<u8>> {
-        Err("Not enough bytes to retrieve the field".into())
+    fn get_secondary_layout(&self) -> Result<Option<u8>, Error> {
+        bail!("not enough bytes to retrieve the field")
     }
 }
 
@@ -200,10 +187,10 @@ impl Into<(u8, u8)> for Region {
 impl<'a> From<&'a [u8]> for Region {
     fn from(input: &'a [u8]) -> Self {
         if input.len() != 2 {
-            Region { low: 0, high: 0 }
+            Self { low: 0, high: 0 }
         } else {
             let input_ref: &[u8] = input.as_ref();
-            Region {
+            Self {
                 low: input_ref[0],
                 high: input_ref[1],
             }
@@ -213,7 +200,7 @@ impl<'a> From<&'a [u8]> for Region {
 
 impl From<(u8, u8)> for Region {
     fn from(input: (u8, u8)) -> Self {
-        Region {
+        Self {
             low: input.0,
             high: input.1,
         }
@@ -225,7 +212,7 @@ impl ToString for Region {
         let mut chrs = Vec::new();
 
         if self.low == 0 && self.high == 0 {
-            return "any".to_string();
+            return "any".to_owned();
         }
 
         chrs.push(self.low);

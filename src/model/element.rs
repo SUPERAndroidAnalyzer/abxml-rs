@@ -1,9 +1,7 @@
-use std::rc::Rc;
-use std::fmt::{Display, Formatter};
-use std::result::Result as StdResult;
-use std::fmt::Error as FmtError;
-use std::iter;
 use std::collections::HashMap;
+use std::fmt::{self, Display, Formatter};
+use std::iter;
+use std::rc::Rc;
 
 #[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct Tag {
@@ -13,10 +11,7 @@ pub struct Tag {
 
 impl Tag {
     pub fn new(name: Rc<String>, prefixes: Vec<Rc<String>>) -> Self {
-        Tag {
-            name: name,
-            prefixes: prefixes,
-        }
+        Self { name, prefixes }
     }
 
     pub fn get_name(&self) -> Rc<String> {
@@ -38,9 +33,9 @@ pub struct Element {
 
 impl Element {
     pub fn new(tag: Tag, attrs: HashMap<String, String>) -> Self {
-        Element {
-            tag: tag,
-            attrs: attrs,
+        Self {
+            tag,
+            attrs,
             children: Vec::new(),
             level: 0,
         }
@@ -68,7 +63,7 @@ impl Element {
 }
 
 impl Display for Element {
-    fn fmt(&self, formatter: &mut Formatter) -> StdResult<(), FmtError> {
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
         let tabs = iter::repeat("\t")
             .take(self.level as usize)
             .collect::<String>();

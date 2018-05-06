@@ -1,8 +1,10 @@
 //! Collection of visitors that are fed from chunk iterator
 use std::io::Cursor;
-use chunks::*;
+
+use failure::{Error, ResultExt};
 use byteorder::{LittleEndian, ReadBytesExt};
-use errors::*;
+
+use chunks::*;
 
 mod xml;
 pub mod model;
@@ -32,25 +34,25 @@ pub struct Executor;
 impl Executor {
     /// Given a valid `resources.arsc` file contents, it will call to the proper methods on the
     /// given visitor.
-    pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], visitor: &mut V) -> Result<()> {
+    pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], visitor: &mut V) -> Result<(), Error> {
         let mut cursor = Cursor::new(buffer);
         let token = cursor
             .read_u16::<LittleEndian>()
-            .chain_err(|| "Error reading first token")?;
+            .context("error reading first token")?;
 
         if token != 0x2 {
-            return Err(format!("File does not start with ARSC token: {:X}", token).into());
+            bail!("file does not start with ARSC token: {:X}", token);
         }
 
         let _header_size = cursor
             .read_u16::<LittleEndian>()
-            .chain_err(|| "Error reading header size")?;
+            .context("error reading header size")?;
         let _chunk_size = cursor
             .read_u32::<LittleEndian>()
-            .chain_err(|| "Error reading chunk size")?;
+            .context("error reading chunk size")?;
         let _package_amount = cursor
             .read_u32::<LittleEndian>()
-            .chain_err(|| "Error reading package amount")?;
+            .context("error reading package amount")?;
         // TODO: Avoid infinite loop
         cursor.set_position(_header_size as u64);
 
@@ -58,7 +60,7 @@ impl Executor {
         let mut origin = Origin::Global;
 
         for c in stream {
-            match c.chain_err(|| "Error reading next chunk")? {
+            match c.context("error reading next chunk")? {
                 Chunk::StringTable(stw) => {
                     visitor.visit_string_table(stw, origin);
                     origin = Origin::next(origin);
@@ -86,26 +88,26 @@ impl Executor {
     pub fn xml<'a, V: ChunkVisitor<'a>>(
         mut cursor: Cursor<&'a [u8]>,
         visitor: &mut V,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
         let token = cursor
             .read_u16::<LittleEndian>()
-            .chain_err(|| "Error reading first token")?;
+            .context("error reading first token")?;
 
         if token != 0x3 {
-            return Err(format!("Document does not start with XML token: {:X}", token).into());
+            bail!("document does not start with XML token: {:X}", token);
         }
 
         let header_size = cursor
             .read_u16::<LittleEndian>()
-            .chain_err(|| "Error reading header size")?;
+            .context("error reading header size")?;
         let _chunk_size = cursor
             .read_u32::<LittleEndian>()
-            .chain_err(|| "Error reading chunk size")?;
+            .context("error reading chunk size")?;
         cursor.set_position(header_size as u64);
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
-            match c.chain_err(|| "Error reading next chunk")? {
+            match c.context("error reading next chunk")? {
                 Chunk::StringTable(stw) => {
                     visitor.visit_string_table(stw, Origin::Global);
                 }

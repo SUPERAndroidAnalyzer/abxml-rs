@@ -1,8 +1,10 @@
-use model::Configuration;
-use chunks::table_type::Region;
-use errors::*;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use failure::Error;
+
+use chunks::table_type::Region;
+use model::Configuration;
 
 #[derive(Clone, Default)]
 pub struct ConfigurationBuf {
@@ -33,7 +35,7 @@ pub struct ConfigurationBuf {
 }
 
 impl ConfigurationBuf {
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         let mut buffer = Vec::new();
 
         buffer.write_u32::<LittleEndian>(self.size)?;
@@ -75,7 +77,7 @@ impl ConfigurationBuf {
         Ok(buffer)
     }
 
-    pub fn from_cursor(buffer: Vec<u8>) -> Result<Self> {
+    pub fn from_cursor(buffer: Vec<u8>) -> Result<Self, Error> {
         let original_size = buffer.len() as u32;
         let mut cursor = Cursor::new(buffer);
         let size = cursor.read_u32::<LittleEndian>()?;
@@ -138,121 +140,119 @@ impl ConfigurationBuf {
             // TODO: Read bytes
         }
 
-        let rc = ConfigurationBuf {
-            size: size,
-            original_size: original_size,
-            mcc: mcc,
-            mnc: mnc,
+        Ok(Self {
+            size,
+            original_size,
+            mcc,
+            mnc,
             language: str_lang,
             region: str_reg,
-            orientation: orientation,
-            touchscreen: touchscreen,
-            density: density,
-            keyboard: keyboard,
-            navigation: navigation,
-            input_flags: input_flags,
-            width: width,
-            height: height,
-            sdk_version: sdk_version,
-            min_sdk_version: min_sdk_version,
-            screen_layout: screen_layout,
-            ui_mode: ui_mode,
-            smallest_screen: smallest_screen,
-            screen_width_dp: screen_width_dp,
-            screen_height_dp: screen_height_dp,
+            orientation,
+            touchscreen,
+            density,
+            keyboard,
+            navigation,
+            input_flags,
+            width,
+            height,
+            sdk_version,
+            min_sdk_version,
+            screen_layout,
+            ui_mode,
+            smallest_screen,
+            screen_width_dp,
+            screen_height_dp,
             locale_script: None,
             locale_variant: None,
             secondary_screen_layout: None,
-        };
-
-        Ok(rc)
+        })
     }
 }
 
 impl Configuration for ConfigurationBuf {
-    fn get_size(&self) -> Result<u32> {
+    fn get_size(&self) -> Result<u32, Error> {
         Ok(self.size)
     }
 
-    fn get_mcc(&self) -> Result<u16> {
+    fn get_mcc(&self) -> Result<u16, Error> {
         Ok(self.mcc)
     }
 
-    fn get_mnc(&self) -> Result<u16> {
+    fn get_mnc(&self) -> Result<u16, Error> {
         Ok(self.mnc)
     }
 
-    fn get_language(&self) -> Result<String> {
+    fn get_language(&self) -> Result<String, Error> {
         let region = Region::from(self.language.as_ref());
         Ok(region.to_string())
     }
 
-    fn get_region(&self) -> Result<String> {
+    fn get_region(&self) -> Result<String, Error> {
         let region = Region::from(self.region.as_ref());
         Ok(region.to_string())
     }
 
-    fn get_orientation(&self) -> Result<u8> {
+    fn get_orientation(&self) -> Result<u8, Error> {
         Ok(self.orientation)
     }
 
-    fn get_touchscreen(&self) -> Result<u8> {
+    fn get_touchscreen(&self) -> Result<u8, Error> {
         Ok(self.touchscreen)
     }
 
-    fn get_density(&self) -> Result<u16> {
+    fn get_density(&self) -> Result<u16, Error> {
         Ok(self.density)
     }
 
-    fn get_keyboard(&self) -> Result<u8> {
+    fn get_keyboard(&self) -> Result<u8, Error> {
         Ok(self.keyboard)
     }
 
-    fn get_navigation(&self) -> Result<u8> {
+    fn get_navigation(&self) -> Result<u8, Error> {
         Ok(self.navigation)
     }
 
-    fn get_input_flags(&self) -> Result<u8> {
+    fn get_input_flags(&self) -> Result<u8, Error> {
         Ok(self.input_flags)
     }
 
-    fn get_width(&self) -> Result<u16> {
+    fn get_width(&self) -> Result<u16, Error> {
         Ok(self.width)
     }
 
-    fn get_height(&self) -> Result<u16> {
+    fn get_height(&self) -> Result<u16, Error> {
         Ok(self.height)
     }
 
-    fn get_sdk_version(&self) -> Result<u16> {
+    fn get_sdk_version(&self) -> Result<u16, Error> {
         Ok(self.sdk_version)
     }
 
-    fn get_min_sdk_version(&self) -> Result<u16> {
+    fn get_min_sdk_version(&self) -> Result<u16, Error> {
         Ok(self.min_sdk_version)
     }
 
-    fn get_screen_layout(&self) -> Result<u8> {
+    fn get_screen_layout(&self) -> Result<u8, Error> {
         Ok(self.screen_layout)
     }
 
-    fn get_ui_mode(&self) -> Result<u8> {
+    fn get_ui_mode(&self) -> Result<u8, Error> {
         Ok(self.ui_mode)
     }
 
-    fn get_smallest_screen(&self) -> Result<u16> {
+    fn get_smallest_screen(&self) -> Result<u16, Error> {
         Ok(self.smallest_screen)
     }
 
-    fn get_screen_width(&self) -> Result<u16> {
+    fn get_screen_width(&self) -> Result<u16, Error> {
         Ok(self.screen_width_dp)
     }
 
-    fn get_screen_height(&self) -> Result<u16> {
+    fn get_screen_height(&self) -> Result<u16, Error> {
         Ok(self.screen_height_dp)
     }
 
-    fn get_locale_script(&self) -> Result<Option<String>> {
+    fn get_locale_script(&self) -> Result<Option<String>, Error> {
         let out = match self.locale_script {
             Some(ref s) => Some(s.clone()),
             None => None,
@@ -261,7 +261,7 @@ impl Configuration for ConfigurationBuf {
         Ok(out)
     }
 
-    fn get_locale_variant(&self) -> Result<Option<String>> {
+    fn get_locale_variant(&self) -> Result<Option<String>, Error> {
         let out = match self.locale_variant {
             Some(ref s) => Some(s.clone()),
             None => None,
@@ -270,7 +270,7 @@ impl Configuration for ConfigurationBuf {
         Ok(out)
     }
 
-    fn get_secondary_layout(&self) -> Result<Option<u8>> {
+    fn get_secondary_layout(&self) -> Result<Option<u8>, Error> {
         Ok(self.secondary_screen_layout)
     }
 }

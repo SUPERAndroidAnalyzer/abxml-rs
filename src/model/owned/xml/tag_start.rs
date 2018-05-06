@@ -1,10 +1,9 @@
-use model::owned::OwnedBuf;
-use model::TagStart;
 use byteorder::{LittleEndian, WriteBytesExt};
+use failure::Error;
+
 use chunks::*;
-use errors::*;
-use model::owned::AttributeBuf;
-use model::AttributeTrait;
+use model::owned::{AttributeBuf, OwnedBuf};
+use model::{AttributeTrait, TagStart};
 
 /// Representation of a XML Tag start chunk
 pub struct XmlTagStartBuf {
@@ -26,22 +25,15 @@ pub struct XmlTagStartBuf {
 
 impl XmlTagStartBuf {
     /// Creates a new `XmlTagStartBuf` with the given data
-    pub fn new(
-        line: u32,
-        field1: u32,
-        namespace: u32,
-        name_index: u32,
-        field2: u32,
-        class: u32,
-    ) -> Self {
-        XmlTagStartBuf {
+    pub fn new(line: u32, field1: u32, namespace: u32, name: u32, field2: u32, class: u32) -> Self {
+        Self {
             attributes: Vec::new(),
-            name: name_index,
-            namespace: namespace,
-            line: line,
-            field1: field1,
-            field2: field2,
-            class: class,
+            name,
+            namespace,
+            line,
+            field1,
+            field2,
+            class,
         }
     }
 
@@ -54,42 +46,40 @@ impl XmlTagStartBuf {
 impl TagStart for XmlTagStartBuf {
     type Attribute = AttributeBuf;
 
-    fn get_line(&self) -> Result<u32> {
+    fn get_line(&self) -> Result<u32, Error> {
         Ok(self.line)
     }
 
-    fn get_field1(&self) -> Result<u32> {
+    fn get_field1(&self) -> Result<u32, Error> {
         Ok(self.field1)
     }
 
-    fn get_namespace_index(&self) -> Result<u32> {
+    fn get_namespace_index(&self) -> Result<u32, Error> {
         Ok(self.namespace)
     }
 
-    fn get_element_name_index(&self) -> Result<u32> {
+    fn get_element_name_index(&self) -> Result<u32, Error> {
         Ok(self.name)
     }
 
-    fn get_field2(&self) -> Result<u32> {
+    fn get_field2(&self) -> Result<u32, Error> {
         Ok(self.field2)
     }
 
-    fn get_attributes_amount(&self) -> Result<u32> {
+    fn get_attributes_amount(&self) -> Result<u32, Error> {
         Ok(self.attributes.len() as u32)
     }
 
-    fn get_class(&self) -> Result<u32> {
+    fn get_class(&self) -> Result<u32, Error> {
         Ok(self.class)
     }
 
-    fn get_attribute(&self, index: u32) -> Result<Self::Attribute> {
-        if index as usize >= self.attributes.len() {
-            return Err("Requested attribute out of bounds".into());
+    fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error> {
+        if let Some(attr) = self.attributes.get(index as usize) {
+            Ok(attr.clone())
+        } else {
+            bail!("requested attribute out of bounds")
         }
-
-        let attr = &self.attributes[index as usize];
-
-        Ok(attr.clone())
     }
 }
 
@@ -98,7 +88,7 @@ impl OwnedBuf for XmlTagStartBuf {
         TOKEN_XML_TAG_START
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>> {
+    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.namespace)?;
@@ -118,7 +108,7 @@ impl OwnedBuf for XmlTagStartBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>> {
+    fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.line)?;
@@ -131,10 +121,10 @@ impl OwnedBuf for XmlTagStartBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chunks::XmlTagStartWrapper;
     use model::owned::AttributeBuf;
     use raw_chunks::EXAMPLE_TAG_START;
     use test::compare_chunks;
-    use chunks::XmlTagStartWrapper;
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

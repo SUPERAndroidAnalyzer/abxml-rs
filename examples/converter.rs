@@ -1,16 +1,19 @@
 extern crate abxml;
-extern crate error_chain;
 extern crate byteorder;
-extern crate zip;
-extern crate log;
 extern crate env_logger;
+#[macro_use]
+extern crate failure;
+extern crate log;
+extern crate zip;
 
 use std::env;
-use abxml::encoder::Xml;
 use std::io::prelude::*;
-use abxml::errors::*;
-use abxml::visitor::*;
 use std::io::Cursor;
+
+use failure::{Error, ResultExt};
+
+use abxml::encoder::Xml;
+use abxml::visitor::*;
 
 fn main() {
     env_logger::try_init().unwrap();
@@ -18,14 +21,8 @@ fn main() {
     if let Err(ref e) = run() {
         println!("error: {}", e);
 
-        for e in e.iter().skip(1) {
+        for e in e.causes() {
             println!("caused by: {}", e);
-        }
-
-        // The backtrace is not always generated. Try to run this example
-        // with `RUST_BACKTRACE=1`.
-        if let Some(backtrace) = e.backtrace() {
-            println!("backtrace: {:?}", backtrace);
         }
 
         ::std::process::exit(1);
@@ -35,7 +32,7 @@ fn main() {
 // Most functions will return the `Result` type, imported from the
 // `errors` module. It is a typedef of the standard `Result` type
 // for which the error type is always our own `Error`.
-fn run() -> Result<()> {
+fn run() -> Result<(), Error> {
     let apk_path = match env::args().nth(1) {
         Some(path) => path,
         None => {
@@ -60,9 +57,10 @@ fn run() -> Result<()> {
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
     let mut resources_content = Vec::new();
-    archive.by_name("resources.arsc").unwrap().read_to_end(
-        &mut resources_content,
-    )?;
+    archive
+        .by_name("resources.arsc")
+        .unwrap()
+        .read_to_end(&mut resources_content)?;
 
     let mut resources_visitor = ModelVisitor::default();
     Executor::arsc(&resources_content, &mut resources_visitor)?;
@@ -79,9 +77,8 @@ fn run() -> Result<()> {
                 let new_content = xml_content.clone();
 
                 let resources = resources_visitor.get_resources();
-                let out = parse_xml(&new_content, resources).chain_err(
-                    || "Could not decode target file",
-                )?;
+                let out =
+                    parse_xml(&new_content, resources).context("could not decode target file")?;
                 println!("{}", out);
             }
         }
@@ -90,29 +87,27 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String> {
+fn parse_xml<'a>(content: &[u8], resources: &'a Resources<'a>) -> Result<String, Error> {
     let cursor = Cursor::new(content);
     let mut visitor = XmlVisitor::new(resources);
 
     Executor::xml(cursor, &mut visitor)?;
 
     match *visitor.get_root() {
-        Some(ref root) => {
-            match *visitor.get_string_table() {
-                Some(_) => {
-                    return Xml::encode(visitor.get_namespaces(), root).chain_err(
-                        || "Could note encode XML",
-                    );
-                }
-                None => {
-                    println!("No string table found");
-                }
+        Some(ref root) => match *visitor.get_string_table() {
+            Some(_) => {
+                let res =
+                    Xml::encode(visitor.get_namespaces(), root).context("could note encode XML")?;
+                return Ok(res);
             }
-        }
+            None => {
+                println!("No string table found");
+            }
+        },
         None => {
             println!("No root on target XML");
         }
     }
 
-    Err("Could not decode XML".into())
+    bail!("could not decode XML")
 }

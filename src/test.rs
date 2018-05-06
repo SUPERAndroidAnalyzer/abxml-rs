@@ -1,19 +1,17 @@
+use failure::Error;
+
 use chunks::*;
+use model;
+use std::rc::Rc;
 use visitor::ChunkVisitor;
 use visitor::Origin;
-use std::rc::Rc;
-use errors::*;
-use model;
 
+#[derive(Default)]
 pub struct CounterChunkVisitor {
     count: u32,
 }
 
 impl CounterChunkVisitor {
-    pub fn new() -> CounterChunkVisitor {
-        CounterChunkVisitor { count: 0 }
-    }
-
     pub fn get_count(&self) -> u32 {
         self.count
     }
@@ -85,7 +83,7 @@ impl model::StringTable for FakeStringTable {
         0
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
         match idx {
             0 => Ok(Rc::new("Zero".to_string())),
             11 => Ok(Rc::new("Ones".to_string())),
@@ -95,7 +93,7 @@ impl model::StringTable for FakeStringTable {
             123 => Ok(Rc::new("center".to_string())),
             456 => Ok(Rc::new("left".to_string())),
             789 => Ok(Rc::new("right".to_string())),
-            _ => Err("Index out of bounds".into()),
+            _ => bail!("index out of bounds"),
         }
     }
 }

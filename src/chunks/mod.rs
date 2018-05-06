@@ -1,31 +1,25 @@
 //! Structs to represent chunks and iterate them
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
 
-pub mod string_table;
+use byteorder::{LittleEndian, ReadBytesExt};
+use failure::Error;
+
 mod chunk_header;
 mod package;
-pub mod table_type;
 mod resource;
+pub mod string_table;
+pub mod table_type;
 mod table_type_spec;
 mod xml;
 
-pub use self::string_table::StringTableWrapper;
-pub use self::string_table::StringTableCache;
 pub use self::chunk_header::ChunkHeader;
 pub use self::package::PackageWrapper;
-pub use self::table_type_spec::TypeSpecWrapper;
-pub use self::table_type::TableTypeWrapper;
-pub use self::table_type::ConfigurationWrapper;
-
 pub use self::resource::ResourceWrapper;
-pub use self::xml::XmlNamespaceStartWrapper;
-pub use self::xml::XmlNamespaceEndWrapper;
-pub use self::xml::XmlTagStartWrapper;
-pub use self::xml::XmlTagEndWrapper;
-pub use self::xml::XmlTextWrapper;
-
-use errors::*;
+pub use self::string_table::{StringTableCache, StringTableWrapper};
+pub use self::table_type::{ConfigurationWrapper, TableTypeWrapper};
+pub use self::table_type_spec::TypeSpecWrapper;
+pub use self::xml::{XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper,
+                    XmlTagStartWrapper, XmlTextWrapper};
 
 pub const TOKEN_STRING_TABLE: u16 = 0x0001;
 pub const TOKEN_RESOURCE: u16 = 0x0180;
@@ -59,13 +53,13 @@ pub struct ChunkLoaderStream<'a> {
 
 impl<'a> ChunkLoaderStream<'a> {
     pub fn new(cursor: Cursor<&'a [u8]>) -> Self {
-        ChunkLoaderStream {
-            cursor: cursor,
+        Self {
+            cursor,
             previous: None,
         }
     }
 
-    fn read_one(&mut self) -> Result<Chunk<'a>> {
+    fn read_one(&mut self) -> Result<Chunk<'a>, Error> {
         let initial_position = self.cursor.position();
         let token = self.cursor.read_u16::<LittleEndian>()?;
         let header_size = self.cursor.read_u16::<LittleEndian>()?;
@@ -115,9 +109,9 @@ impl<'a> ChunkLoaderStream<'a> {
 }
 
 impl<'a> Iterator for ChunkLoaderStream<'a> {
-    type Item = Result<Chunk<'a>>;
+    type Item = Result<Chunk<'a>, Error>;
 
-    fn next(&mut self) -> Option<Result<Chunk<'a>>> {
+    fn next(&mut self) -> Option<Result<Chunk<'a>, Error>> {
         if let Some(prev) = self.previous {
             if prev == self.cursor.position() {
                 return None;
@@ -138,8 +132,8 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
     use model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
+    use std::io::Cursor;
 
     #[test]
     fn it_can_detect_loops() {

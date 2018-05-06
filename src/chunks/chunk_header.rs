@@ -10,11 +10,11 @@ pub struct ChunkHeader {
 
 impl ChunkHeader {
     pub fn new(offset: u64, header_size: u16, chunk_size: u32, chunk_type: u16) -> Self {
-        ChunkHeader {
-            offset: offset,
-            header_size: header_size,
-            chunk_size: chunk_size,
-            chunk_type: chunk_type,
+        Self {
+            offset,
+            header_size,
+            chunk_size,
+            chunk_type,
         }
     }
 

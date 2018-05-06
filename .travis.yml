@@ -1,13 +1,10 @@
 language: rust
-cache: cargo
+# cache: cargo
 dist: trusty
-sudo: false
+sudo: true
 os:
   - linux
-
-env:
-  global:
-    -cache: cargo
+  - osx
 
 addons:
   apt:
@@ -15,10 +12,11 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-      - binutils-dev
       - cmake
-    sources:
-      - kalakris-cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+      - zlib1g-dev
 
 rust:
   - nightly
@@ -26,30 +24,29 @@ rust:
   - stable
   - 1.20.0
 
-matrix:
-  allow_failures:
-    - rust: nightly
-
 before_script:
-  - |
-      cargo install cargo-travis || true  &&
-      export PATH=$HOME/.cargo/bin:$PATH
-  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo install rustfmt-nightly --force)
+  - export PATH=$PATH:~/.cargo/bin
+  - ./travis-helper.sh install_deps
 
 script:
-  - |
-    cargo build &&
-    cargo build --example converter &&
-    cargo build --example exporter &&
-    cargo test
-  - (test $TRAVIS_RUST_VERSION != "nightly" || cargo fmt -- --write-mode=diff)
+  - cargo build
+  - cargo build --example converter
+  - cargo build --example exporter
+  - cargo test
+  - cargo package
+  - ./travis-helper.sh clippy_run
+  - ./travis-helper.sh fmt_run
 
 after_success:
-  - cargo coveralls
+  - ./travis-helper.sh upload_code_coverage
+  - ./travis-helper.sh upload_documentation
 
 notifications:
   email:
     recipients:
-      - gnieto.talo@gmail.com
+      - razican@protonmail.ch
+      - brunoop@protonmail.ch
+      - sergiodlo@protonmail.com
+      - jaimesr@protonmail.ch
     on_success: change
     on_failure: always

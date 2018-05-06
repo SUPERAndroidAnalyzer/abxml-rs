@@ -1,4 +1,5 @@
-use errors::*;
+use failure::Error;
+
 use model::AttributeTrait;
 
 #[derive(Clone)]
@@ -12,34 +13,34 @@ pub struct AttributeBuf {
 
 impl AttributeBuf {
     pub fn new(namespace: u32, name: u32, class: u32, value: u32, data: u32) -> Self {
-        AttributeBuf {
-            namespace: namespace,
-            name: name,
-            class: class,
-            value: value,
-            data: data,
+        Self {
+            namespace,
+            name,
+            class,
+            value,
+            data,
         }
     }
 }
 
 impl AttributeTrait for AttributeBuf {
-    fn get_namespace(&self) -> Result<u32> {
+    fn get_namespace(&self) -> Result<u32, Error> {
         Ok(self.namespace)
     }
 
-    fn get_name(&self) -> Result<u32> {
+    fn get_name(&self) -> Result<u32, Error> {
         Ok(self.name)
     }
 
-    fn get_class(&self) -> Result<u32> {
+    fn get_class(&self) -> Result<u32, Error> {
         Ok(self.class)
     }
 
-    fn get_resource_value(&self) -> Result<u32> {
+    fn get_resource_value(&self) -> Result<u32, Error> {
         Ok(self.value)
     }
 
-    fn get_data(&self) -> Result<u32> {
+    fn get_data(&self) -> Result<u32, Error> {
         Ok(self.data)
     }
 }
