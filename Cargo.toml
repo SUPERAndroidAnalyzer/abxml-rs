@@ -6,11 +6,18 @@ authors = [
     "Guillem Nieto <gnieto.talo@gmail.com>",
     "Iban Eguia <razican@protonmail.ch>"
 ]
-repository = "https://github.com/gnieto/abxml-rs"
+repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs"
 description = """
 Parser for resources.arsc contained on APKs and binary XML decompresser
 """
 keywords = ["android", "arsc", "apk", "parser"]
+
+[badges]
+travis-ci = { repository = "SUPERAndroidAnalyzer/abxml-rss", branch = "master" }
+appveyor = { repository = "SUPERAndroidAnalyzer/abxml-rs", branch = "master", service = "github" }
+codecov = { repository = "SUPERAndroidAnalyzer/abxml-rs", branch = "master", service = "github" }
+is-it-maintained-issue-resolution = { repository = "SUPERAndroidAnalyzer/abxml-rs" }
+is-it-maintained-open-issues = { repository = "SUPERAndroidAnalyzer/abxml-rs" }
 
 [dependencies]
 failure = "0.1.1"

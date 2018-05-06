@@ -1,6 +1,7 @@
 language: rust
+# cache: cargo
 dist: trusty
-sudo: false
+sudo: true
 os:
   - linux
   - osx
@@ -11,10 +12,11 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-      - binutils-dev
       - cmake
-    sources:
-      - kalakris-cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+      - zlib1g-dev
 
 rust:
   - nightly
@@ -23,10 +25,8 @@ rust:
   - 1.20.0
 
 before_script:
-  - |
-      cargo install cargo-travis || true  &&
-      export PATH=$HOME/.cargo/bin:$PATH
-  - (test $TRAVIS_RUST_VERSION != "stable" || rustup component add rustfmt-preview)
+  - export PATH=$PATH:~/.cargo/bin
+  - ./travis-helper.sh install_deps
 
 script:
   - |
@@ -34,10 +34,12 @@ script:
     cargo build --example converter &&
     cargo build --example exporter &&
     cargo test
-  - (test $TRAVIS_RUST_VERSION != "stable" || cargo fmt -- --write-mode=diff)
+  - ./travis-helper.sh clippy_run
+  - ./travis-helper.sh fmt_run
 
 after_success:
-  - cargo coveralls
+  - ./travis-helper.sh upload_code_coverage
+  - ./travis-helper.sh upload_documentation
 
 notifications:
   email:

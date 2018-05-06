@@ -81,7 +81,7 @@ After that, you should be able to run:
 You should see, per each file, if the output of the library matches with the output of Apktool.
 In case that there is some difference, it will print the diff of the outputs.
 
-[coverage_badge]: https://coveralls.io/repos/github/gnieto/abxml-rs/badge.svg?branch=develop
-[coverage_link]: https://coveralls.io/github/gnieto/abxml-rs?branch=develop
+[coverage_badge]: https://codecov.io/gh/SUPERAndroidAnalyzer/abxml-rs/branch/develop/graph/badge.svg
+[coverage_link]: https://codecov.io/gh/SUPERAndroidAnalyzer/abxml-rs
 [status_badge]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs.svg?branch=develop
 [status_link]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs
