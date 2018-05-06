@@ -11,6 +11,7 @@ description = """
 Parser for resources.arsc contained on APKs and binary XML decompresser
 """
 keywords = ["android", "arsc", "apk", "parser"]
+categories = ["parser-implementations", "parsing"]
 
 [badges]
 travis-ci = { repository = "SUPERAndroidAnalyzer/abxml-rss", branch = "master" }
@@ -18,6 +19,7 @@ appveyor = { repository = "SUPERAndroidAnalyzer/abxml-rs", branch = "master", se
 codecov = { repository = "SUPERAndroidAnalyzer/abxml-rs", branch = "master", service = "github" }
 is-it-maintained-issue-resolution = { repository = "SUPERAndroidAnalyzer/abxml-rs" }
 is-it-maintained-open-issues = { repository = "SUPERAndroidAnalyzer/abxml-rs" }
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 failure = "0.1.1"
