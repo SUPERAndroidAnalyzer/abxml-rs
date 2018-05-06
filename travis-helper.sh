@@ -36,8 +36,8 @@ elif [ "$action" = "upload_code_coverage" ]; then
     sudo make install &&
     cd ../.. &&
     rm -rf kcov-master &&
-    for file in target/debug/abxml*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-    for file in target/debug/lib*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+    for file in target/debug/abxml-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+    for file in target/debug/lib-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
     bash <(curl -s https://codecov.io/bash) &&
     echo "Uploaded code coverage"
   fi
