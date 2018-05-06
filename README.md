@@ -83,5 +83,5 @@ In case that there is some difference, it will print the diff of the outputs.
 
 [coverage_badge]: https://codecov.io/gh/SUPERAndroidAnalyzer/abxml-rs/branch/develop/graph/badge.svg
 [coverage_link]: https://codecov.io/gh/SUPERAndroidAnalyzer/abxml-rs
-[status_badge]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs.svg?branch=develop
+[status_badge]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs.svg?branch=master
 [status_link]: https://travis-ci.org/SUPERAndroidAnalyzer/abxml-rs

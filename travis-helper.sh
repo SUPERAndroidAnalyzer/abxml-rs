@@ -11,7 +11,7 @@ if [ "$action" = "install_deps" ]; then
   # Install Clippy
   if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
     # Install clippy
-    cargo install clippy --force --verbose
+    cargo install clippy --force --verbose || true
   fi
 
 elif [ "$action" = "clippy_run" ]; then

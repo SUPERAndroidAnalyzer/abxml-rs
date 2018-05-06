@@ -29,11 +29,11 @@ before_script:
   - ./travis-helper.sh install_deps
 
 script:
-  - |
-    cargo build &&
-    cargo build --example converter &&
-    cargo build --example exporter &&
-    cargo test
+  - cargo build
+  - cargo build --example converter
+  - cargo build --example exporter
+  - cargo test
+  - cargo package
   - ./travis-helper.sh clippy_run
   - ./travis-helper.sh fmt_run
 
