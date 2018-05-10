@@ -6,7 +6,7 @@ use std::rc::Rc;
 use visitor::ChunkVisitor;
 use visitor::Origin;
 
-#[derive(Default)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct CounterChunkVisitor {
     count: u32,
 }
@@ -52,7 +52,7 @@ impl<'a> ChunkVisitor<'a> for CounterChunkVisitor {
 
 pub fn compare_chunks(expected: &[u8], data: &[u8]) {
     if expected.len() != data.len() {
-        println!("Expected len: {}; Data len: {}", expected.len(), data.len());
+        eprintln!("Expected len: {}; Data len: {}", expected.len(), data.len());
     }
 
     let mut is_equal = true;
@@ -65,7 +65,7 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
 
     for i in 0..len {
         if expected[i] != data[i] {
-            println!("Difference @{}: {} <-> {}", i, expected[i], data[i]);
+            eprintln!("Difference @{}: {} <-> {}", i, expected[i], data[i]);
             is_equal = false;
         }
     }
@@ -73,6 +73,7 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
     assert!(is_equal);
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct FakeStringTable;
 impl model::StringTable for FakeStringTable {
     fn get_strings_len(&self) -> u32 {

@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 
@@ -18,7 +20,7 @@ mod table_type_spec;
 mod xml;
 
 /// Implementors are able to be converted to well formed chunks as expected on `ChunkLoaderStream`
-pub trait OwnedBuf {
+pub trait OwnedBuf: Debug {
     /// Token that identifies the current chunk
     fn get_token(&self) -> u16;
     /// Return the bytes corresponding to chunk's body
@@ -50,7 +52,7 @@ pub trait OwnedBuf {
 
         buffer.write_u16::<LittleEndian>(self.get_token())?;
         buffer.write_u16::<LittleEndian>(header_size)?;
-        buffer.write_u32::<LittleEndian>(body.len() as u32 + header_size as u32)?;
+        buffer.write_u32::<LittleEndian>(body.len() as u32 + u32::from(header_size))?;
         buffer.extend(&header);
 
         Ok(())

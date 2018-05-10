@@ -3,7 +3,7 @@ use failure::{Error, ResultExt};
 
 use model::owned::OwnedBuf;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Arsc {
     chunks: Vec<Box<OwnedBuf>>,
 }
@@ -44,7 +44,7 @@ impl Arsc {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Xml {
     chunks: Vec<Box<OwnedBuf>>,
 }

@@ -9,6 +9,7 @@ use zip::read::ZipArchive;
 
 use decoder::*;
 
+#[derive(Debug)]
 pub struct Apk {
     handler: ZipArchive<fs::File>,
     decoder: BufferedDecoder,

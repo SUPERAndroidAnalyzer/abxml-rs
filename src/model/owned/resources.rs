@@ -4,7 +4,7 @@ use failure::Error;
 use chunks::*;
 use model::owned::OwnedBuf;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ResourcesBuf {
     resources: Vec<u32>,
 }

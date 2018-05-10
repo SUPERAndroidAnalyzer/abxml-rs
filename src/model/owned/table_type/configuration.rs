@@ -6,7 +6,7 @@ use failure::Error;
 use chunks::table_type::Region;
 use model::Configuration;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct ConfigurationBuf {
     size: u32,
     original_size: u32,
@@ -183,8 +183,7 @@ impl Configuration for ConfigurationBuf {
     }
 
     fn get_language(&self) -> Result<String, Error> {
-        let region = Region::from(self.language.as_ref());
-        Ok(region.to_string())
+        Ok(Region::from(self.language.as_ref()).to_string())
     }
 
     fn get_region(&self) -> Result<String, Error> {
@@ -253,21 +252,11 @@ impl Configuration for ConfigurationBuf {
     }
 
     fn get_locale_script(&self) -> Result<Option<String>, Error> {
-        let out = match self.locale_script {
-            Some(ref s) => Some(s.clone()),
-            None => None,
-        };
-
-        Ok(out)
+        Ok(self.locale_script.clone())
     }
 
     fn get_locale_variant(&self) -> Result<Option<String>, Error> {
-        let out = match self.locale_variant {
-            Some(ref s) => Some(s.clone()),
-            None => None,
-        };
-
-        Ok(out)
+        Ok(self.locale_variant.clone())
     }
 
     fn get_secondary_layout(&self) -> Result<Option<u8>, Error> {

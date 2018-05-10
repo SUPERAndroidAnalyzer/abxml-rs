@@ -7,6 +7,7 @@ use super::ChunkVisitor;
 use super::Origin;
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct PrintVisitor;
 
 impl<'a> ChunkVisitor<'a> for PrintVisitor {

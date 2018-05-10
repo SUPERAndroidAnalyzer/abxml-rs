@@ -6,7 +6,7 @@ use encoding::Encoding;
 use encoding::codec::utf_16;
 use model::owned::OwnedBuf;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PackageBuf {
     id: u32,
     package_name: String,

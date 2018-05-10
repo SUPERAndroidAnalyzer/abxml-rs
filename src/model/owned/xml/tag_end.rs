@@ -5,6 +5,7 @@ use chunks::TOKEN_XML_TAG_END;
 use model::TagEnd;
 use model::owned::OwnedBuf;
 
+#[derive(Debug, Copy, Clone)]
 pub struct XmlTagEndBuf {
     id: u32,
 }

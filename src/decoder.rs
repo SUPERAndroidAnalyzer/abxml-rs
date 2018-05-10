@@ -9,6 +9,7 @@ use visitor::Executor;
 use visitor::ModelVisitor;
 use visitor::*;
 
+#[derive(Debug)]
 pub struct BufferedDecoder {
     buffer: Box<[u8]>,
 }
@@ -25,11 +26,11 @@ where
 }
 
 impl BufferedDecoder {
-    pub fn from_read<R: Read>(mut read: R) -> Result<BufferedDecoder, Error> {
+    pub fn from_read<R: Read>(mut read: R) -> Result<Self, Error> {
         let mut buffer = Vec::new();
         read.read_to_end(&mut buffer)
             .context("could not read buffer")?;
-        Ok(BufferedDecoder {
+        Ok(Self {
             buffer: buffer.into_boxed_slice(),
         })
     }
@@ -39,6 +40,7 @@ impl BufferedDecoder {
     }
 }
 
+#[derive(Debug)]
 pub struct Decoder<'a> {
     visitor: ModelVisitor<'a>,
     buffer_android: &'a [u8],

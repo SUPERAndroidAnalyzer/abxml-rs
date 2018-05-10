@@ -11,6 +11,7 @@ use failure::Error;
 use model::StringTable;
 use model::owned::{Encoding as EncodingType, StringTableBuf};
 
+#[derive(Debug)]
 pub struct StringTableWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -61,16 +62,16 @@ impl<'a> StringTableWrapper<'a> {
             }
         }
 
-        Ok(position as u64)
+        Ok(u64::from(position))
     }
 
     fn parse_string(&self, offset: u32) -> Result<String, Error> {
         let mut cursor = Cursor::new(self.raw_data);
-        cursor.set_position(offset as u64);
+        cursor.set_position(u64::from(offset));
 
         if self.is_utf8() {
             let mut ini_offset = offset;
-            let v = cursor.read_u8()? as u32;
+            let v = u32::from(cursor.read_u8()?);
             if v == 0x80 {
                 ini_offset += 2;
                 cursor.read_u8()?;
@@ -78,7 +79,7 @@ impl<'a> StringTableWrapper<'a> {
                 ini_offset += 1;
             }
 
-            let v = cursor.read_u8()? as u32;
+            let v = u32::from(cursor.read_u8()?);
             if v == 0x80 {
                 ini_offset += 2;
                 cursor.read_u8()?;
@@ -91,10 +92,10 @@ impl<'a> StringTableWrapper<'a> {
             loop {
                 let v = cursor.read_u8()?;
 
-                if v != 0 {
-                    length += 1;
-                } else {
+                if v == 0 {
                     break;
+                } else {
+                    length += 1;
                 }
             }
 
@@ -113,18 +114,19 @@ impl<'a> StringTableWrapper<'a> {
             decoder.raw_feed(subslice, &mut o);
             let decode_error = decoder.raw_finish(&mut o);
 
-            match decode_error {
-                None => Ok(o),
-                Some(_) => Err(format_err!("error decoding UTF8 string")),
+            if decode_error.is_none() {
+                Ok(o)
+            } else {
+                Err(format_err!("error decoding UTF8 string"))
             }
         } else {
-            let size1 = cursor.read_u8()? as u32;
-            let size2 = cursor.read_u8()? as u32;
+            let size1 = u32::from(cursor.read_u8()?);
+            let size2 = u32::from(cursor.read_u8()?);
 
             let val = ((size2 & 0xFF) << 8) | size1 & 0xFF;
 
             let a = offset + 2;
-            let b = offset + 2 + (val * 2);
+            let b = a + val * 2;
 
             ensure!(
                 a <= self.raw_data.len() as u32 && b <= self.raw_data.len() as u32 && a <= b,
@@ -175,6 +177,7 @@ impl<'a> StringTable for StringTableWrapper<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct StringTableCache<S: StringTable> {
     inner: S,
     cache: RefCell<HashMap<u32, Rc<String>>>,

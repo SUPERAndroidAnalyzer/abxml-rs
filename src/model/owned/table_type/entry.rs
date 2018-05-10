@@ -4,6 +4,7 @@ use failure::Error;
 const MASK_COMPLEX: u16 = 0x0001;
 
 #[allow(dead_code)]
+#[derive(Debug, Copy, Clone)]
 pub struct EntryHeader {
     header_size: u16,
     flags: u16,
@@ -28,7 +29,7 @@ impl EntryHeader {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct SimpleEntry {
     id: u32,
     key_index: u32,
@@ -72,7 +73,7 @@ impl SimpleEntry {
         out.write_u16::<LittleEndian>(0)?;
 
         // Key index
-        out.write_u32::<LittleEndian>(self.get_key() as u32)?;
+        out.write_u32::<LittleEndian>(self.get_key())?;
 
         // Value type
         out.write_u16::<LittleEndian>(8)?;
@@ -80,7 +81,7 @@ impl SimpleEntry {
         out.write_u8(self.get_type())?;
 
         // Value
-        out.write_u32::<LittleEndian>(self.get_value() as u32)?;
+        out.write_u32::<LittleEndian>(self.get_value())?;
 
         Ok(out)
     }
@@ -160,7 +161,7 @@ impl ComplexEntry {
             out.write_u8(e.get_type())?;
 
             // Value
-            out.write_u32::<LittleEndian>(e.get_value() as u32)?;
+            out.write_u32::<LittleEndian>(e.get_value())?;
         }
 
         Ok(out)
@@ -176,46 +177,49 @@ pub enum Entry {
 
 impl Entry {
     pub fn simple(&self) -> Result<&SimpleEntry, Error> {
-        match *self {
-            Entry::Simple(ref simple) => Ok(simple),
-            _ => Err(format_err!("asked for a complex entry on a simple one")),
+        if let Entry::Simple(simple) = self {
+            Ok(simple)
+        } else {
+            Err(format_err!("asked for a complex entry on a simple one"))
         }
     }
 
     pub fn complex(&self) -> Result<&ComplexEntry, Error> {
-        match *self {
-            Entry::Complex(ref complex) => Ok(complex),
-            _ => Err(format_err!("asked for a simple entry on a complex one")),
+        if let Entry::Complex(complex) = self {
+            Ok(complex)
+        } else {
+            Err(format_err!("asked for a simple entry on a complex one"))
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        match *self {
-            Entry::Empty(_, _) => true,
-            _ => false,
+        if let Entry::Empty(_, _) = self {
+            true
+        } else {
+            false
         }
     }
 
     pub fn get_id(&self) -> u32 {
-        match *self {
-            Entry::Complex(ref complex) => complex.get_id(),
-            Entry::Simple(ref simple) => simple.get_id(),
-            Entry::Empty(id, _) => id,
+        match self {
+            Entry::Complex(complex) => complex.get_id(),
+            Entry::Simple(simple) => simple.get_id(),
+            Entry::Empty(id, _) => *id,
         }
     }
 
     pub fn get_key(&self) -> u32 {
-        match *self {
-            Entry::Complex(ref complex) => complex.get_key(),
-            Entry::Simple(ref simple) => simple.get_key(),
-            Entry::Empty(_, key) => key,
+        match self {
+            Entry::Complex(complex) => complex.get_key(),
+            Entry::Simple(simple) => simple.get_key(),
+            Entry::Empty(_, key) => *key,
         }
     }
 
     pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
-        match *self {
-            Entry::Complex(ref complex) => complex.to_vec(),
-            Entry::Simple(ref simple) => simple.to_vec(),
+        match self {
+            Entry::Complex(complex) => complex.to_vec(),
+            Entry::Simple(simple) => simple.to_vec(),
             Entry::Empty(_, _) => Ok(Vec::new()),
         }
     }

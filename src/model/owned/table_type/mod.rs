@@ -10,6 +10,7 @@ mod entry;
 pub use self::configuration::ConfigurationBuf;
 pub use self::entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry};
 
+#[derive(Debug)]
 pub struct TableTypeBuf {
     id: u8,
     config: ConfigurationBuf,
@@ -64,7 +65,7 @@ impl OwnedBuf for TableTypeBuf {
 
         let vec_config = self.config.to_vec()?;
         let header_size = (5 * 4) + vec_config.len() as u32;
-        out.write_u32::<LittleEndian>(self.id as u32)?;
+        out.write_u32::<LittleEndian>(u32::from(self.id))?;
         out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
         out.write_u32::<LittleEndian>(header_size + (self.entries.len() as u32 * 4))?;
         out.extend(&vec_config);

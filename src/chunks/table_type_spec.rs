@@ -6,7 +6,7 @@ use failure::Error;
 use model::TypeSpec;
 use model::owned::TableTypeSpecBuf;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TypeSpecWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -17,7 +17,7 @@ impl<'a> TypeSpecWrapper<'a> {
     }
 
     pub fn to_buffer(&self) -> Result<TableTypeSpecBuf, Error> {
-        let mut owned = TableTypeSpecBuf::new(self.get_id()? as u16);
+        let mut owned = TableTypeSpecBuf::new(self.get_id()?);
         let amount = self.get_amount()?;
 
         for i in 0..amount {
@@ -54,7 +54,7 @@ impl<'a> TypeSpec for TypeSpecWrapper<'a> {
         );
 
         let mut cursor = Cursor::new(self.raw_data);
-        let flag_offset = 16 + (index * 4) as u64;
+        let flag_offset = 16 + u64::from(index) * 4;
         cursor.set_position(flag_offset);
 
         Ok(cursor.read_u32::<LittleEndian>()?)

@@ -4,6 +4,7 @@ use failure::Error;
 use model::TypeSpec;
 use model::owned::OwnedBuf;
 
+#[derive(Debug)]
 pub struct TableTypeSpecBuf {
     id: u16,
     flags: Vec<u32>,
@@ -40,7 +41,7 @@ impl OwnedBuf for TableTypeSpecBuf {
     fn get_header(&self) -> Result<Vec<u8>, Error> {
         let mut out = Vec::new();
 
-        out.write_u32::<LittleEndian>(self.id as u32)?;
+        out.write_u32::<LittleEndian>(u32::from(self.id))?;
         out.write_u32::<LittleEndian>(self.flags.len() as u32)?;
 
         Ok(out)

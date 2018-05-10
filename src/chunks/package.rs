@@ -5,6 +5,7 @@ use encoding::codec::utf_16;
 use encoding::codec::utf_16::Little;
 use failure::Error;
 
+#[derive(Debug)]
 pub struct PackageWrapper<'a> {
     raw_data: &'a [u8],
 }

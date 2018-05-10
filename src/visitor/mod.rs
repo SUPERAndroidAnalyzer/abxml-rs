@@ -29,6 +29,7 @@ pub trait ChunkVisitor<'a> {
 }
 
 /// Methods to decode a binary resource.arsc file or a binary xml file
+#[derive(Debug, Copy, Clone)]
 pub struct Executor;
 
 impl Executor {
@@ -44,7 +45,7 @@ impl Executor {
             bail!("file does not start with ARSC token: {:X}", token);
         }
 
-        let _header_size = cursor
+        let header_size = cursor
             .read_u16::<LittleEndian>()
             .context("error reading header size")?;
         let _chunk_size = cursor
@@ -54,7 +55,7 @@ impl Executor {
             .read_u32::<LittleEndian>()
             .context("error reading package amount")?;
         // TODO: Avoid infinite loop
-        cursor.set_position(_header_size as u64);
+        cursor.set_position(u64::from(header_size));
 
         let stream = ChunkLoaderStream::new(cursor);
         let mut origin = Origin::Global;
@@ -103,7 +104,7 @@ impl Executor {
         let _chunk_size = cursor
             .read_u32::<LittleEndian>()
             .context("error reading chunk size")?;
-        cursor.set_position(header_size as u64);
+        cursor.set_position(u64::from(header_size));
         let stream = ChunkLoaderStream::new(cursor);
 
         for c in stream {
@@ -145,7 +146,7 @@ pub enum Origin {
 }
 
 impl Origin {
-    pub fn next(origin: Origin) -> Origin {
+    pub fn next(origin: Self) -> Self {
         match origin {
             Origin::Global => Origin::Spec,
             Origin::Spec => Origin::Entries,

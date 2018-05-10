@@ -14,6 +14,7 @@ use visitor::model::Resources;
 use super::ChunkVisitor;
 use super::Origin;
 
+#[derive(Debug)]
 pub struct XmlVisitor<'a> {
     main_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     namespaces: Namespaces,
@@ -57,29 +58,25 @@ impl<'a> XmlVisitor<'a> {
 
     // TODO: Convert to TryInto once it will be stable
     pub fn into_string(self) -> Result<String, Error> {
-        match *self.get_root() {
-            Some(ref root) => match *self.get_string_table() {
-                Some(_) => {
-                    let res =
-                        Xml::encode(self.get_namespaces(), root).context("could note encode XML")?;
-                    return Ok(res);
-                }
-                None => {
-                    warn!("No string table found");
-                }
-            },
-            None => {
-                warn!("No root on target XML");
+        if let Some(root) = self.get_root() {
+            if self.get_string_table().is_some() {
+                let res =
+                    Xml::encode(self.get_namespaces(), root).context("could note encode XML")?;
+                return Ok(res);
+            } else {
+                warn!("No string table found");
             }
+        } else {
+            warn!("No root on target XML");
         }
 
         Err(format_err!("could not decode XML"))
     }
 
     fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element, Error> {
-        match self.main_string_table {
-            Some(ref string_table) => {
-                let (tag, attributes) = self.get_element_data(string_table, tag_start)
+        match &self.main_string_table {
+            Some(string_table) => {
+                let (tag, attributes) = self.get_element_data(&string_table, tag_start)
                     .context("could not get element data")?;
                 Ok(Element::new(tag, attributes))
             }
@@ -116,7 +113,7 @@ impl<'a> XmlVisitor<'a> {
                 let namespace = (*string_table.get_string(namespace_index)?).clone();
                 let prefix = self.namespaces
                     .get(&namespace)
-                    .ok_or(format_err!("namespace not found"))?;
+                    .ok_or_else(|| format_err!("namespace not found"))?;
                 final_name.push_str(prefix);
                 final_name.push(':');
             }
@@ -128,18 +125,18 @@ impl<'a> XmlVisitor<'a> {
             let current_value = current_attribute.get_value()?;
             let value = match current_value {
                 Value::StringReference(index) => (*string_table.get_string(index)?).clone(),
-                Value::ReferenceId(ref id) => {
-                    AttributeHelper::resolve_reference(self.resources, *id, "@")
+                Value::ReferenceId(id) => {
+                    AttributeHelper::resolve_reference(self.resources, id, "@")
                         .context("could not resolve reference")?
                 }
-                Value::AttributeReferenceId(ref id) => {
-                    AttributeHelper::resolve_reference(self.resources, *id, "?")
+                Value::AttributeReferenceId(id) => {
+                    AttributeHelper::resolve_reference(self.resources, id, "?")
                         .context("could not resolve attribute reference")?
                 }
-                Value::Integer(ref value) | Value::Flags(ref value) => {
+                Value::Integer(value) | Value::Flags(value) => {
                     let flag_resolution = AttributeHelper::resolve_flags(
                         &current_attribute,
-                        *value as u32,
+                        value,
                         &self.res,
                         self.resources,
                     );
@@ -162,41 +159,34 @@ impl<'a> XmlVisitor<'a> {
 
 impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_string_table(&mut self, string_table: StringTableWrapper<'a>, _: Origin) {
-        match self.main_string_table {
-            Some(_) => {
-                error!("Secondary table!");
-            }
-            None => {
-                self.main_string_table = Some(StringTableCache::new(string_table));
-            }
+        if self.main_string_table.is_some() {
+            error!("Secondary table!");
+        } else {
+            self.main_string_table = Some(StringTableCache::new(string_table));
         }
     }
 
     fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStartWrapper<'a>) {
         if let Some(ref mut string_table) = self.main_string_table {
-            match (
+            if let (Ok(namespace), Ok(prefix)) = (
                 namespace_start.get_namespace(string_table),
                 namespace_start.get_prefix(string_table),
             ) {
-                (Ok(namespace), Ok(prefix)) => {
-                    self.namespaces
-                        .insert((*namespace).clone(), (*prefix).clone());
-                    self.namespace_prefixes.push(namespace.clone());
-                }
-                _ => {
-                    error!("Error reading namespace from the string table");
-                }
+                self.namespaces
+                    .insert((*namespace).clone(), (*prefix).clone());
+                self.namespace_prefixes.push(namespace.clone());
+            } else {
+                error!("Error reading namespace from the string table");
             }
         }
     }
 
     fn visit_xml_tag_start(&mut self, tag_start: XmlTagStartWrapper<'a>) {
         let element_result = self.build_element(&tag_start);
-        match element_result {
-            Ok(element) => {
-                self.container.start_element(element);
-            }
-            Err(_) => error!("Could not build a XML element"),
+        if let Ok(element) = element_result {
+            self.container.start_element(element);
+        } else {
+            error!("Could not build a XML element")
         }
     }
 
@@ -233,13 +223,12 @@ impl AttributeHelper {
         let is_main = resources.is_main_package(package_id);
         let package = resources
             .get_package(package_id)
-            .ok_or(format_err!("package not found"))?;
+            .ok_or_else(|| format_err!("package not found"))?;
 
         let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
 
         if let Some(key) = entry_key {
-            let namespace = if !is_main { package.get_name() } else { None };
-
+            let namespace = if is_main { None } else { package.get_name() };
             return package.format_reference(id, key, namespace, prefix);
         }
 
@@ -275,7 +264,7 @@ impl AttributeHelper {
             None => return None,
         };
 
-        let package_id = entry_ref.get_package() as u8;
+        let package_id = entry_ref.get_package();
         resources
             .get_package(package_id)
             .and_then(|package| Self::search_flags(flags, *entry_ref, package))
@@ -285,12 +274,12 @@ impl AttributeHelper {
         let str_indexes = Self::get_strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes
             .iter()
-            .map(|si| match package.get_entries_string(*si) {
-                Ok(str) => (*str).clone(),
-                Err(_) => {
+            .map(|si| {
+                if let Ok(str) = package.get_entries_string(*si) {
+                    (*str).clone()
+                } else {
                     error!("Key not found on the string table");
-
-                    "".to_string()
+                    String::new()
                 }
             })
             .collect();
@@ -322,37 +311,34 @@ impl AttributeHelper {
             if (mask & flags) == mask {
                 let maybe_entry = package.get_entry(ie.get_id());
 
-                match maybe_entry {
-                    Ok(entry) => {
-                        let mut has_to_add = true;
+                if let Ok(entry) = maybe_entry {
+                    let mut has_to_add = true;
 
-                        for s in &masks {
-                            if mask & s == mask {
-                                has_to_add = false;
-                                break;
-                            }
-                        }
-
-                        if has_to_add {
-                            entry
-                                .simple()
-                                .and_then(|s| Ok(s.get_key()))
-                                .and_then(|key| {
-                                    strs.push(key);
-                                    masks.push(mask);
-                                    Ok(())
-                                })
-                                .unwrap_or_else(|_| {
-                                    error!(
-                                        "Value should be added but there was an issue reading \
-                                         the entry"
-                                    );
-                                });
+                    for s in &masks {
+                        if mask & s == mask {
+                            has_to_add = false;
+                            break;
                         }
                     }
-                    Err(_) => {
-                        info!("Some entry matched but could not found on entries");
+
+                    if has_to_add {
+                        entry
+                            .simple()
+                            .and_then(|s| Ok(s.get_key()))
+                            .and_then(|key| {
+                                strs.push(key);
+                                masks.push(mask);
+                                Ok(())
+                            })
+                            .unwrap_or_else(|_| {
+                                error!(
+                                    "Value should be added but there was an issue reading \
+                                     the entry"
+                                );
+                            });
                     }
+                } else {
+                    info!("Some entry matched but could not found on entries");
                 }
             }
         }

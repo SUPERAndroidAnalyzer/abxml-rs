@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct ChunkHeader {
     offset: u64,
     header_size: u16,
@@ -27,11 +27,11 @@ impl ChunkHeader {
     }
 
     pub fn get_data_offset(&self) -> u64 {
-        self.offset + self.header_size as u64
+        self.offset + u64::from(self.header_size)
     }
 
     pub fn get_chunk_end(&self) -> u64 {
-        self.offset + self.chunk_size as u64
+        self.offset + u64::from(self.chunk_size)
     }
 
     pub fn absolute(&self, relative: u64) -> u64 {

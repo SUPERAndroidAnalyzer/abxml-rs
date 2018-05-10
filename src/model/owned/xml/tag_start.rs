@@ -6,6 +6,7 @@ use model::owned::{AttributeBuf, OwnedBuf};
 use model::{AttributeTrait, TagStart};
 
 /// Representation of a XML Tag start chunk
+#[derive(Debug)]
 pub struct XmlTagStartBuf {
     /// Attributes of the tag
     attributes: Vec<AttributeBuf>,
@@ -76,7 +77,7 @@ impl TagStart for XmlTagStartBuf {
 
     fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error> {
         if let Some(attr) = self.attributes.get(index as usize) {
-            Ok(attr.clone())
+            Ok(*attr)
         } else {
             bail!("requested attribute out of bounds")
         }

@@ -7,6 +7,7 @@ use chunks::*;
 use model::owned::OwnedBuf;
 use model::{NamespaceStart, StringTable};
 
+#[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceStartBuf {
     line: u32,
     prefix_index: u32,

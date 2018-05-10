@@ -7,6 +7,7 @@ use failure::Error;
 use model::Configuration;
 use model::owned::ConfigurationBuf;
 
+#[derive(Debug)]
 pub struct ConfigurationWrapper<'a> {
     slice: &'a [u8],
 }
@@ -173,6 +174,7 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
     }
 }
 
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Region {
     low: u8,
     high: u8,
@@ -186,14 +188,10 @@ impl Into<(u8, u8)> for Region {
 
 impl<'a> From<&'a [u8]> for Region {
     fn from(input: &'a [u8]) -> Self {
-        if input.len() != 2 {
-            Self { low: 0, high: 0 }
+        if let [low, high] = *input {
+            Self { low, high }
         } else {
-            let input_ref: &[u8] = input.as_ref();
-            Self {
-                low: input_ref[0],
-                high: input_ref[1],
-            }
+            Self::default()
         }
     }
 }

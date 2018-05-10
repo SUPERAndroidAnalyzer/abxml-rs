@@ -41,7 +41,7 @@ impl Element {
         }
     }
 
-    pub fn append(&mut self, element: Element) {
+    pub fn append(&mut self, element: Self) {
         self.children.push(element)
     }
 
@@ -57,7 +57,7 @@ impl Element {
         &self.tag
     }
 
-    pub fn get_children(&self) -> &Vec<Element> {
+    pub fn get_children(&self) -> &Vec<Self> {
         &self.children
     }
 }
@@ -67,7 +67,7 @@ impl Display for Element {
         let tabs = iter::repeat("\t")
             .take(self.level as usize)
             .collect::<String>();
-        write!(formatter, "{}Element: {}\n", tabs, self.tag.get_name())?;
+        writeln!(formatter, "{}Element: {}", tabs, self.tag.get_name())?;
 
         for c in &self.children {
             write!(formatter, "{}", c)?;
@@ -77,7 +77,7 @@ impl Display for Element {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ElementContainer {
     stack: Vec<Element>,
     root: Option<Element>,

@@ -7,6 +7,7 @@ use chunks::*;
 use model::owned::OwnedBuf;
 use model::{NamespaceEnd, StringTable};
 
+#[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceEndBuf {
     line: u32,
     prefix_index: u32,

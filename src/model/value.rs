@@ -58,19 +58,18 @@ pub enum Value {
 
 impl ToString for Value {
     fn to_string(&self) -> String {
-        match *self {
+        match self {
             Value::StringReference(i) => format!("@string/{}", i),
-            Value::Dimension(ref s)
-            | Value::Fraction(ref s)
-            | Value::ColorARGB8(ref s)
-            | Value::ColorRGB8(ref s)
-            | Value::ColorARGB4(ref s)
-            | Value::ColorRGB4(ref s) => s.clone(),
+            Value::Dimension(s)
+            | Value::Fraction(s)
+            | Value::ColorARGB8(s)
+            | Value::ColorRGB8(s)
+            | Value::ColorARGB4(s)
+            | Value::ColorRGB4(s) => s.clone(),
             Value::Float(f) => format!("{:.*}", 1, f),
             Value::Integer(i) | Value::Flags(i) => i.to_string(),
             Value::Boolean(b) => b.to_string(),
-            Value::ReferenceId(ref s) => format!("@id/0x{:x}", s),
-            Value::AttributeReferenceId(ref s) => format!("@id/0x{:x}", s),
+            Value::ReferenceId(s) | Value::AttributeReferenceId(s) => format!("@id/0x{:x}", s),
             _ => "Unknown".to_string(),
         }
     }
@@ -109,9 +108,9 @@ impl Value {
                 let unit_idx = (data & 0xF) as usize;
                 let final_value = Self::complex(data) * 100.0;
 
-                match units.get(unit_idx as usize) {
+                match units.get(unit_idx) {
                     Some(unit) => {
-                        let integer = final_value.round() as f32;
+                        let integer = final_value.round();
                         let diff = final_value - integer;
                         let formatted_fraction = if diff > 0.0000001 {
                             format!("{:.*}{}", 6, final_value, unit)
@@ -134,17 +133,8 @@ impl Value {
                 Value::Integer(data)
             }
             TOKEN_TYPE_FLAGS => Value::Flags(data),
-            TOKEN_TYPE_FLOAT => {
-                let f = unsafe { mem::transmute::<u32, f32>(data) };
-                Value::Float(f)
-            }
-            TOKEN_TYPE_BOOLEAN => {
-                if data > 0 {
-                    Value::Boolean(true)
-                } else {
-                    Value::Boolean(false)
-                }
-            }
+            TOKEN_TYPE_FLOAT => Value::Float(f32::from_bits(data)),
+            TOKEN_TYPE_BOOLEAN => Value::Boolean(data > 0),
             TOKEN_TYPE_ARGB8 => {
                 let formatted_color = format!("#{:08x}", data);
                 Value::ColorARGB8(formatted_color)
@@ -167,6 +157,8 @@ impl Value {
         Ok(value)
     }
 
+    // TODO: maybe remove the unsafe code.
+    #[allow(unsafe_code)]
     fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;

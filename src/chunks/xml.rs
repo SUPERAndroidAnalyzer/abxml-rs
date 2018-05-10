@@ -8,6 +8,7 @@ use model::owned::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTa
                    XmlTagStartBuf};
 use model::{AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart};
 
+#[derive(Debug)]
 pub struct XmlNamespaceStartWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -66,6 +67,7 @@ impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct XmlNamespaceEndWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -124,6 +126,7 @@ impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
 }
 
 /// Contains a reference to the whole buffer and the chunk header of a `TagStart`
+#[derive(Debug)]
 pub struct XmlTagStartWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -195,9 +198,9 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
     }
 
     fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error> {
-        let offset = 36 + (index * (5 * 4)) as u64;
+        let offset = 36 + u64::from(index) * 5 * 4;
         let initial_position = offset as usize;
-        let final_position = (offset + (5 * 4)) as usize;
+        let final_position = (offset + 5 * 4) as usize;
 
         ensure!(
             self.raw_data.len() >= final_position,
@@ -239,6 +242,7 @@ impl<'a> XmlTagStartWrapper<'a> {
 }
 
 /// Contains a slice that represents an attribute
+#[derive(Debug)]
 pub struct AttributeWrapper<'a> {
     slice: &'a [u8],
 }
@@ -311,6 +315,7 @@ impl<'a> AttributeWrapper<'a> {
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct XmlTagEndWrapper<'a> {
     raw_data: &'a [u8],
 }
@@ -334,6 +339,7 @@ impl<'a> TagEnd for XmlTagEndWrapper<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct XmlTextWrapper<'a> {
     raw_data: &'a [u8],
 }

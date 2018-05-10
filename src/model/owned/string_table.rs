@@ -9,12 +9,13 @@ use chunks::*;
 use model::StringTable;
 use model::owned::OwnedBuf;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Encoding {
     Utf8,
     Utf16,
 }
 
+#[derive(Debug)]
 pub struct StringTableBuf {
     strings: Vec<Rc<String>>,
     styles: Vec<Rc<String>>,
@@ -60,8 +61,7 @@ impl OwnedBuf for StringTableBuf {
         };
 
         let header_size = 7 * 4;
-        let string_offset =
-            header_size + (self.get_strings_len() as u32 * 4) + (self.get_styles_len() as u32 * 4);
+        let string_offset = header_size + self.get_strings_len() * 4 + self.get_styles_len() * 4;
 
         out.write_u32::<LittleEndian>(self.strings.len() as u32)?;
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;
@@ -69,8 +69,8 @@ impl OwnedBuf for StringTableBuf {
 
         // TODO: Calculate properly the offset as we are calculating on the decoding part
         let style_offset = 0;
-        out.write_u32::<LittleEndian>(string_offset as u32)?;
-        out.write_u32::<LittleEndian>(style_offset as u32)?;
+        out.write_u32::<LittleEndian>(string_offset)?;
+        out.write_u32::<LittleEndian>(style_offset)?;
 
         Ok(out)
     }

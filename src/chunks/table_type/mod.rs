@@ -11,6 +11,7 @@ pub use self::configuration::Region;
 
 mod configuration;
 
+#[derive(Debug)]
 pub struct TableTypeWrapper<'a> {
     raw_data: &'a [u8],
     data_offset: u64,
@@ -28,7 +29,7 @@ impl<'a> TableTypeWrapper<'a> {
         let id = self.get_id()?;
         let amount = self.get_amount()?;
         let config = self.get_configuration()?.to_buffer()?;
-        let mut owned = TableTypeBuf::new((id & 0xF) as u8, config);
+        let mut owned = TableTypeBuf::new(id & 0xF, config);
 
         for i in 0..amount {
             let entry = self.get_entry(i)?;
@@ -56,19 +57,16 @@ impl<'a> TableTypeWrapper<'a> {
         for i in 0..self.get_amount()? {
             let id = i & 0xFFFF;
 
-            if offsets[i as usize] != 0xFFFFFFFF {
+            if offsets[i as usize] == 0xFFFFFFFF {
+                entries.push(Entry::Empty(id, id));
+            } else {
                 let maybe_entry = Self::decode_entry(cursor, id)?;
 
-                match maybe_entry {
-                    Some(e) => {
-                        entries.push(e);
-                    }
-                    None => {
-                        debug!("Entry with a negative count");
-                    }
+                if let Some(e) = maybe_entry {
+                    entries.push(e);
+                } else {
+                    debug!("Entry with a negative count");
                 }
-            } else {
-                entries.push(Entry::Empty(id, id));
             }
         }
 
@@ -163,7 +161,7 @@ impl<'a> TableType for TableTypeWrapper<'a> {
     }
 
     fn get_configuration(&self) -> Result<Self::Configuration, Error> {
-        let ini = 20 as usize;
+        let ini = 20;
         let end = self.data_offset as usize;
 
         ensure!(

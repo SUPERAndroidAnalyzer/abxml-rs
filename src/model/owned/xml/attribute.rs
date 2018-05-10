@@ -2,7 +2,7 @@ use failure::Error;
 
 use model::AttributeTrait;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Copy)]
 pub struct AttributeBuf {
     namespace: u32,
     name: u32,

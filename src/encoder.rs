@@ -9,6 +9,7 @@ use xml::writer::{EmitterConfig, EventWriter, XmlEvent};
 
 use model::{Element as AbxmlElement, Namespaces};
 
+#[derive(Debug, Copy, Clone)]
 pub struct Xml;
 
 impl Xml {
@@ -20,7 +21,7 @@ impl Xml {
 
         let version = XmlVersion::Version10;
         writer.write(XmlEvent::StartDocument {
-            version: version,
+            version,
             encoding: None,
             standalone: Some(false),
         })?;

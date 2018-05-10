@@ -32,6 +32,7 @@ pub const TOKEN_XML_TAG_START: u16 = 0x102;
 pub const TOKEN_XML_TAG_END: u16 = 0x103;
 pub const TOKEN_XML_TEXT: u16 = 0x104;
 
+#[derive(Debug)]
 pub enum Chunk<'a> {
     StringTable(StringTableWrapper<'a>),
     Package(PackageWrapper<'a>),
@@ -46,6 +47,7 @@ pub enum Chunk<'a> {
     Unknown,
 }
 
+#[derive(Debug)]
 pub struct ChunkLoaderStream<'a> {
     cursor: Cursor<&'a [u8]>,
     previous: Option<u64>,
@@ -81,7 +83,7 @@ impl<'a> ChunkLoaderStream<'a> {
         let raw_data = self.cursor.get_ref();
         let slice = &raw_data[header.get_offset() as usize..header.get_chunk_end() as usize];
 
-        let chunk = match header.get_token() {
+        match header.get_token() {
             TOKEN_STRING_TABLE => Chunk::StringTable(StringTableWrapper::new(slice)),
             TOKEN_PACKAGE => Chunk::Package(PackageWrapper::new(slice)),
             TOKEN_TABLE_SPEC => Chunk::TableTypeSpec(TypeSpecWrapper::new(slice)),
@@ -102,9 +104,7 @@ impl<'a> ChunkLoaderStream<'a> {
 
                 Chunk::Unknown
             }
-        };
-
-        chunk
+        }
     }
 }
 
