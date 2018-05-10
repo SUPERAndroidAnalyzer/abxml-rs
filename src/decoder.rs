@@ -13,17 +13,9 @@ pub struct BufferedDecoder {
     buffer: Box<[u8]>,
 }
 
-impl From<Vec<u8>> for BufferedDecoder {
-    fn from(buffer: Vec<u8>) -> BufferedDecoder {
-        BufferedDecoder {
-            buffer: buffer.into_boxed_slice(),
-        }
-    }
-}
-
-impl From<Box<[u8]>> for BufferedDecoder {
-    fn from(buffer: Box<[u8]>) -> BufferedDecoder {
-        BufferedDecoder { buffer: buffer }
+impl<T> From<T> for BufferedDecoder where T: Into<Box<[u8]>> {
+    fn from(buffer: T) -> Self {
+        Self { buffer: buffer.into() }
     }
 }
 
