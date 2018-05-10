@@ -7,8 +7,8 @@ extern crate log;
 extern crate zip;
 
 use std::env;
-use std::io::prelude::*;
 use std::io::Cursor;
+use std::io::prelude::*;
 
 use failure::{Error, ResultExt};
 

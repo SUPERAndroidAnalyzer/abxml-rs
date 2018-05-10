@@ -4,8 +4,8 @@ use std::string::ToString;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 
-use model::owned::ConfigurationBuf;
 use model::Configuration;
+use model::owned::ConfigurationBuf;
 
 pub struct ConfigurationWrapper<'a> {
     slice: &'a [u8],

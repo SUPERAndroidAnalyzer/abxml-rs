@@ -4,10 +4,10 @@ use std::io::{Cursor, Read};
 
 use failure::{Error, ResultExt};
 
+use STR_ARSC;
 use visitor::Executor;
 use visitor::ModelVisitor;
 use visitor::*;
-use STR_ARSC;
 
 pub struct BufferedDecoder {
     buffer: Box<[u8]>,

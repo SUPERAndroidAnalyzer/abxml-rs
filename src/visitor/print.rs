@@ -1,7 +1,7 @@
 use chunks::*;
 use model::StringTable;
-use model::TypeSpec;
 use model::TableType;
+use model::TypeSpec;
 
 use super::ChunkVisitor;
 use super::Origin;

@@ -16,17 +16,17 @@ extern crate xml;
 #[cfg(feature = "zip_decode")]
 extern crate zip;
 
-pub mod encoder;
-pub mod chunks;
-pub mod visitor;
-pub mod model;
-pub mod decoder;
-#[cfg(test)]
-pub mod test;
-#[cfg(test)]
-pub mod raw_chunks;
 #[cfg(feature = "zip_decode")]
 pub mod apk;
+pub mod chunks;
+pub mod decoder;
+pub mod encoder;
+pub mod model;
+#[cfg(test)]
+pub mod raw_chunks;
+#[cfg(test)]
+pub mod test;
+pub mod visitor;
 
 /// Contents of android's resources.arsc
 pub const STR_ARSC: &'static [u8] = include_bytes!("../resources/resources.arsc");

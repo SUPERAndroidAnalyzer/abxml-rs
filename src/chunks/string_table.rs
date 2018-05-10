@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::Cursor;
 use std::rc::Rc;
 
@@ -8,8 +8,8 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use encoding::codec::{utf_16, utf_8};
 use failure::Error;
 
-use model::owned::{Encoding as EncodingType, StringTableBuf};
 use model::StringTable;
+use model::owned::{Encoding as EncodingType, StringTableBuf};
 
 pub struct StringTableWrapper<'a> {
     raw_data: &'a [u8],
