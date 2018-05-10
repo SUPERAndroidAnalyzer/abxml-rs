@@ -1,19 +1,19 @@
 //! Collection of visitors that are fed from chunk iterator
 use std::io::Cursor;
 
-use failure::{Error, ResultExt};
 use byteorder::{LittleEndian, ReadBytesExt};
+use failure::{Error, ResultExt};
 
 use chunks::*;
 
-mod xml;
 pub mod model;
 mod print;
+mod xml;
 
-pub use self::model::Resources;
 pub use self::model::ModelVisitor;
-pub use self::xml::XmlVisitor;
 pub use self::model::RefPackage;
+pub use self::model::Resources;
+pub use self::xml::XmlVisitor;
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {}

@@ -1,8 +1,8 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use model::owned::OwnedBuf;
 use model::TypeSpec;
+use model::owned::OwnedBuf;
 
 pub struct TableTypeSpecBuf {
     id: u16,
