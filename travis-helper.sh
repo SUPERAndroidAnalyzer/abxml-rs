@@ -13,16 +13,19 @@ if [ "$action" = "install_deps" ]; then
     cargo install clippy --force --verbose || true
   fi
 
+# Run Clippy.
 elif [ "$action" = "clippy_run" ]; then
   if [ "$TRAVIS_RUST_VERSION" == "nightly" ] && cargo clippy --version; then
     cargo clippy --verbose
   fi
 
+# Check formatting.
 elif [ "$action" = "fmt_run" ]; then
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
       cargo fmt --verbose -- --write-mode=diff
   fi
 
+# Upload coverage for stable linux builds.
 elif [ "$action" = "upload_code_coverage" ]; then
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
     wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
@@ -41,6 +44,7 @@ elif [ "$action" = "upload_code_coverage" ]; then
     echo "Uploaded code coverage"
   fi
 
+# Upload documentation for stable linux builds.
 elif [ "$action" = "upload_documentation" ]; then
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" && "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_BRANCH" == "develop" ]]; then
     cargo doc &&
