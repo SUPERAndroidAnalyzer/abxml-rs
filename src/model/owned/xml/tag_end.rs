@@ -2,8 +2,8 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use chunks::TOKEN_XML_TAG_END;
-use model::TagEnd;
 use model::owned::OwnedBuf;
+use model::TagEnd;
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlTagEndBuf {

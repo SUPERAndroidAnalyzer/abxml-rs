@@ -1,8 +1,8 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use model::TableType;
 use model::owned::OwnedBuf;
+use model::TableType;
 
 mod configuration;
 mod entry;
@@ -101,8 +101,8 @@ impl TableType for TableTypeBuf {
 mod tests {
     use super::*;
     use chunks::*;
-    use model::TableType;
     use model::owned::OwnedBuf;
+    use model::TableType;
     use raw_chunks;
     use test::compare_chunks;
 

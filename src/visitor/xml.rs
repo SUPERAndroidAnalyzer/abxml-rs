@@ -376,9 +376,9 @@ impl AttributeHelper {
 mod tests {
     use super::*;
     use failure::Error;
+    use model::owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry};
     use model::Entries;
     use model::TypeSpec;
-    use model::owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry};
     use model::{Library, LibraryBuilder, Resources, StringTable};
     use test::FakeStringTable;
     use visitor::Origin;

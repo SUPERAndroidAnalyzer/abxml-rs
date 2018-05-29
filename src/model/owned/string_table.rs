@@ -1,13 +1,13 @@
 use std::rc::Rc;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use encoding::Encoding as EncodingTrait;
 use encoding::codec::{utf_16, utf_8};
+use encoding::Encoding as EncodingTrait;
 use failure::Error;
 
 use chunks::*;
-use model::StringTable;
 use model::owned::OwnedBuf;
+use model::StringTable;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Encoding {

@@ -4,8 +4,8 @@ use std::string::ToString;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 
-use model::Configuration;
 use model::owned::ConfigurationBuf;
+use model::Configuration;
 
 #[derive(Debug)]
 pub struct ConfigurationWrapper<'a> {
