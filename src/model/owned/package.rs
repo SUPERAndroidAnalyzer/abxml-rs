@@ -2,8 +2,8 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use chunks::*;
-use encoding::Encoding;
 use encoding::codec::utf_16;
+use encoding::Encoding;
 use model::owned::OwnedBuf;
 
 #[derive(Default, Debug)]
@@ -77,8 +77,8 @@ impl OwnedBuf for PackageBuf {
 mod tests {
     use super::*;
     use chunks::{Chunk, ChunkLoaderStream, PackageWrapper};
-    use model::StringTable;
     use model::owned::StringTableBuf;
+    use model::StringTable;
     use std::io::Cursor;
     use std::iter;
 

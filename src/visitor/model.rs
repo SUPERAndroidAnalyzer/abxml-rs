@@ -5,12 +5,12 @@ use std::rc::Rc;
 use failure::{Error, ResultExt};
 
 use chunks::*;
+use model::owned::Entry;
 use model::Library as LibraryTrait;
 use model::LibraryBuilder;
 use model::Resources as ResourcesTrait;
 use model::StringTable as StringTableTrait;
 use model::TypeSpec as TypeSpecTrait;
-use model::owned::Entry;
 use model::{Entries, Identifier};
 
 use super::ChunkVisitor;

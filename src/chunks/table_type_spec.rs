@@ -3,8 +3,8 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 
-use model::TypeSpec;
 use model::owned::TableTypeSpecBuf;
+use model::TypeSpec;
 
 #[derive(Clone, Debug)]
 pub struct TypeSpecWrapper<'a> {
