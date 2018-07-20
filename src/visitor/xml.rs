@@ -7,8 +7,10 @@ use failure::{Error, ResultExt};
 use chunks::*;
 use encoder::Xml;
 use model::owned::SimpleEntry;
-use model::{AttributeTrait, Element, ElementContainer, Identifier, Library, NamespaceStart,
-            Namespaces, Resources as ResourceTrait, StringTable, Tag, TagStart, Value};
+use model::{
+    AttributeTrait, Element, ElementContainer, Identifier, Library, NamespaceStart, Namespaces,
+    Resources as ResourceTrait, StringTable, Tag, TagStart, Value,
+};
 use visitor::model::Resources;
 
 use super::ChunkVisitor;

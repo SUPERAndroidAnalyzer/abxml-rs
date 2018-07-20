@@ -18,7 +18,9 @@
 #![allow(missing_docs, unused_results)]
 #![cfg_attr(
     feature = "cargo-clippy",
-    allow(unreadable_literal, stutter, similar_names, cast_possible_truncation, cast_precision_loss)
+    allow(
+        unreadable_literal, stutter, similar_names, cast_possible_truncation, cast_precision_loss
+    )
 )]
 
 extern crate byteorder;
