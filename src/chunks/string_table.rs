@@ -170,7 +170,8 @@ impl<'a> StringTable for StringTableWrapper<'a> {
     fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
         ensure!(idx <= self.get_strings_len(), "index out of bounds");
 
-        let string = self.get_string_position(idx)
+        let string = self
+            .get_string_position(idx)
             .and_then(|position| self.parse_string(position as u32))?;
 
         Ok(Rc::new(string))

@@ -42,7 +42,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         } else {
             let package_id = self.package_mask.get_package();
 
-            let st_res = self.resources
+            let st_res = self
+                .resources
                 .get_mut_package(package_id)
                 .and_then(|package| {
                     package.set_string_table(StringTableCache::new(string_table), origin);
@@ -89,7 +90,8 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         let mut entries = Entries::new();
 
         if let Some(ts) = &self.current_spec {
-            let mask = ts.get_id()
+            let mask = ts
+                .get_id()
                 .and_then(|id| Ok(self.package_mask | (u32::from(id) << 16)))
                 .unwrap_or(0);
 
@@ -223,7 +225,8 @@ impl<'a> LibraryTrait for Library<'a> {
         prefix: &str,
     ) -> Result<String, Error> {
         let spec_id = u32::from(id.get_spec());
-        let spec_str = self.get_spec_as_str(spec_id)
+        let spec_str = self
+            .get_spec_as_str(spec_id)
             .context(format_err!("could not find spec: {}", spec_id))?;
         let string = self.get_entries_string(key).context(format_err!(
             "could not find key {} on entries string table",

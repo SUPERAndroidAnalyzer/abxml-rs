@@ -78,7 +78,8 @@ impl<'a> XmlVisitor<'a> {
     fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element, Error> {
         match &self.main_string_table {
             Some(string_table) => {
-                let (tag, attributes) = self.get_element_data(&string_table, tag_start)
+                let (tag, attributes) = self
+                    .get_element_data(&string_table, tag_start)
                     .context("could not get element data")?;
                 Ok(Element::new(tag, attributes))
             }
@@ -113,7 +114,8 @@ impl<'a> XmlVisitor<'a> {
             let namespace_index = current_attribute.get_namespace()?;
             if namespace_index != 0xFFFFFFFF {
                 let namespace = (*string_table.get_string(namespace_index)?).clone();
-                let prefix = self.namespaces
+                let prefix = self
+                    .namespaces
                     .get(&namespace)
                     .ok_or_else(|| format_err!("namespace not found"))?;
                 final_name.push_str(prefix);
