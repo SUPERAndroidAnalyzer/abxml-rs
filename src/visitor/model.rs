@@ -67,13 +67,14 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
 
             if self.tables.contains_key(&Origin::Global) {
                 if let Some(st) = self.tables.remove(&Origin::Global) {
-                    let set_result = self.resources.get_mut_package(package_id).and_then(
-                        |package| {
-                            package.set_string_table(st, Origin::Global);
+                    let set_result =
+                        self.resources
+                            .get_mut_package(package_id)
+                            .and_then(|package| {
+                                package.set_string_table(st, Origin::Global);
 
-                            Some(())
-                        },
-                    );
+                                Some(())
+                            });
 
                     if set_result.is_none() {
                         error!(

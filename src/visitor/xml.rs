@@ -285,8 +285,7 @@ impl AttributeHelper {
                     error!("Key not found on the string table");
                     String::new()
                 }
-            })
-            .collect();
+            }).collect();
 
         if str_strs.is_empty() {
             None
@@ -333,8 +332,7 @@ impl AttributeHelper {
                                 strs.push(key);
                                 masks.push(mask);
                                 Ok(())
-                            })
-                            .unwrap_or_else(|_| {
+                            }).unwrap_or_else(|_| {
                                 error!(
                                     "Value should be added but there was an issue reading \
                                      the entry"

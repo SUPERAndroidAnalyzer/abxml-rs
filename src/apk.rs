@@ -90,7 +90,8 @@ impl Apk {
     ) -> Result<(), Error> {
         let full_path = base_path.as_ref().join(&relative);
         // println!("Full path: {}", full_path.display());
-        fs::create_dir_all(full_path.parent().unwrap()).context("could not create the output dir")?;
+        fs::create_dir_all(full_path.parent().unwrap())
+            .context("could not create the output dir")?;
 
         let mut descriptor = fs::OpenOptions::new()
             .write(true)
