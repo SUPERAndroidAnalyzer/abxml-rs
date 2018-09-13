@@ -22,7 +22,7 @@ elif [ "$action" = "clippy_run" ]; then
 # Check formatting.
 elif [ "$action" = "fmt_run" ]; then
   if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
-      cargo fmt --verbose -- --write-mode=diff
+      cargo fmt --verbose -- --check
   fi
 
 # Upload coverage for stable linux builds.
