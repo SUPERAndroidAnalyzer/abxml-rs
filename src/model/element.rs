@@ -102,8 +102,7 @@ impl ElementContainer {
                 }
 
                 Some(())
-            })
-            .unwrap_or_else(|| {
+            }).unwrap_or_else(|| {
                 error!("Received an end element event with an empty stack");
             });
     }

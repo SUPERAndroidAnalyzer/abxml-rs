@@ -6,11 +6,13 @@ use failure::{Error, ResultExt};
 pub use self::package::PackageBuf;
 pub use self::resources::ResourcesBuf;
 pub use self::string_table::{Encoding, StringTableBuf};
-pub use self::table_type::{ComplexEntry, ConfigurationBuf, Entry, EntryHeader, SimpleEntry,
-                           TableTypeBuf};
+pub use self::table_type::{
+    ComplexEntry, ConfigurationBuf, Entry, EntryHeader, SimpleEntry, TableTypeBuf,
+};
 pub use self::table_type_spec::TableTypeSpecBuf;
-pub use self::xml::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf,
-                    XmlTagStartBuf};
+pub use self::xml::{
+    AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf,
+};
 
 mod package;
 mod resources;

@@ -10,15 +10,29 @@
 #![forbid(anonymous_parameters)]
 #![cfg_attr(feature = "cargo-clippy", warn(clippy_pedantic))]
 #![deny(
-    variant_size_differences, unused_results, unused_qualifications, unused_import_braces,
-    unsafe_code, trivial_numeric_casts, trivial_casts, missing_docs, unused_extern_crates,
-    missing_debug_implementations, missing_copy_implementations
+    variant_size_differences,
+    unused_results,
+    unused_qualifications,
+    unused_import_braces,
+    unsafe_code,
+    trivial_numeric_casts,
+    trivial_casts,
+    missing_docs,
+    unused_extern_crates,
+    missing_debug_implementations,
+    missing_copy_implementations
 )]
 // Allowing these for now:
 #![allow(missing_docs, unused_results)]
 #![cfg_attr(
     feature = "cargo-clippy",
-    allow(unreadable_literal, stutter, similar_names, cast_possible_truncation, cast_precision_loss)
+    allow(
+        unreadable_literal,
+        stutter,
+        similar_names,
+        cast_possible_truncation,
+        cast_precision_loss
+    )
 )]
 
 extern crate byteorder;

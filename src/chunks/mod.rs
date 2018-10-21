@@ -18,8 +18,10 @@ pub use self::resource::ResourceWrapper;
 pub use self::string_table::{StringTableCache, StringTableWrapper};
 pub use self::table_type::{ConfigurationWrapper, TableTypeWrapper};
 pub use self::table_type_spec::TypeSpecWrapper;
-pub use self::xml::{XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper,
-                    XmlTagStartWrapper, XmlTextWrapper};
+pub use self::xml::{
+    XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper, XmlTagStartWrapper,
+    XmlTextWrapper,
+};
 
 pub const TOKEN_STRING_TABLE: u16 = 0x0001;
 pub const TOKEN_RESOURCE: u16 = 0x0180;

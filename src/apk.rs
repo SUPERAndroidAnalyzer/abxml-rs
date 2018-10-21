@@ -33,7 +33,8 @@ impl Apk {
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<(), Error> {
-        let decoder = self.decoder
+        let decoder = self
+            .decoder
             .get_decoder()
             .context("could not get the decoder")?;
 
@@ -51,7 +52,8 @@ impl Apk {
         // Iterate over all the files on the ZIP and extract them
         for i in 0..self.handler.len() {
             let (file_name, contents) = {
-                let mut current_file = self.handler
+                let mut current_file = self
+                    .handler
                     .by_index(i)
                     .context("could not read ZIP entry")?;
                 let mut contents = Vec::new();
@@ -88,7 +90,8 @@ impl Apk {
     ) -> Result<(), Error> {
         let full_path = base_path.as_ref().join(&relative);
         // println!("Full path: {}", full_path.display());
-        fs::create_dir_all(full_path.parent().unwrap()).context("could not create the output dir")?;
+        fs::create_dir_all(full_path.parent().unwrap())
+            .context("could not create the output dir")?;
 
         let mut descriptor = fs::OpenOptions::new()
             .write(true)

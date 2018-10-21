@@ -4,8 +4,9 @@ use std::rc::Rc;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{Error, ResultExt};
 
-use model::owned::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf,
-                   XmlTagStartBuf};
+use model::owned::{
+    AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf,
+};
 use model::{AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart};
 
 #[derive(Debug)]
