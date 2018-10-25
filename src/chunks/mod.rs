@@ -12,15 +12,17 @@ pub mod table_type;
 mod table_type_spec;
 mod xml;
 
-pub use self::chunk_header::ChunkHeader;
-pub use self::package::PackageWrapper;
-pub use self::resource::ResourceWrapper;
-pub use self::string_table::{StringTableCache, StringTableWrapper};
-pub use self::table_type::{ConfigurationWrapper, TableTypeWrapper};
-pub use self::table_type_spec::TypeSpecWrapper;
-pub use self::xml::{
-    XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper, XmlTagStartWrapper,
-    XmlTextWrapper,
+pub use self::{
+    chunk_header::ChunkHeader,
+    package::PackageWrapper,
+    resource::ResourceWrapper,
+    string_table::{StringTableCache, StringTableWrapper},
+    table_type::{ConfigurationWrapper, TableTypeWrapper},
+    table_type_spec::TypeSpecWrapper,
+    xml::{
+        XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper, XmlTagStartWrapper,
+        XmlTextWrapper,
+    },
 };
 
 pub const TOKEN_STRING_TABLE: u16 = 0x0001;

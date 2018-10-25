@@ -1,10 +1,7 @@
 use chunks::*;
-use model::StringTable;
-use model::TableType;
-use model::TypeSpec;
+use model::{StringTable, TableType, TypeSpec};
 
-use super::ChunkVisitor;
-use super::Origin;
+use super::{ChunkVisitor, Origin};
 
 #[allow(dead_code)]
 #[derive(Debug)]

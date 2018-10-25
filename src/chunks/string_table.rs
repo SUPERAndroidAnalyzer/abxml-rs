@@ -1,15 +1,21 @@
-use std::cell::RefCell;
-use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::collections::HashMap;
-use std::io::Cursor;
-use std::rc::Rc;
+use std::{
+    cell::RefCell,
+    collections::{
+        hash_map::Entry::{Occupied, Vacant},
+        HashMap,
+    },
+    io::Cursor,
+    rc::Rc,
+};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use encoding::codec::{utf_16, utf_8};
-use failure::Error;
+use failure::{ensure, format_err, Error};
 
-use model::owned::{Encoding as EncodingType, StringTableBuf};
-use model::StringTable;
+use model::{
+    owned::{Encoding as EncodingType, StringTableBuf},
+    StringTable,
+};
 
 #[derive(Debug)]
 pub struct StringTableWrapper<'a> {

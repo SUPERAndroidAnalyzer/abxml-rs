@@ -4,8 +4,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use chunks::*;
-use model::owned::OwnedBuf;
-use model::{NamespaceStart, StringTable};
+use model::{owned::OwnedBuf, NamespaceStart, StringTable};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceStartBuf {

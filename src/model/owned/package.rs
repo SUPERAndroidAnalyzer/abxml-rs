@@ -1,9 +1,8 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
+use failure::{ensure, Error};
 
 use chunks::*;
-use encoding::codec::utf_16;
-use encoding::Encoding;
+use encoding::{codec::utf_16, Encoding};
 use model::owned::OwnedBuf;
 
 #[derive(Default, Debug)]

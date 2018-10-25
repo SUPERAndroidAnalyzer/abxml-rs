@@ -1,14 +1,15 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
+use failure::{ensure, format_err, Error};
 
-use model::owned::OwnedBuf;
-use model::TableType;
+use model::{owned::OwnedBuf, TableType};
 
 mod configuration;
 mod entry;
 
-pub use self::configuration::ConfigurationBuf;
-pub use self::entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry};
+pub use self::{
+    configuration::ConfigurationBuf,
+    entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry},
+};
 
 #[derive(Debug)]
 pub struct TableTypeBuf {

@@ -1,9 +1,8 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use encoding::codec::utf_16;
-use encoding::codec::utf_16::Little;
-use failure::Error;
+use encoding::codec::utf_16::{self, Little};
+use failure::{ensure, format_err, Error};
 
 #[derive(Debug)]
 pub struct PackageWrapper<'a> {

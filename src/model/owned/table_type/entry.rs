@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
+use failure::{format_err, Error};
 
 const MASK_COMPLEX: u16 = 0x0001;
 

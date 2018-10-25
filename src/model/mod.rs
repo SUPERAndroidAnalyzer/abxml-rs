@@ -1,23 +1,24 @@
 //! Representations of logical structures found on android binary files
 
-use std::collections::{BTreeMap, HashMap};
-use std::rc::Rc;
+use std::{
+    collections::{BTreeMap, HashMap},
+    rc::Rc,
+};
 
 use failure::Error;
 
 use model::owned::Entry;
+use visitor::Origin;
 
 pub mod builder;
 mod element;
 pub mod owned;
 mod value;
 
-pub use self::element::Element;
-pub use self::element::ElementContainer;
-pub use self::element::Tag;
-pub use self::value::Value;
-
-use visitor::Origin;
+pub use self::{
+    element::{Element, ElementContainer, Tag},
+    value::Value,
+};
 
 pub type Namespaces = BTreeMap<String, String>;
 pub type Entries = HashMap<u32, Entry>;

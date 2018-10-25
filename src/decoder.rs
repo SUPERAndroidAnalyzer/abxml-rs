@@ -4,9 +4,7 @@ use std::io::{Cursor, Read};
 
 use failure::{Error, ResultExt};
 
-use visitor::Executor;
-use visitor::ModelVisitor;
-use visitor::*;
+use visitor::{Executor, ModelVisitor, Resources, XmlVisitor};
 use STR_ARSC;
 
 #[derive(Debug)]

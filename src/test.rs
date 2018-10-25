@@ -1,10 +1,10 @@
+use std::rc::Rc;
+
 use failure::Error;
 
 use chunks::*;
 use model;
-use std::rc::Rc;
-use visitor::ChunkVisitor;
-use visitor::Origin;
+use visitor::{ChunkVisitor, Origin};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct CounterChunkVisitor {

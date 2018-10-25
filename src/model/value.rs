@@ -1,7 +1,6 @@
-use std::mem;
-use std::string::ToString;
+use std::{mem, string::ToString};
 
-use failure::Error;
+use failure::{format_err, Error};
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;

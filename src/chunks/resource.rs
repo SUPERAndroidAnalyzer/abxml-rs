@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
+use failure::{ensure, Error};
 
 use model::owned::ResourcesBuf;
 

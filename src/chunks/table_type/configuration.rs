@@ -1,11 +1,9 @@
-use std::io::Cursor;
-use std::string::ToString;
+use std::{io::Cursor, string::ToString};
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
+use failure::{bail, ensure, Error};
 
-use model::owned::ConfigurationBuf;
-use model::Configuration;
+use model::{owned::ConfigurationBuf, Configuration};
 
 #[derive(Debug)]
 pub struct ConfigurationWrapper<'a> {

@@ -1,13 +1,14 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
+use failure::{ensure, format_err, Error};
 
-use model::owned::{ComplexEntry, Entry, EntryHeader, SimpleEntry, TableTypeBuf};
-use model::TableType;
+use model::{
+    owned::{ComplexEntry, Entry, EntryHeader, SimpleEntry, TableTypeBuf},
+    TableType,
+};
 
-pub use self::configuration::ConfigurationWrapper;
-pub use self::configuration::Region;
+pub use self::configuration::{ConfigurationWrapper, Region};
 
 mod configuration;
 

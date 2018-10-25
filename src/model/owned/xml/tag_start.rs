@@ -1,9 +1,11 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
+use failure::{bail, Error};
 
 use chunks::*;
-use model::owned::{AttributeBuf, OwnedBuf};
-use model::{AttributeTrait, TagStart};
+use model::{
+    owned::{AttributeBuf, OwnedBuf},
+    AttributeTrait, TagStart,
+};
 
 /// Representation of a XML Tag start chunk
 #[derive(Debug)]

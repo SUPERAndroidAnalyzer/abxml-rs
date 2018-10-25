@@ -4,8 +4,7 @@ mod namespace_start;
 mod tag_end;
 mod tag_start;
 
-pub use model::owned::xml::attribute::AttributeBuf;
-pub use model::owned::xml::namespace_end::XmlNamespaceEndBuf;
-pub use model::owned::xml::namespace_start::XmlNamespaceStartBuf;
-pub use model::owned::xml::tag_end::XmlTagEndBuf;
-pub use model::owned::xml::tag_start::XmlTagStartBuf;
+pub use model::owned::xml::{
+    attribute::AttributeBuf, namespace_end::XmlNamespaceEndBuf,
+    namespace_start::XmlNamespaceStartBuf, tag_end::XmlTagEndBuf, tag_start::XmlTagStartBuf,
+};

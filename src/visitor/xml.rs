@@ -1,20 +1,16 @@
-use std::cmp::Ordering;
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
-use failure::{Error, ResultExt};
+use failure::{format_err, Error, ResultExt};
 
 use chunks::*;
 use encoder::Xml;
-use model::owned::SimpleEntry;
 use model::{
-    AttributeTrait, Element, ElementContainer, Identifier, Library, NamespaceStart, Namespaces,
-    Resources as ResourceTrait, StringTable, Tag, TagStart, Value,
+    owned::SimpleEntry, AttributeTrait, Element, ElementContainer, Identifier, Library,
+    NamespaceStart, Namespaces, Resources as ResourceTrait, StringTable, Tag, TagStart, Value,
 };
 use visitor::model::Resources;
 
-use super::ChunkVisitor;
-use super::Origin;
+use super::{ChunkVisitor, Origin};
 
 #[derive(Debug)]
 pub struct XmlVisitor<'a> {
