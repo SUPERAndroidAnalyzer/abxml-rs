@@ -1,8 +1,10 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use chunks::TOKEN_XML_TAG_END;
-use model::{owned::OwnedBuf, TagEnd};
+use crate::{
+    chunks::TOKEN_XML_TAG_END,
+    model::{owned::OwnedBuf, TagEnd},
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlTagEndBuf {
@@ -52,9 +54,7 @@ impl TagEnd for XmlTagEndBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
-    use raw_chunks;
-    use test::compare_chunks;
+    use crate::{chunks::*, raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_an_empty_chunk() {

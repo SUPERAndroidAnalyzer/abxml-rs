@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{format_err, Error};
 
-use model::{owned::OwnedBuf, TableType};
+use crate::model::{owned::OwnedBuf, TableType};
 
 mod configuration;
 mod entry;
@@ -101,10 +101,12 @@ impl TableType for TableTypeBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
-    use model::{owned::OwnedBuf, TableType};
-    use raw_chunks;
-    use test::compare_chunks;
+    use crate::{
+        chunks::*,
+        model::{owned::OwnedBuf, TableType},
+        raw_chunks,
+        test::compare_chunks,
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

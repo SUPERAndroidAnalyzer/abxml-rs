@@ -3,10 +3,12 @@ use std::rc::Rc;
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use chunks::*;
-use model::{
-    owned::OwnedBuf,
-    {NamespaceEnd, StringTable},
+use crate::{
+    chunks::*,
+    model::{
+        owned::OwnedBuf,
+        {NamespaceEnd, StringTable},
+    },
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -71,9 +73,9 @@ impl OwnedBuf for XmlNamespaceEndBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::XmlNamespaceEndWrapper;
-    use raw_chunks::EXAMPLE_NAMESPACE_END;
-    use test::compare_chunks;
+    use crate::{
+        chunks::XmlNamespaceEndWrapper, raw_chunks::EXAMPLE_NAMESPACE_END, test::compare_chunks,
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

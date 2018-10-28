@@ -2,9 +2,11 @@ use std::rc::Rc;
 
 use failure::{bail, Error};
 
-use chunks::*;
-use model;
-use visitor::{ChunkVisitor, Origin};
+use crate::{
+    chunks::*,
+    model,
+    visitor::{ChunkVisitor, Origin},
+};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct CounterChunkVisitor {

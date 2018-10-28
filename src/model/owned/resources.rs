@@ -1,8 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use chunks::*;
-use model::owned::OwnedBuf;
+use crate::{chunks::*, model::owned::OwnedBuf};
 
 #[derive(Default, Debug)]
 pub struct ResourcesBuf {
@@ -38,8 +37,7 @@ impl OwnedBuf for ResourcesBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raw_chunks;
-    use test::compare_chunks;
+    use crate::{raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

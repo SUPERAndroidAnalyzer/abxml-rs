@@ -2,15 +2,16 @@ use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 use failure::{format_err, Error, ResultExt};
 
-use chunks::*;
-use encoder::Xml;
-use model::{
-    owned::SimpleEntry, AttributeTrait, Element, ElementContainer, Identifier, Library,
-    NamespaceStart, Namespaces, Resources as ResourceTrait, StringTable, Tag, TagStart, Value,
-};
-use visitor::model::Resources;
-
 use super::{ChunkVisitor, Origin};
+use crate::{
+    chunks::*,
+    encoder::Xml,
+    model::{
+        owned::SimpleEntry, AttributeTrait, Element, ElementContainer, Identifier, Library,
+        NamespaceStart, Namespaces, Resources as ResourceTrait, StringTable, Tag, TagStart, Value,
+    },
+    visitor::model::Resources,
+};
 
 #[derive(Debug)]
 pub struct XmlVisitor<'a> {
@@ -375,12 +376,14 @@ mod tests {
     use failure::{bail, Error};
 
     use super::*;
-    use model::{
-        owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry},
-        Entries, Library, LibraryBuilder, Resources, StringTable, TypeSpec,
+    use crate::{
+        model::{
+            owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry},
+            Entries, Library, LibraryBuilder, Resources, StringTable, TypeSpec,
+        },
+        test::FakeStringTable,
+        visitor::Origin,
     };
-    use test::FakeStringTable;
-    use visitor::Origin;
 
     struct FakeLibrary {
         entries: Entries,

@@ -4,8 +4,10 @@ use std::io::{Cursor, Read};
 
 use failure::{Error, ResultExt};
 
-use visitor::{Executor, ModelVisitor, Resources, XmlVisitor};
-use STR_ARSC;
+use crate::{
+    visitor::{Executor, ModelVisitor, Resources, XmlVisitor},
+    STR_ARSC,
+};
 
 #[derive(Debug)]
 pub struct BufferedDecoder {

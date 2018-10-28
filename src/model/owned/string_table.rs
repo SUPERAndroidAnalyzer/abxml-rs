@@ -7,8 +7,10 @@ use encoding::{
 };
 use failure::{bail, ensure, Error};
 
-use chunks::*;
-use model::{owned::OwnedBuf, StringTable};
+use crate::{
+    chunks::*,
+    model::{owned::OwnedBuf, StringTable},
+};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Encoding {
@@ -155,8 +157,7 @@ impl StringTable for StringTableBuf {
 #[cfg_attr(feature = "cargo-clippy", allow(non_ascii_literal))]
 mod tests {
     use super::*;
-    use raw_chunks;
-    use test::compare_chunks;
+    use crate::{raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_an_empty_chunk() {

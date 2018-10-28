@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{ensure, Error};
 
-use model::owned::ResourcesBuf;
+use crate::model::owned::ResourcesBuf;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -53,7 +53,7 @@ impl<'a> ResourceWrapper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::owned::{OwnedBuf, ResourcesBuf};
+    use crate::model::owned::{OwnedBuf, ResourcesBuf};
 
     #[test]
     fn it_can_not_decode_a_buffer_with_an_invalid_size() {
