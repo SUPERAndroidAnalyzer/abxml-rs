@@ -79,8 +79,9 @@ impl<'a> Decoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::io::Cursor;
+
+    use super::*;
 
     #[test]
     fn it_can_not_decode_an_empty_binary_xml() {

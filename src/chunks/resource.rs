@@ -53,8 +53,7 @@ impl<'a> ResourceWrapper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use model::owned::OwnedBuf;
-    use model::owned::ResourcesBuf;
+    use model::owned::{OwnedBuf, ResourcesBuf};
 
     #[test]
     fn it_can_not_decode_a_buffer_with_an_invalid_size() {

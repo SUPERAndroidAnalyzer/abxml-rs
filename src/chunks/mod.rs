@@ -135,9 +135,10 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use super::*;
     use model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
-    use std::io::Cursor;
 
     #[test]
     fn it_can_detect_loops() {

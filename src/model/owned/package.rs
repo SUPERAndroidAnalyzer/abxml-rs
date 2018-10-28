@@ -74,12 +74,11 @@ impl OwnedBuf for PackageBuf {
 
 #[cfg(test)]
 mod tests {
+    use std::{io::Cursor, iter};
+
     use super::*;
     use chunks::{Chunk, ChunkLoaderStream, PackageWrapper};
-    use model::owned::StringTableBuf;
-    use model::StringTable;
-    use std::io::Cursor;
-    use std::iter;
+    use model::{owned::StringTableBuf, StringTable};
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
