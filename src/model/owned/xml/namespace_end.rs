@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use crate::{
-    chunks::*,
+    chunks::TOKEN_XML_END_NAMESPACE,
     model::{
         owned::OwnedBuf,
         {NamespaceEnd, StringTable},
@@ -72,7 +72,7 @@ impl OwnedBuf for XmlNamespaceEndBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{NamespaceEnd, OwnedBuf, XmlNamespaceEndBuf};
     use crate::{
         chunks::XmlNamespaceEndWrapper, raw_chunks::EXAMPLE_NAMESPACE_END, test::compare_chunks,
     };

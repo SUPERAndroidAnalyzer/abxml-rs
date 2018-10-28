@@ -100,9 +100,9 @@ impl TableType for TableTypeBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{ComplexEntry, ConfigurationBuf, Entry, SimpleEntry, TableTypeBuf};
     use crate::{
-        chunks::*,
+        chunks::TableTypeWrapper,
         model::{owned::OwnedBuf, TableType},
         raw_chunks,
         test::compare_chunks,

@@ -62,7 +62,7 @@ impl<'a> TypeSpec for TypeSpecWrapper<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{TypeSpec, TypeSpecWrapper};
     use crate::raw_chunks;
 
     #[test]

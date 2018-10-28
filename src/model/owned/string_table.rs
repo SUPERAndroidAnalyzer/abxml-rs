@@ -8,7 +8,7 @@ use encoding::{
 use failure::{bail, ensure, Error};
 
 use crate::{
-    chunks::*,
+    chunks::TOKEN_STRING_TABLE,
     model::{owned::OwnedBuf, StringTable},
 };
 
@@ -156,8 +156,8 @@ impl StringTable for StringTableBuf {
 #[cfg(test)]
 #[cfg_attr(feature = "cargo-clippy", allow(non_ascii_literal))]
 mod tests {
-    use super::*;
-    use crate::{raw_chunks, test::compare_chunks};
+    use super::{OwnedBuf, StringTable, StringTableBuf};
+    use crate::{chunks::StringTableWrapper, raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_an_empty_chunk() {

@@ -137,7 +137,7 @@ impl<'a> Iterator for ChunkLoaderStream<'a> {
 mod tests {
     use std::io::Cursor;
 
-    use super::*;
+    use super::ChunkLoaderStream;
     use crate::model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
 
     #[test]

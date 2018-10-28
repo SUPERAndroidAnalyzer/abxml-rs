@@ -265,7 +265,9 @@ impl Configuration for ConfigurationBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::{chunks::*, raw_chunks::EXAMPLE_CONFIGURATION, test::compare_chunks};
+    use crate::{
+        chunks::ConfigurationWrapper, raw_chunks::EXAMPLE_CONFIGURATION, test::compare_chunks,
+    };
 
     #[test]
     fn identity() {

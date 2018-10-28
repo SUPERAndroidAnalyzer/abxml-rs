@@ -83,7 +83,7 @@ impl<'a> Decoder<'a> {
 mod tests {
     use std::io::Cursor;
 
-    use super::*;
+    use super::BufferedDecoder;
 
     #[test]
     fn it_can_not_decode_an_empty_binary_xml() {

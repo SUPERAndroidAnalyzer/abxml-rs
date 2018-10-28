@@ -181,7 +181,13 @@ impl Value {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        ToString, Value, TOKEN_TYPE_ARGB4, TOKEN_TYPE_ARGB8, TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID,
+        TOKEN_TYPE_BOOLEAN, TOKEN_TYPE_DIMENSION, TOKEN_TYPE_DYN_ATTRIBUTE,
+        TOKEN_TYPE_DYN_REFERENCE, TOKEN_TYPE_FLAGS, TOKEN_TYPE_FLOAT, TOKEN_TYPE_FRACTION,
+        TOKEN_TYPE_INTEGER, TOKEN_TYPE_REFERENCE_ID, TOKEN_TYPE_RGB4, TOKEN_TYPE_RGB8,
+        TOKEN_TYPE_STRING,
+    };
 
     #[test]
     fn it_can_generate_a_string_value() {

@@ -4,7 +4,11 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, Error, ResultExt};
 
-use crate::chunks::*;
+use crate::chunks::{
+    Chunk, ChunkLoaderStream, PackageWrapper, ResourceWrapper, StringTableWrapper,
+    TableTypeWrapper, TypeSpecWrapper, XmlNamespaceEndWrapper, XmlNamespaceStartWrapper,
+    XmlTagEndWrapper, XmlTagStartWrapper, XmlTextWrapper,
+};
 
 pub mod model;
 mod print;

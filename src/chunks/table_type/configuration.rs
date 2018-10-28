@@ -220,7 +220,7 @@ impl ToString for Region {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Configuration, ConfigurationWrapper, Region, ToString};
     use crate::raw_chunks::EXAMPLE_CONFIGURATION;
 
     #[test]

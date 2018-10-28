@@ -3,7 +3,9 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use failure::{format_err, Error, ResultExt};
 
 use crate::{
-    chunks::*,
+    chunks::{
+        PackageWrapper, StringTableCache, StringTableWrapper, TableTypeWrapper, TypeSpecWrapper,
+    },
     model::{
         owned::Entry, Entries, Identifier, Library as LibraryTrait, LibraryBuilder,
         Resources as ResourcesTrait, StringTable as StringTableTrait, TypeSpec as TypeSpecTrait,

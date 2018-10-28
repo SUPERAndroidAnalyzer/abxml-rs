@@ -7,12 +7,15 @@ extern crate zip;
 
 use std::{
     env,
-    io::{prelude::*, Cursor},
+    io::{Cursor, Read},
 };
 
 use failure::{bail, Error, ResultExt};
 
-use abxml::{encoder::Xml, visitor::*};
+use abxml::{
+    encoder::Xml,
+    visitor::{Executor, ModelVisitor, Resources, XmlVisitor},
+};
 
 fn main() {
     env_logger::try_init().unwrap();

@@ -64,7 +64,7 @@ impl fmt::Display for ChunkHeader {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ChunkHeader;
 
     #[test]
     pub fn it_returns_data_offset() {

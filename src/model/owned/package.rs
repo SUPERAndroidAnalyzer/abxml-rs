@@ -2,7 +2,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use encoding::{codec::utf_16, Encoding};
 use failure::{ensure, Error};
 
-use crate::{chunks::*, model::owned::OwnedBuf};
+use crate::{chunks::TOKEN_PACKAGE, model::owned::OwnedBuf};
 
 #[derive(Default, Debug)]
 pub struct PackageBuf {
@@ -75,7 +75,7 @@ impl OwnedBuf for PackageBuf {
 mod tests {
     use std::{io::Cursor, iter};
 
-    use super::*;
+    use super::{OwnedBuf, PackageBuf};
     use crate::{
         chunks::{Chunk, ChunkLoaderStream, PackageWrapper},
         model::{owned::StringTableBuf, StringTable},

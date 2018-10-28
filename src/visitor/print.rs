@@ -1,9 +1,8 @@
+use super::{ChunkVisitor, Origin};
 use crate::{
-    chunks::*,
+    chunks::{PackageWrapper, StringTableWrapper, TableTypeWrapper, TypeSpecWrapper},
     model::{StringTable, TableType, TypeSpec},
 };
-
-use super::{ChunkVisitor, Origin};
 
 #[allow(dead_code)]
 #[derive(Debug)]

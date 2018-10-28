@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use crate::{
-    chunks::*,
+    chunks::TOKEN_XML_START_NAMESPACE,
     model::{owned::OwnedBuf, NamespaceStart, StringTable},
 };
 
@@ -69,7 +69,7 @@ impl OwnedBuf for XmlNamespaceStartBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{NamespaceStart, OwnedBuf, XmlNamespaceStartBuf};
     use crate::{
         chunks::XmlNamespaceStartWrapper,
         raw_chunks::EXAMPLE_NAMESPACE_START,
