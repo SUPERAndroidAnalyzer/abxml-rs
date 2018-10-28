@@ -47,7 +47,7 @@ impl OwnedBuf for TableTypeBuf {
             let current_entry = e.to_vec()?;
 
             if e.is_empty() {
-                out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+                out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
             } else {
                 out.write_u32::<LittleEndian>(i)?;
                 i += current_entry.len() as u32;

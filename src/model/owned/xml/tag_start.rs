@@ -134,7 +134,7 @@ mod tests {
         let attribute1 = AttributeBuf::new(1, 2, 3, 5, 6);
         let attribute2 = AttributeBuf::new(7, 8, 9, 11, 12);
 
-        let mut tag_start = XmlTagStartBuf::new(10, 22, 0xFFFFFFFF, 7, 5, 3);
+        let mut tag_start = XmlTagStartBuf::new(10, 22, 0xFFFF_FFFF, 7, 5, 3);
         tag_start.add_attribute(attribute1);
         tag_start.add_attribute(attribute2);
 
@@ -144,7 +144,7 @@ mod tests {
         assert_eq!(5, tag_start.get_field2().unwrap());
         assert_eq!(3, tag_start.get_class().unwrap());
         assert_eq!(2, tag_start.get_attributes_amount().unwrap());
-        assert_eq!(0xFFFFFFFF, tag_start.get_namespace_index().unwrap());
+        assert_eq!(0xFFFF_FFFF, tag_start.get_namespace_index().unwrap());
         let first_attribute = tag_start.get_attribute(0).unwrap();
         assert_eq!(1, first_attribute.get_namespace().unwrap());
         let third_attribute = tag_start.get_attribute(2);

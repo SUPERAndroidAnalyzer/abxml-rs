@@ -20,11 +20,11 @@ impl EntryHeader {
         }
     }
 
-    pub fn is_complex(&self) -> bool {
+    pub fn is_complex(self) -> bool {
         (self.flags & MASK_COMPLEX) == MASK_COMPLEX
     }
 
-    pub fn get_key_index(&self) -> u32 {
+    pub fn get_key_index(self) -> u32 {
         self.key_index
     }
 }
@@ -145,7 +145,7 @@ impl ComplexEntry {
         // Children entry amount
         let children_amount = self.entries.len() as u32;
         if children_amount == 0 {
-            out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+            out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
         } else {
             out.write_u32::<LittleEndian>(self.entries.len() as u32)?;
         }

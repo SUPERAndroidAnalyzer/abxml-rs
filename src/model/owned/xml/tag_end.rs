@@ -24,7 +24,7 @@ impl OwnedBuf for XmlTagEndBuf {
         let mut out = Vec::new();
 
         // ??
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+        out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
         // Id
         out.write_u32::<LittleEndian>(self.id)?;
 
@@ -37,7 +37,7 @@ impl OwnedBuf for XmlTagEndBuf {
         // Amount of writes
         out.write_u32::<LittleEndian>(3)?;
         // ??
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+        out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
 
         Ok(out)
     }

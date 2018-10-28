@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use failure::Error;
+use failure::{bail, Error};
 
 use chunks::*;
 use model;
@@ -12,7 +12,7 @@ pub struct CounterChunkVisitor {
 }
 
 impl CounterChunkVisitor {
-    pub fn get_count(&self) -> u32 {
+    pub fn get_count(self) -> u32 {
         self.count
     }
 }

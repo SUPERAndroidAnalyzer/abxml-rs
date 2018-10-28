@@ -59,7 +59,7 @@ impl<'a> StringTableWrapper<'a> {
         let mut position = str_offset;
         let mut max_offset = 0;
 
-        for _ in 0..(idx + 1) {
+        for _ in 0..=idx {
             let current_offset = cursor.read_u32::<LittleEndian>()?;
             position = str_offset.wrapping_add(current_offset);
 

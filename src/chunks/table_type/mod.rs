@@ -58,7 +58,7 @@ impl<'a> TableTypeWrapper<'a> {
         for i in 0..self.get_amount()? {
             let id = i & 0xFFFF;
 
-            if offsets[i as usize] == 0xFFFFFFFF {
+            if offsets[i as usize] == 0xFFFF_FFFF {
                 entries.push(Entry::Empty(id, id));
             } else {
                 let maybe_entry = Self::decode_entry(cursor, id)?;
@@ -81,15 +81,15 @@ impl<'a> TableTypeWrapper<'a> {
         let header_entry = EntryHeader::new(header_size, flags, key_index);
 
         if header_entry.is_complex() {
-            Self::decode_complex_entry(cursor, &header_entry, id)
+            Self::decode_complex_entry(cursor, header_entry, id)
         } else {
-            Self::decode_simple_entry(cursor, &header_entry, id)
+            Self::decode_simple_entry(cursor, header_entry, id)
         }
     }
 
     fn decode_simple_entry(
         cursor: &mut Cursor<&[u8]>,
-        header: &EntryHeader,
+        header: EntryHeader,
         id: u32,
     ) -> Result<Option<Entry>, Error> {
         cursor.read_u16::<LittleEndian>()?;
@@ -106,14 +106,14 @@ impl<'a> TableTypeWrapper<'a> {
 
     fn decode_complex_entry(
         cursor: &mut Cursor<&[u8]>,
-        header: &EntryHeader,
+        header: EntryHeader,
         id: u32,
     ) -> Result<Option<Entry>, Error> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
 
-        if value_count == 0xFFFFFFFF {
+        if value_count == 0xFFFF_FFFF {
             return Ok(None);
         }
 

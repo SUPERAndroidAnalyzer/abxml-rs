@@ -105,7 +105,7 @@ pub trait TagStart {
     fn get_line(&self) -> Result<u32, Error>;
     /// Return the content of the unknown field1
     fn get_field1(&self) -> Result<u32, Error>;
-    /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
+    /// Return the namespace index. If there is no namespace, it will return 0xFFFF_FFFF
     fn get_namespace_index(&self) -> Result<u32, Error>;
     /// Returns the index of the tag name on the string table
     fn get_element_name_index(&self) -> Result<u32, Error>;
@@ -121,7 +121,7 @@ pub trait TagStart {
 }
 
 pub trait AttributeTrait {
-    /// Return the namespace index. If there is no namespace, it will return 0xFFFFFFFF
+    /// Return the namespace index. If there is no namespace, it will return 0xFFFF_FFFF
     fn get_namespace(&self) -> Result<u32, Error>;
     /// Returns the index of the attribute on the string table
     fn get_name(&self) -> Result<u32, Error>;
@@ -138,7 +138,7 @@ pub trait AttributeTrait {
         let data_value = self.get_data()?;
         let class = self.get_class()?;
 
-        let value = if class == 0xFFFFFFFF {
+        let value = if class == 0xFFFF_FFFF {
             Value::new(data_type, data_value)?
         } else {
             Value::StringReference(class)

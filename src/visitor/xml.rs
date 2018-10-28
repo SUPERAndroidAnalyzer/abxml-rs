@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
-use failure::{format_err, Error, ResultExt};
+use failure::{bail, format_err, Error, ResultExt};
 
 use chunks::*;
 use encoder::Xml;
@@ -108,7 +108,7 @@ impl<'a> XmlVisitor<'a> {
                 .context(format_err!("could not read attribute {} ", i))?;
 
             let namespace_index = current_attribute.get_namespace()?;
-            if namespace_index != 0xFFFFFFFF {
+            if namespace_index != 0xFFFF_FFFF {
                 let namespace = (*string_table.get_string(namespace_index)?).clone();
                 let prefix = self
                     .namespaces
@@ -394,16 +394,16 @@ mod tests {
             let entry2 = Entry::Simple(simple_entry2);
 
             let simple_entry3 = SimpleEntry::new((2 << 24) | 4, 1, 1, 1 << 8);
-            let entry3 = Entry::Simple(simple_entry3.clone());
+            let entry3 = Entry::Simple(simple_entry3);
 
             let simple_entry4 = SimpleEntry::new((2 << 24) | 4, 456, 1, 1 << 8);
             let entry4 = Entry::Simple(simple_entry4);
 
             let simple_entry5 = SimpleEntry::new((2 << 24) | 5, 789, 1, 1 << 9);
-            let entry5 = Entry::Simple(simple_entry5.clone());
+            let entry5 = Entry::Simple(simple_entry5);
 
             let simple_entry6 = SimpleEntry::new((2 << 24) | 6, 123, 1, 1 << 10);
-            let entry6 = Entry::Simple(simple_entry6.clone());
+            let entry6 = Entry::Simple(simple_entry6);
 
             let mut ce1_childen_entries = Vec::new();
             ce1_childen_entries.push(simple_entry3);
@@ -490,7 +490,7 @@ mod tests {
 
             flags
                 .get(index as usize)
-                .map(|x| *x)
+                .cloned()
                 .ok_or_else(|| format_err!("flag out of bounds"))
         }
     }
@@ -501,9 +501,9 @@ mod tests {
 
     impl FakeResources {
         pub fn fake() -> Self {
-            let library = FakeLibrary::new();
-
-            FakeResources { library: library }
+            Self {
+                library: FakeLibrary::new(),
+            }
         }
     }
 
