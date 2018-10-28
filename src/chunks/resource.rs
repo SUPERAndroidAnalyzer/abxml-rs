@@ -52,7 +52,7 @@ impl<'a> ResourceWrapper<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ResourceWrapper;
     use crate::model::owned::{OwnedBuf, ResourcesBuf};
 
     #[test]

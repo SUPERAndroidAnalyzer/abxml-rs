@@ -9,7 +9,7 @@ use std::{
 use failure::{format_err, Error, ResultExt};
 use zip::read::ZipArchive;
 
-use crate::decoder::*;
+use crate::decoder::BufferedDecoder;
 
 #[derive(Debug)]
 pub struct Apk {

@@ -85,8 +85,12 @@ impl Xml {
 mod tests {
     use std::io::Cursor;
 
-    use super::*;
-    use crate::{model::owned::*, test::*, visitor::Executor};
+    use super::{Arsc, Xml};
+    use crate::{
+        model::owned::{ResourcesBuf, StringTableBuf},
+        test::CounterChunkVisitor,
+        visitor::Executor,
+    };
 
     #[test]
     fn it_can_generate_a_resources_arsc_file_content() {

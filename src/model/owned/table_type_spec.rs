@@ -65,8 +65,10 @@ impl TypeSpec for TableTypeSpecBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{chunks::*, model::owned::OwnedBuf, raw_chunks, test::compare_chunks};
+    use super::{TableTypeSpecBuf, TypeSpec};
+    use crate::{
+        chunks::TypeSpecWrapper, model::owned::OwnedBuf, raw_chunks, test::compare_chunks,
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

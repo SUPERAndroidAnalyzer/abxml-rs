@@ -3,7 +3,11 @@ use std::rc::Rc;
 use failure::{bail, Error};
 
 use crate::{
-    chunks::*,
+    chunks::{
+        PackageWrapper, ResourceWrapper, StringTableWrapper, TableTypeWrapper, TypeSpecWrapper,
+        XmlNamespaceEndWrapper, XmlNamespaceStartWrapper, XmlTagEndWrapper, XmlTagStartWrapper,
+        XmlTextWrapper,
+    },
     model,
     visitor::{ChunkVisitor, Origin},
 };

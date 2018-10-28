@@ -4,7 +4,10 @@ use failure::{format_err, Error, ResultExt};
 
 use super::{ChunkVisitor, Origin};
 use crate::{
-    chunks::*,
+    chunks::{
+        ResourceWrapper, StringTableCache, StringTableWrapper, XmlNamespaceEndWrapper,
+        XmlNamespaceStartWrapper, XmlTagEndWrapper, XmlTagStartWrapper,
+    },
     encoder::Xml,
     model::{
         owned::SimpleEntry, AttributeTrait, Element, ElementContainer, Identifier, Library,
@@ -375,7 +378,7 @@ impl AttributeHelper {
 mod tests {
     use failure::{bail, Error};
 
-    use super::*;
+    use super::{format_err, AttributeHelper, Rc};
     use crate::{
         model::{
             owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry},

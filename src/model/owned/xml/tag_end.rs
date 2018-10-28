@@ -53,8 +53,8 @@ impl TagEnd for XmlTagEndBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{chunks::*, raw_chunks, test::compare_chunks};
+    use super::{OwnedBuf, XmlTagEndBuf};
+    use crate::{chunks::XmlTagEndWrapper, raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_an_empty_chunk() {

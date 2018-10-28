@@ -2,7 +2,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{bail, Error};
 
 use crate::{
-    chunks::*,
+    chunks::TOKEN_XML_TAG_START,
     model::{
         owned::{AttributeBuf, OwnedBuf},
         AttributeTrait, TagStart,
@@ -125,7 +125,7 @@ impl OwnedBuf for XmlTagStartBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{AttributeTrait, OwnedBuf, TagStart, XmlTagStartBuf};
     use crate::{
         chunks::XmlTagStartWrapper, model::owned::AttributeBuf, raw_chunks::EXAMPLE_TAG_START,
         test::compare_chunks,
