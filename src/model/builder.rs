@@ -83,9 +83,10 @@ impl Xml {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use super::*;
     use model::owned::*;
-    use std::io::Cursor;
     use test::*;
     use visitor::Executor;
 

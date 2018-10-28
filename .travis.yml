@@ -22,7 +22,7 @@ rust:
   - nightly
   - beta
   - stable
-  - 1.26.2
+  - 1.30.0
 
 before_script:
   - export PATH=$PATH:~/.cargo/bin

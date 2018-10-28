@@ -2,7 +2,7 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{Error, ResultExt};
+use failure::{bail, Error, ResultExt};
 
 use chunks::*;
 
@@ -10,10 +10,10 @@ pub mod model;
 mod print;
 mod xml;
 
-pub use self::model::ModelVisitor;
-pub use self::model::RefPackage;
-pub use self::model::Resources;
-pub use self::xml::XmlVisitor;
+pub use self::{
+    model::{ModelVisitor, RefPackage, Resources},
+    xml::XmlVisitor,
+};
 
 pub trait ChunkVisitor<'a> {
     fn visit_string_table(&mut self, _string_table: StringTableWrapper<'a>, _origin: Origin) {}

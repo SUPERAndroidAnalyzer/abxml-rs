@@ -1,19 +1,18 @@
 extern crate abxml;
 extern crate byteorder;
 extern crate env_logger;
-#[macro_use]
 extern crate failure;
 extern crate log;
 extern crate zip;
 
-use std::env;
-use std::io::prelude::*;
-use std::io::Cursor;
+use std::{
+    env,
+    io::{prelude::*, Cursor},
+};
 
-use failure::{Error, ResultExt};
+use failure::{bail, Error, ResultExt};
 
-use abxml::encoder::Xml;
-use abxml::visitor::*;
+use abxml::{encoder::Xml, visitor::*};
 
 fn main() {
     env_logger::try_init().unwrap();
@@ -29,9 +28,6 @@ fn main() {
     }
 }
 
-// Most functions will return the `Result` type, imported from the
-// `errors` module. It is a typedef of the standard `Result` type
-// for which the error type is always our own `Error`.
 fn run() -> Result<(), Error> {
     let apk_path = match env::args().nth(1) {
         Some(path) => path,

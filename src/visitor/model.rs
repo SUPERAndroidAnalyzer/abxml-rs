@@ -1,20 +1,14 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use failure::{Error, ResultExt};
+use failure::{format_err, Error, ResultExt};
 
 use chunks::*;
-use model::owned::Entry;
-use model::Library as LibraryTrait;
-use model::LibraryBuilder;
-use model::Resources as ResourcesTrait;
-use model::StringTable as StringTableTrait;
-use model::TypeSpec as TypeSpecTrait;
-use model::{Entries, Identifier};
+use model::{
+    owned::Entry, Entries, Identifier, Library as LibraryTrait, LibraryBuilder,
+    Resources as ResourcesTrait, StringTable as StringTableTrait, TypeSpec as TypeSpecTrait,
+};
 
-use super::ChunkVisitor;
-use super::Origin;
+use super::{ChunkVisitor, Origin};
 
 #[derive(Default, Debug)]
 pub struct ModelVisitor<'a> {

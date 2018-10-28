@@ -1,10 +1,12 @@
 //! High level abstraction to easy the extraction to file system of APKs
 
-use std::fs;
-use std::io::{Read, Write};
-use std::path::Path;
+use std::{
+    fs,
+    io::{Read, Write},
+    path::Path,
+};
 
-use failure::{Error, ResultExt};
+use failure::{format_err, Error, ResultExt};
 use zip::read::ZipArchive;
 
 use decoder::*;

@@ -4,9 +4,7 @@ use std::io::{Cursor, Read};
 
 use failure::{Error, ResultExt};
 
-use visitor::Executor;
-use visitor::ModelVisitor;
-use visitor::*;
+use visitor::{Executor, ModelVisitor, Resources, XmlVisitor};
 use STR_ARSC;
 
 #[derive(Debug)]
@@ -81,8 +79,9 @@ impl<'a> Decoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::io::Cursor;
+
+    use super::*;
 
     #[test]
     fn it_can_not_decode_an_empty_binary_xml() {

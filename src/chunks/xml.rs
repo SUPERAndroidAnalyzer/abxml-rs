@@ -1,13 +1,12 @@
-use std::io::Cursor;
-use std::rc::Rc;
+use std::{io::Cursor, rc::Rc};
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{Error, ResultExt};
+use failure::{ensure, Error, ResultExt};
 
-use model::owned::{
-    AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf,
+use model::{
+    owned::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf},
+    AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart,
 };
-use model::{AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart};
 
 #[derive(Debug)]
 pub struct XmlNamespaceStartWrapper<'a> {

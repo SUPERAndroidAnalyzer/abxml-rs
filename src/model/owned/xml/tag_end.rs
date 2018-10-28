@@ -2,8 +2,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use chunks::TOKEN_XML_TAG_END;
-use model::owned::OwnedBuf;
-use model::TagEnd;
+use model::{owned::OwnedBuf, TagEnd};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlTagEndBuf {
@@ -25,7 +24,7 @@ impl OwnedBuf for XmlTagEndBuf {
         let mut out = Vec::new();
 
         // ??
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+        out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
         // Id
         out.write_u32::<LittleEndian>(self.id)?;
 
@@ -38,7 +37,7 @@ impl OwnedBuf for XmlTagEndBuf {
         // Amount of writes
         out.write_u32::<LittleEndian>(3)?;
         // ??
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+        out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
 
         Ok(out)
     }

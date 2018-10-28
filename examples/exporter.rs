@@ -5,8 +5,7 @@ extern crate failure;
 extern crate log;
 extern crate zip;
 
-use std::env;
-use std::path::Path;
+use std::{env, path::Path};
 
 use failure::{Error, ResultExt};
 
@@ -26,9 +25,6 @@ fn main() {
     }
 }
 
-// Most functions will return the `Result` type, imported from the
-// `errors` module. It is a typedef of the standard `Result` type
-// for which the error type is always our own `Error`.
 fn run() -> Result<(), Error> {
     let apk_path = match env::args().nth(1) {
         Some(path) => path,

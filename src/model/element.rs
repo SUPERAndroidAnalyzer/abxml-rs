@@ -1,7 +1,9 @@
-use std::collections::HashMap;
-use std::fmt::{self, Display, Formatter};
-use std::iter;
-use std::rc::Rc;
+use std::{
+    collections::HashMap,
+    fmt::{self, Display, Formatter},
+    iter,
+    rc::Rc,
+};
 
 #[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct Tag {

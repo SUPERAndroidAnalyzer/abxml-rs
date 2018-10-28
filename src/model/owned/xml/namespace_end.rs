@@ -4,8 +4,10 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
 use chunks::*;
-use model::owned::OwnedBuf;
-use model::{NamespaceEnd, StringTable};
+use model::{
+    owned::OwnedBuf,
+    {NamespaceEnd, StringTable},
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceEndBuf {
@@ -60,7 +62,7 @@ impl OwnedBuf for XmlNamespaceEndBuf {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.line)?;
-        out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+        out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
 
         Ok(out)
     }

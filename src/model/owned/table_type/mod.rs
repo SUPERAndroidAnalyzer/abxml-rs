@@ -1,14 +1,15 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
+use failure::{format_err, Error};
 
-use model::owned::OwnedBuf;
-use model::TableType;
+use model::{owned::OwnedBuf, TableType};
 
 mod configuration;
 mod entry;
 
-pub use self::configuration::ConfigurationBuf;
-pub use self::entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry};
+pub use self::{
+    configuration::ConfigurationBuf,
+    entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry},
+};
 
 #[derive(Debug)]
 pub struct TableTypeBuf {
@@ -46,7 +47,7 @@ impl OwnedBuf for TableTypeBuf {
             let current_entry = e.to_vec()?;
 
             if e.is_empty() {
-                out.write_u32::<LittleEndian>(0xFFFFFFFF)?;
+                out.write_u32::<LittleEndian>(0xFFFF_FFFF)?;
             } else {
                 out.write_u32::<LittleEndian>(i)?;
                 i += current_entry.len() as u32;
@@ -101,8 +102,7 @@ impl TableType for TableTypeBuf {
 mod tests {
     use super::*;
     use chunks::*;
-    use model::owned::OwnedBuf;
-    use model::TableType;
+    use model::{owned::OwnedBuf, TableType};
     use raw_chunks;
     use test::compare_chunks;
 

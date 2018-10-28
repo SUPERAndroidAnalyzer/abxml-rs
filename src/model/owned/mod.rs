@@ -3,15 +3,13 @@ use std::fmt::Debug;
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 
-pub use self::package::PackageBuf;
-pub use self::resources::ResourcesBuf;
-pub use self::string_table::{Encoding, StringTableBuf};
-pub use self::table_type::{
-    ComplexEntry, ConfigurationBuf, Entry, EntryHeader, SimpleEntry, TableTypeBuf,
-};
-pub use self::table_type_spec::TableTypeSpecBuf;
-pub use self::xml::{
-    AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf,
+pub use self::{
+    package::PackageBuf,
+    resources::ResourcesBuf,
+    string_table::{Encoding, StringTableBuf},
+    table_type::{ComplexEntry, ConfigurationBuf, Entry, EntryHeader, SimpleEntry, TableTypeBuf},
+    table_type_spec::TableTypeSpecBuf,
+    xml::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf},
 };
 
 mod package;

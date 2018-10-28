@@ -1,10 +1,10 @@
-use failure::Error;
+use std::rc::Rc;
+
+use failure::{bail, Error};
 
 use chunks::*;
 use model;
-use std::rc::Rc;
-use visitor::ChunkVisitor;
-use visitor::Origin;
+use visitor::{ChunkVisitor, Origin};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct CounterChunkVisitor {
@@ -12,7 +12,7 @@ pub struct CounterChunkVisitor {
 }
 
 impl CounterChunkVisitor {
-    pub fn get_count(&self) -> u32 {
+    pub fn get_count(self) -> u32 {
         self.count
     }
 }

@@ -1,7 +1,6 @@
-use std::mem;
-use std::string::ToString;
+use std::{mem, string::ToString};
 
-use failure::Error;
+use failure::{format_err, Error};
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
@@ -162,9 +161,9 @@ impl Value {
     fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
         let mantissa = 0xffffff << 8;
-        let uvalue = data & mantissa;
-        let ivalue: i32 = unsafe { mem::transmute(uvalue) };
-        let m = ivalue as f32;
+        let u_value = data & mantissa;
+        let i_value: i32 = unsafe { mem::transmute(u_value) };
+        let m = i_value as f32;
         let mm = 1.0 / ((1 << 8) as f32);
 
         let radix = [

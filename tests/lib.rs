@@ -15,9 +15,9 @@ fn it_can_generate_a_decoder_from_a_buffer() {
     st.add_string("key".to_string());
     st.add_string("value".to_string());
 
-    let attribute = AttributeBuf::new(0xFFFFFFFF, 3, 0xFFFFFFFF, 3 << 24, 4);
+    let attribute = AttributeBuf::new(0xFFFF_FFFF, 3, 0xFFFF_FFFF, 3 << 24, 4);
 
-    let mut tag_start = XmlTagStartBuf::new(2, 0, 0xFFFFFFFF, 2, 0, 0);
+    let mut tag_start = XmlTagStartBuf::new(2, 0, 0xFFFF_FFFF, 2, 0, 0);
     tag_start.add_attribute(attribute);
 
     xml.push_owned(Box::new(st));

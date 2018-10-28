@@ -1,11 +1,12 @@
 //! Exports the decoded binary XMLs to string XMLs
 
-use std::io::Write;
-use std::ops::Deref;
+use std::{io::Write, ops::Deref};
 
 use failure::{Error, ResultExt};
-use xml::common::XmlVersion;
-use xml::writer::{EmitterConfig, EventWriter, XmlEvent};
+use xml::{
+    common::XmlVersion,
+    writer::{EmitterConfig, EventWriter, XmlEvent},
+};
 
 use model::{Element as AbxmlElement, Namespaces};
 

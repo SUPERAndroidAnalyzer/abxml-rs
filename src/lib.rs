@@ -29,15 +29,15 @@
     allow(
         unreadable_literal,
         stutter,
-        similar_names,
         cast_possible_truncation,
-        cast_precision_loss
+        cast_precision_loss,
+        similar_names,
+        shadow_unrelated,
     )
 )]
 
 extern crate byteorder;
 extern crate encoding;
-#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate log;
