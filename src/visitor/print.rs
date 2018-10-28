@@ -1,5 +1,7 @@
-use chunks::*;
-use model::{StringTable, TableType, TypeSpec};
+use crate::{
+    chunks::*,
+    model::{StringTable, TableType, TypeSpec},
+};
 
 use super::{ChunkVisitor, Origin};
 

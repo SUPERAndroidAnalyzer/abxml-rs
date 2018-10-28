@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{format_err, Error};
 
-use model::{owned::OwnedBuf, TypeSpec};
+use crate::model::{owned::OwnedBuf, TypeSpec};
 
 #[derive(Debug)]
 pub struct TableTypeSpecBuf {
@@ -66,10 +66,7 @@ impl TypeSpec for TableTypeSpecBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::*;
-    use model::owned::OwnedBuf;
-    use raw_chunks;
-    use test::compare_chunks;
+    use crate::{chunks::*, model::owned::OwnedBuf, raw_chunks, test::compare_chunks};
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

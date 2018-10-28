@@ -3,8 +3,10 @@ use std::rc::Rc;
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 
-use chunks::*;
-use model::{owned::OwnedBuf, NamespaceStart, StringTable};
+use crate::{
+    chunks::*,
+    model::{owned::OwnedBuf, NamespaceStart, StringTable},
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceStartBuf {
@@ -68,9 +70,11 @@ impl OwnedBuf for XmlNamespaceStartBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::XmlNamespaceStartWrapper;
-    use raw_chunks::EXAMPLE_NAMESPACE_START;
-    use test::{compare_chunks, FakeStringTable};
+    use crate::{
+        chunks::XmlNamespaceStartWrapper,
+        raw_chunks::EXAMPLE_NAMESPACE_START,
+        test::{compare_chunks, FakeStringTable},
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

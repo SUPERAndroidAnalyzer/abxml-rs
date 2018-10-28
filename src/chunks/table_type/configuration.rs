@@ -3,7 +3,7 @@ use std::{io::Cursor, string::ToString};
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, ensure, Error};
 
-use model::{owned::ConfigurationBuf, Configuration};
+use crate::model::{owned::ConfigurationBuf, Configuration};
 
 #[derive(Debug)]
 pub struct ConfigurationWrapper<'a> {
@@ -221,7 +221,7 @@ impl ToString for Region {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raw_chunks::EXAMPLE_CONFIGURATION;
+    use crate::raw_chunks::EXAMPLE_CONFIGURATION;
 
     #[test]
     fn it_can_encode_bytes_region_to_string() {

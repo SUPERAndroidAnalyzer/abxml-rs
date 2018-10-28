@@ -3,8 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use failure::Error;
 
-use chunks::table_type::Region;
-use model::Configuration;
+use crate::{chunks::table_type::Region, model::Configuration};
 
 #[derive(Clone, Default, Debug)]
 pub struct ConfigurationBuf {
@@ -266,9 +265,7 @@ impl Configuration for ConfigurationBuf {
 
 #[cfg(test)]
 mod tests {
-    use chunks::*;
-    use raw_chunks::EXAMPLE_CONFIGURATION;
-    use test::compare_chunks;
+    use crate::{chunks::*, raw_chunks::EXAMPLE_CONFIGURATION, test::compare_chunks};
 
     #[test]
     fn identity() {

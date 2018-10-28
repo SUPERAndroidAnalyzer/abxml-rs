@@ -8,7 +8,7 @@ use xml::{
     writer::{EmitterConfig, EventWriter, XmlEvent},
 };
 
-use model::{Element as AbxmlElement, Namespaces};
+use crate::model::{Element as AbxmlElement, Namespaces};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Xml;

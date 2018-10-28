@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{ensure, Error};
 
-use model::{owned::TableTypeSpecBuf, TypeSpec};
+use crate::model::{owned::TableTypeSpecBuf, TypeSpec};
 
 #[derive(Clone, Debug)]
 pub struct TypeSpecWrapper<'a> {
@@ -63,7 +63,7 @@ impl<'a> TypeSpec for TypeSpecWrapper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raw_chunks;
+    use crate::raw_chunks;
 
     #[test]
     fn it_can_decode_a_type_spec() {

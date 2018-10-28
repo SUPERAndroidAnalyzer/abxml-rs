@@ -12,7 +12,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use encoding::codec::{utf_16, utf_8};
 use failure::{ensure, format_err, Error};
 
-use model::{
+use crate::model::{
     owned::{Encoding as EncodingType, StringTableBuf},
     StringTable,
 };

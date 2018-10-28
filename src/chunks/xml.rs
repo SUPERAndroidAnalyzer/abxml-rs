@@ -3,7 +3,7 @@ use std::{io::Cursor, rc::Rc};
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{ensure, Error, ResultExt};
 
-use model::{
+use crate::model::{
     owned::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf},
     AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart,
 };

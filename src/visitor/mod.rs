@@ -4,7 +4,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, Error, ResultExt};
 
-use chunks::*;
+use crate::chunks::*;
 
 pub mod model;
 mod print;

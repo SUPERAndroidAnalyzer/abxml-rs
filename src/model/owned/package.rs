@@ -1,9 +1,8 @@
 use byteorder::{LittleEndian, WriteBytesExt};
+use encoding::{codec::utf_16, Encoding};
 use failure::{ensure, Error};
 
-use chunks::*;
-use encoding::{codec::utf_16, Encoding};
-use model::owned::OwnedBuf;
+use crate::{chunks::*, model::owned::OwnedBuf};
 
 #[derive(Default, Debug)]
 pub struct PackageBuf {
@@ -77,8 +76,10 @@ mod tests {
     use std::{io::Cursor, iter};
 
     use super::*;
-    use chunks::{Chunk, ChunkLoaderStream, PackageWrapper};
-    use model::{owned::StringTableBuf, StringTable};
+    use crate::{
+        chunks::{Chunk, ChunkLoaderStream, PackageWrapper},
+        model::{owned::StringTableBuf, StringTable},
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {

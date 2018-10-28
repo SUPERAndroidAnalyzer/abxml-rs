@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 
-use model::owned::OwnedBuf;
+use crate::model::owned::OwnedBuf;
 
 #[derive(Default, Debug)]
 pub struct Arsc {
@@ -86,9 +86,7 @@ mod tests {
     use std::io::Cursor;
 
     use super::*;
-    use model::owned::*;
-    use test::*;
-    use visitor::Executor;
+    use crate::{model::owned::*, test::*, visitor::Executor};
 
     #[test]
     fn it_can_generate_a_resources_arsc_file_content() {

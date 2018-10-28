@@ -138,7 +138,7 @@ mod tests {
     use std::io::Cursor;
 
     use super::*;
-    use model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
+    use crate::model::owned::{OwnedBuf, ResourcesBuf, StringTableBuf};
 
     #[test]
     fn it_can_detect_loops() {

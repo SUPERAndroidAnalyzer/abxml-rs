@@ -7,18 +7,17 @@ use std::{
 
 use failure::Error;
 
-use model::owned::Entry;
-use visitor::Origin;
-
 pub mod builder;
 mod element;
 pub mod owned;
 mod value;
 
+use self::owned::Entry;
 pub use self::{
     element::{Element, ElementContainer, Tag},
     value::Value,
 };
+use crate::visitor::Origin;
 
 pub type Namespaces = BTreeMap<String, String>;
 pub type Entries = HashMap<u32, Entry>;
@@ -207,7 +206,7 @@ pub trait Configuration {
 
 #[cfg(test)]
 mod tests {
-    use model::Identifier;
+    use crate::model::Identifier;
 
     #[test]
     fn it_extracts_package_id() {

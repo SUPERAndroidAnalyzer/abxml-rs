@@ -1,6 +1,6 @@
 use failure::Error;
 
-use model::AttributeTrait;
+use crate::model::AttributeTrait;
 
 #[derive(Clone, Debug, Copy)]
 pub struct AttributeBuf {

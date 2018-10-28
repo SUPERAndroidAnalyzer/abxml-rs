@@ -1,10 +1,12 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{bail, Error};
 
-use chunks::*;
-use model::{
-    owned::{AttributeBuf, OwnedBuf},
-    AttributeTrait, TagStart,
+use crate::{
+    chunks::*,
+    model::{
+        owned::{AttributeBuf, OwnedBuf},
+        AttributeTrait, TagStart,
+    },
 };
 
 /// Representation of a XML Tag start chunk
@@ -124,10 +126,10 @@ impl OwnedBuf for XmlTagStartBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chunks::XmlTagStartWrapper;
-    use model::owned::AttributeBuf;
-    use raw_chunks::EXAMPLE_TAG_START;
-    use test::compare_chunks;
+    use crate::{
+        chunks::XmlTagStartWrapper, model::owned::AttributeBuf, raw_chunks::EXAMPLE_TAG_START,
+        test::compare_chunks,
+    };
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
