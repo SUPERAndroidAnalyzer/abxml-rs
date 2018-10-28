@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
-use failure::{bail, format_err, Error, ResultExt};
+use failure::{format_err, Error, ResultExt};
 
 use chunks::*;
 use encoder::Xml;
@@ -372,12 +372,13 @@ impl AttributeHelper {
 
 #[cfg(test)]
 mod tests {
+    use failure::{bail, Error};
+
     use super::*;
-    use failure::Error;
-    use model::owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry};
-    use model::Entries;
-    use model::TypeSpec;
-    use model::{Library, LibraryBuilder, Resources, StringTable};
+    use model::{
+        owned::{AttributeBuf, ComplexEntry, Entry, SimpleEntry},
+        Entries, Library, LibraryBuilder, Resources, StringTable, TypeSpec,
+    };
     use test::FakeStringTable;
     use visitor::Origin;
 

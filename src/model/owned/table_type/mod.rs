@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{ensure, format_err, Error};
+use failure::{format_err, Error};
 
 use model::{owned::OwnedBuf, TableType};
 

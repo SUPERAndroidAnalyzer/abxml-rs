@@ -30,7 +30,9 @@
         unreadable_literal,
         stutter,
         cast_possible_truncation,
-        cast_precision_loss
+        cast_precision_loss,
+        similar_names,
+        shadow_unrelated,
     )
 )]
 
