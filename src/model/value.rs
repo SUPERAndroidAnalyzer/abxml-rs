@@ -77,7 +77,7 @@ impl ToString for Value {
 impl Value {
     /// Creates a new `Value`. If the payload can not be interpreted by the given `value_type`, it
     /// will return an error. If the type is not know, it will return `Value::Unknown`
-    pub fn new(value_type: u8, data: u32) -> Result<Self, Error> {
+    pub fn create(value_type: u8, data: u32) -> Result<Self, Error> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
@@ -191,15 +191,15 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_string_value() {
-        let value = Value::new(TOKEN_TYPE_STRING, 33);
+        let value = Value::create(TOKEN_TYPE_STRING, 33);
 
         assert_eq!("@string/33", value.unwrap().to_string());
     }
 
     #[test]
     fn it_can_generate_reference_and_dyn_references() {
-        let value = Value::new(TOKEN_TYPE_REFERENCE_ID, 12345).unwrap();
-        let value2 = Value::new(TOKEN_TYPE_DYN_REFERENCE, 67890).unwrap();
+        let value = Value::create(TOKEN_TYPE_REFERENCE_ID, 12345).unwrap();
+        let value2 = Value::create(TOKEN_TYPE_DYN_REFERENCE, 67890).unwrap();
 
         assert_eq!("@id/0x3039", value.to_string());
         assert_eq!("@id/0x10932", value2.to_string());
@@ -207,8 +207,8 @@ mod tests {
 
     #[test]
     fn it_can_generate_attribute_and_dyn_references() {
-        let value = Value::new(TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID, 12345).unwrap();
-        let value2 = Value::new(TOKEN_TYPE_DYN_ATTRIBUTE, 67890).unwrap();
+        let value = Value::create(TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID, 12345).unwrap();
+        let value2 = Value::create(TOKEN_TYPE_DYN_ATTRIBUTE, 67890).unwrap();
 
         assert_eq!("@id/0x3039", value.to_string());
         assert_eq!("@id/0x10932", value2.to_string());
@@ -219,7 +219,7 @@ mod tests {
         let dim = 1 << 30; // Positive value 2-complement
         let units = 0x5;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
+        let value = Value::create(TOKEN_TYPE_DIMENSION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("4194304.0mm", str_value);
@@ -230,7 +230,7 @@ mod tests {
         let dim = 1 << 31; // Negative value 2-complement
         let units = 0x0;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
+        let value = Value::create(TOKEN_TYPE_DIMENSION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("-8388608.0px", str_value);
@@ -241,7 +241,7 @@ mod tests {
         let dim = 0;
         let units = 0x6;
 
-        let value = Value::new(TOKEN_TYPE_DIMENSION, dim | units);
+        let value = Value::create(TOKEN_TYPE_DIMENSION, dim | units);
 
         // TODO: Assert error string!
         assert!(value.is_err());
@@ -252,7 +252,7 @@ mod tests {
         let dim = 1 << 25; // Positive value 2-complement
         let units = 0x1;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
+        let value = Value::create(TOKEN_TYPE_FRACTION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("13107200.0%p", str_value);
@@ -263,7 +263,7 @@ mod tests {
         let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x0;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
+        let value = Value::create(TOKEN_TYPE_FRACTION, dim | units);
         let str_value = value.unwrap().to_string();
 
         assert_eq!("-25599.988281%", str_value);
@@ -274,7 +274,7 @@ mod tests {
         let dim = 1 << 31 | 1 << 5 | 1 << 10; // Positive value 2-complement
         let units = 0x2;
 
-        let value = Value::new(TOKEN_TYPE_FRACTION, dim | units);
+        let value = Value::create(TOKEN_TYPE_FRACTION, dim | units);
 
         // TODO: Assert error string!
         assert!(value.is_err());
@@ -284,7 +284,7 @@ mod tests {
     fn it_can_generate_integer_values() {
         let int = 12345;
 
-        let value = Value::new(TOKEN_TYPE_INTEGER, int);
+        let value = Value::create(TOKEN_TYPE_INTEGER, int);
 
         assert_eq!("12345", value.unwrap().to_string());
     }
@@ -293,7 +293,7 @@ mod tests {
     fn it_can_generate_flag_values() {
         let int = 12345;
 
-        let value = Value::new(TOKEN_TYPE_FLAGS, int);
+        let value = Value::create(TOKEN_TYPE_FLAGS, int);
 
         assert_eq!("12345", value.unwrap().to_string());
     }
@@ -303,7 +303,7 @@ mod tests {
         // TODO: Improve this test with a IEE754 number
         let float = 0;
 
-        let value = Value::new(TOKEN_TYPE_FLOAT, float);
+        let value = Value::create(TOKEN_TYPE_FLOAT, float);
 
         assert_eq!("0.0", value.unwrap().to_string());
     }
@@ -312,7 +312,7 @@ mod tests {
     fn it_can_generate_a_boolean_true_value() {
         let data = 123;
 
-        let value = Value::new(TOKEN_TYPE_BOOLEAN, data);
+        let value = Value::create(TOKEN_TYPE_BOOLEAN, data);
 
         assert_eq!("true", value.unwrap().to_string());
     }
@@ -321,7 +321,7 @@ mod tests {
     fn it_can_generate_a_boolean_false_value() {
         let data = 0;
 
-        let value = Value::new(TOKEN_TYPE_BOOLEAN, data);
+        let value = Value::create(TOKEN_TYPE_BOOLEAN, data);
 
         assert_eq!("false", value.unwrap().to_string());
     }
@@ -330,7 +330,7 @@ mod tests {
     fn it_can_generate_a_color_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_ARGB8, data);
+        let value = Value::create(TOKEN_TYPE_ARGB8, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -339,7 +339,7 @@ mod tests {
     fn it_can_generate_a_color2_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_RGB8, data);
+        let value = Value::create(TOKEN_TYPE_RGB8, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -348,7 +348,7 @@ mod tests {
     fn it_can_generate_an_argb4_color_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_ARGB4, data);
+        let value = Value::create(TOKEN_TYPE_ARGB4, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -357,7 +357,7 @@ mod tests {
     fn it_can_generate_a_rgb4_color_value() {
         let data = 0x01AB23FE;
 
-        let value = Value::new(TOKEN_TYPE_RGB4, data);
+        let value = Value::create(TOKEN_TYPE_RGB4, data);
 
         assert_eq!("#01ab23fe", value.unwrap().to_string());
     }
@@ -366,7 +366,7 @@ mod tests {
     fn it_generated_unknown_values_if_type_is_unkown() {
         let data = 0x12345;
 
-        let value = Value::new(0x20, data);
+        let value = Value::create(0x20, data);
 
         assert_eq!("Unknown", value.unwrap().to_string());
     }

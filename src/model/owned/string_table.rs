@@ -154,7 +154,7 @@ impl StringTable for StringTableBuf {
 }
 
 #[cfg(test)]
-#[cfg_attr(feature = "cargo-clippy", allow(non_ascii_literal))]
+#[allow(clippy::non_ascii_literal)]
 mod tests {
     use super::{OwnedBuf, StringTable, StringTableBuf};
     use crate::{chunks::StringTableWrapper, raw_chunks, test::compare_chunks};

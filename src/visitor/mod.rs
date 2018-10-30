@@ -3,6 +3,7 @@ use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, Error, ResultExt};
+use log::warn;
 
 use crate::chunks::{
     Chunk, ChunkLoaderStream, PackageWrapper, ResourceWrapper, StringTableWrapper,

@@ -13,7 +13,7 @@ pub struct PackageBuf {
 
 #[allow(dead_code)]
 impl PackageBuf {
-    pub fn new(id: u32, package_name: String) -> Result<Self, Error> {
+    pub fn create(id: u32, package_name: String) -> Result<Self, Error> {
         ensure!(
             package_name.as_bytes().len() <= 256,
             "can not create a package with a length greater than 256"
@@ -83,8 +83,8 @@ mod tests {
 
     #[test]
     fn it_can_generate_a_chunk_with_the_given_data() {
-        let some_other_chunk = PackageBuf::new(4, "com.test.test".to_string()).unwrap();
-        let mut package = PackageBuf::new(3, "com.test.test".to_string()).unwrap();
+        let some_other_chunk = PackageBuf::create(4, "com.test.test".to_string()).unwrap();
+        let mut package = PackageBuf::create(3, "com.test.test".to_string()).unwrap();
         package.add_chunk(Box::new(some_other_chunk));
         let out = package.to_vec().unwrap();
 
@@ -101,7 +101,7 @@ mod tests {
         inner_chunk_2.add_string("some string".to_string());
         inner_chunk_2.add_string("another string".to_string());
 
-        let mut package = PackageBuf::new(3, "com.test.test".to_string()).unwrap();
+        let mut package = PackageBuf::create(3, "com.test.test".to_string()).unwrap();
         package.add_chunk(Box::new(some_other_chunk));
         package.add_chunk(Box::new(inner_chunk_2));
 
@@ -138,7 +138,7 @@ mod tests {
         let target = iter::repeat('\u{1F624}')
             .take((256 / 4) + 1)
             .collect::<String>();
-        let package = PackageBuf::new(1, target);
+        let package = PackageBuf::create(1, target);
 
         assert!(package.is_err());
     }
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn it_can_create_a_package_with_the_maximum_length() {
         let target = iter::repeat('\u{1F624}').take(256 / 4).collect::<String>();
-        let package = PackageBuf::new(1, target);
+        let package = PackageBuf::create(1, target);
 
         assert!(package.is_ok());
     }

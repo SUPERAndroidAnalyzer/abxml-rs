@@ -42,8 +42,7 @@ fn run() -> Result<(), Error> {
         }
     };
 
-    let path = Path::new(&apk_path);
-    let mut apk = Apk::new(path).context("error loading APK")?;
+    let mut apk = Apk::from_path(&apk_path).context("error loading APK")?;
     apk.export(Path::new(&output), true)
         .context("APK could not be exported")?;
 

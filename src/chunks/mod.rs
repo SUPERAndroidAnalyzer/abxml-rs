@@ -3,6 +3,7 @@ use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
+use log::error;
 
 mod chunk_header;
 mod package;

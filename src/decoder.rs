@@ -36,7 +36,7 @@ impl BufferedDecoder {
     }
 
     pub fn get_decoder(&self) -> Result<Decoder, Error> {
-        Decoder::new(&self.buffer)
+        Decoder::from_buffer(&self.buffer)
     }
 }
 
@@ -48,7 +48,7 @@ pub struct Decoder<'a> {
 }
 
 impl<'a> Decoder<'a> {
-    pub fn new(buffer_apk: &'a [u8]) -> Result<Self, Error> {
+    pub fn from_buffer(buffer_apk: &'a [u8]) -> Result<Self, Error> {
         let visitor = ModelVisitor::default();
 
         let mut decoder = Self {

@@ -6,6 +6,7 @@ use std::{
 };
 
 use failure::Error;
+use log::info;
 
 pub mod builder;
 mod element;
@@ -138,7 +139,7 @@ pub trait AttributeTrait {
         let class = self.get_class()?;
 
         let value = if class == 0xFFFF_FFFF {
-            Value::new(data_type, data_value)?
+            Value::create(data_type, data_value)?
         } else {
             Value::StringReference(class)
         };

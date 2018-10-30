@@ -18,7 +18,7 @@ pub struct Apk {
 }
 
 impl Apk {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let mut buffer = Vec::new();
         let file = fs::File::open(&path)?;
         let mut zip_handler = ZipArchive::new(file)?;

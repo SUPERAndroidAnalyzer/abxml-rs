@@ -6,6 +6,7 @@ authors = [
     "Guillem Nieto <gnieto.talo@gmail.com>",
     "Iban Eguia <razican@protonmail.ch>"
 ]
+edition = "2018"
 repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs"
 description = """
 Parser for resources.arsc contained on APKs and binary XML decompresser
