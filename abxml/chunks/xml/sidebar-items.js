@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AttributeWrapper","Contains a slice that represents an attribute"],["XmlNamespaceEndWrapper",""],["XmlNamespaceStartWrapper",""],["XmlTagEndWrapper",""],["XmlTagStartWrapper","Contains a reference to the whole buffer and the chunk header of a `TagStart`"],["XmlTextWrapper",""]]});

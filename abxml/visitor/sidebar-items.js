@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Origin",""]],"mod":[["model",""]],"struct":[["Executor","Methods to decode a binary resource.arsc file or a binary xml file"],["XmlVisitor",""]],"trait":[["ChunkVisitor",""]]});
+initSidebarItems({"enum":[["Origin",""]],"mod":[["model",""],["print",""],["xml",""]],"struct":[["Executor","Methods to decode a binary resource.arsc file or a binary xml file"],["XmlVisitor",""]],"trait":[["ChunkVisitor",""]]});

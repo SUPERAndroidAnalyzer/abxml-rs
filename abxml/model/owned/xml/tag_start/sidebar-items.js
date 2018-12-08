@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["XmlTagStartBuf","Representation of a XML Tag start chunk"]]});
