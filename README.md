@@ -12,8 +12,6 @@ The code is deeply inspired on Apktool: Without it, this library wouldn't exist.
 The easiest way to use the library is using the helper struct `APK` to decompress and decode it to the filesystem.
 
 ```rust
-extern crate abxml;
-
 use std::path::Path;
 use abxml::apk::Apk;
 
@@ -22,7 +20,6 @@ fn main() {
     let mut apk = Apk::new(path).unwrap();
     apk.export(Path::new("/tmp/apk_output/"), false).unwrap();
 }
-
 ```
 
 The `Apk::new` will create a handler that will allow to export to the filesystem. At this moment, it will load to memory the APK, decompress it and parse the contained `resources.arsc`. If this process succeeds, using the method `export`, it will start exporting all the contained files. If it finds an Android binary XML, it will convert it to a string version of it; otherwise, it will move it to the filesystem as is. The second parameter on the `export` function is used to force the removal of the path given on the first argument. In this case, the second invocation of this snippet will fail, as the directory will be non empty.
@@ -32,10 +29,7 @@ The `Apk::new` will create a handler that will allow to export to the filesystem
 This library uses the visitor pattern to access to the contents of a binary file. There is a helper struct called `Executor` which is in charge of, given the contents of one binary file, call to the corresponding functions on the given visitor. The next example will print to the output the message for each string table found:
 
 ```rust
-extern crate abxml;
-
-use abxml::visitor::Executor;
-use abxml::visitor::ChunkVisitor;
+use abxml::visitor::{Executor, ChunkVisitor};
 
 pub struct PrintVisitor;
 
