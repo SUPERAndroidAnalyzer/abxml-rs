@@ -2,6 +2,7 @@ use std::io::Cursor;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{ensure, format_err, Error};
+use log::debug;
 
 use crate::model::{
     owned::{ComplexEntry, Entry, EntryHeader, SimpleEntry, TableTypeBuf},

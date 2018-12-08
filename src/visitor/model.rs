@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use failure::{format_err, Error, ResultExt};
+use log::error;
 
 use crate::{
     chunks::{
@@ -97,13 +98,15 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
             let entries_result = table_type.get_entries();
 
             match entries_result {
-                Ok(ventries) => for e in &ventries {
-                    let id = mask | e.get_id();
+                Ok(ventries) => {
+                    for e in &ventries {
+                        let id = mask | e.get_id();
 
-                    if !e.is_empty() {
-                        entries.insert(id, e.clone());
+                        if !e.is_empty() {
+                            entries.insert(id, e.clone());
+                        }
                     }
-                },
+                }
                 Err(err) => error!("Error visiting table_type: {}", err),
             }
         }

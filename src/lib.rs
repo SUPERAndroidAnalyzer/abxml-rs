@@ -5,11 +5,9 @@
 //! possible to check which chunks of data a document contains, and perform specific queries
 //! depending on the type of chunk.
 
-#![recursion_limit = "1024"]
-#![cfg_attr(feature = "cargo-clippy", deny(clippy))]
 #![forbid(anonymous_parameters)]
-#![cfg_attr(feature = "cargo-clippy", warn(clippy_pedantic))]
 #![deny(
+    clippy::all,
     variant_size_differences,
     unused_results,
     unused_qualifications,
@@ -22,28 +20,18 @@
     missing_debug_implementations,
     missing_copy_implementations
 )]
+#![warn(clippy::pedantic)]
 // Allowing these for now:
-#![allow(missing_docs, unused_results)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        unreadable_literal,
-        stutter,
-        cast_possible_truncation,
-        cast_precision_loss,
-        similar_names,
-        shadow_unrelated,
-    )
+#![allow(
+    missing_docs,
+    unused_results,
+    clippy::unreadable_literal,
+    clippy::stutter,
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::similar_names,
+    clippy::shadow_unrelated
 )]
-
-extern crate byteorder;
-extern crate encoding;
-extern crate failure;
-#[macro_use]
-extern crate log;
-extern crate xml;
-#[cfg(feature = "zip_decode")]
-extern crate zip;
 
 #[cfg(feature = "zip_decode")]
 pub mod apk;

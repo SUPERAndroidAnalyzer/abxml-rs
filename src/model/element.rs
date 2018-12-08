@@ -5,6 +5,8 @@ use std::{
     rc::Rc,
 };
 
+use log::error;
+
 #[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct Tag {
     name: Rc<String>,
@@ -104,7 +106,8 @@ impl ElementContainer {
                 }
 
                 Some(())
-            }).unwrap_or_else(|| {
+            })
+            .unwrap_or_else(|| {
                 error!("Received an end element event with an empty stack");
             });
     }

@@ -2,51 +2,83 @@ language: rust
 cache: cargo
 dist: trusty
 sudo: true
-os:
-  - linux
-  - osx
 
 addons:
   apt:
     packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - libiberty-dev
-      - zlib1g-dev
+    - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+    - cmake
+    - gcc
+    - binutils-dev
+    - libiberty-dev
+    - zlib1g-dev
 
+# Run builds in Linux, MacOS X and Windows
+os:
+- linux
+- osx
+- windows
+
+# Run builds for all the supported trains
 rust:
-  - nightly
-  - beta
-  - stable
-  - 1.30.0
+- 1.31.0
+- stable
+- beta
+- nightly
 
-before_script:
-  - export PATH=$PATH:~/.cargo/bin
-  - ./travis-helper.sh install_deps
+stages:
+- test
+- deploy
 
+# Extra jobs to include
+jobs:
+  include:
+  # Upload documentation
+  - name: "Documentation upload"
+    os: linux
+    rust: stable
+    stage: deploy
+    env: CACHE_NAME=DOCS
+    script: ./travis-helper.sh documentation
+    deploy: &pages
+      provider: pages
+      github-token: $GH_TOKEN
+      local-dir: target/doc/
+      skip_cleanup: true
+      keep-history: true
+      on:
+        repo: SUPERAndroidAnalyzer/abxml-rs
+        branch: develop
+
+matrix:
+  allow_failures:
+  - os: windows
+
+# Run the multiple tests
 script:
-  - cargo build
-  - cargo build --example converter
-  - cargo build --example exporter
-  - cargo test
-  - cargo package
-  - ./travis-helper.sh clippy_run
-  - ./travis-helper.sh fmt_run
+- ./travis-helper.sh fmt_check
+- ./travis-helper.sh clippy_check
+- ./travis-helper.sh test
 
 after_success:
   - ./travis-helper.sh upload_code_coverage
-  - ./travis-helper.sh upload_documentation
+
+# Crates.io deployment
+deploy:
+  provider: cargo
+  api_key: $CARGO_TOKEN
+  on:
+    repo: SUPERAndroidAnalyzer/abxml-rs
+    tags: true
 
 notifications:
   email:
     recipients:
-      - razican@protonmail.ch
-      - brunoop@protonmail.ch
-      - sergiodlo@protonmail.com
-      - jaimesr@protonmail.ch
+    - razican@protonmail.ch
+    - brunoop@protonmail.ch
+    - sergiodlo@protonmail.com
+    - jaimesr@protonmail.ch
     on_success: change
     on_failure: always
