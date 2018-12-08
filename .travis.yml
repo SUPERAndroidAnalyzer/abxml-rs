@@ -51,6 +51,19 @@ jobs:
       on:
         repo: SUPERAndroidAnalyzer/abxml-rs
         branch: develop
+  # Crates.io deployment
+  - name: "crates.io deployment"
+    os: linux
+    rust: stable
+    stage: deploy
+    env: CACHE_NAME=DEPLOY
+    script: skip
+    deploy:
+      provider: cargo
+      token: $CARGO_TOKEN
+      on:
+        repo: SUPERAndroidAnalyzer/abxml-rs
+        tags: true
 
 matrix:
   allow_failures:
@@ -64,14 +77,6 @@ script:
 
 after_success:
   - ./travis-helper.sh upload_code_coverage
-
-# Crates.io deployment
-deploy:
-  provider: cargo
-  api_key: $CARGO_TOKEN
-  on:
-    repo: SUPERAndroidAnalyzer/abxml-rs
-    tags: true
 
 notifications:
   email:
