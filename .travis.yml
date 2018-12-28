@@ -76,7 +76,7 @@ script:
 - ./travis-helper.sh test
 
 after_success:
-  - ./travis-helper.sh upload_code_coverage
+- ./travis-helper.sh upload_code_coverage
 
 notifications:
   email:
