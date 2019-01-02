@@ -1,15 +1,18 @@
 [package]
 name = "abxml"
-version = "0.7.1"
+version = "0.7.2"
 license = "MIT/Apache-2.0"
 authors = [
     "Guillem Nieto <gnieto.talo@gmail.com>",
     "Iban Eguia <razican@protonmail.ch>"
 ]
 edition = "2018"
-repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs"
+readme = "README.md"
+documentation = "https://docs.rs/abxml/"
+repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs/"
+homepage = "https://superanalyzer.rocks/"
 description = """
-Parser for resources.arsc contained on APKs and binary XML decompresser
+Parser for resources.arsc contained on APKs and binary XML decompresser.
 """
 keywords = ["android", "arsc", "apk", "parser"]
 categories = ["parser-implementations", "parsing"]
@@ -22,7 +25,7 @@ is-it-maintained-open-issues = { repository = "SUPERAndroidAnalyzer/abxml-rs" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-failure = "0.1.3"
+failure = "0.1.5"
 byteorder = "1.2.7"
 ansi_term = "0.11.0"
 log = "0.4.6"

@@ -1,6 +1,6 @@
 language: rust
 cache: cargo
-dist: trusty
+dist: xenial
 sudo: true
 
 addons:
@@ -23,7 +23,7 @@ os:
 
 # Run builds for all the supported trains
 rust:
-- 1.31.0
+- 1.31.1
 - stable
 - beta
 - nightly
@@ -76,7 +76,7 @@ script:
 - ./travis-helper.sh test
 
 after_success:
-  - ./travis-helper.sh upload_code_coverage
+- ./travis-helper.sh upload_code_coverage
 
 notifications:
   email:
