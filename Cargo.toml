@@ -7,9 +7,12 @@ authors = [
     "Iban Eguia <razican@protonmail.ch>"
 ]
 edition = "2018"
-repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs"
+readme = "README.md"
+documentation = "https://docs.rs/abxml/"
+repository = "https://github.com/SUPERAndroidAnalyzer/abxml-rs/"
+homepage = "https://superanalyzer.rocks/"
 description = """
-Parser for resources.arsc contained on APKs and binary XML decompresser
+Parser for resources.arsc contained on APKs and binary XML decompresser.
 """
 keywords = ["android", "arsc", "apk", "parser"]
 categories = ["parser-implementations", "parsing"]
