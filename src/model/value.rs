@@ -98,7 +98,7 @@ impl Value {
                         return Err(format_err!(
                             "expected a valid unit index, got: {}",
                             unit_idx
-                        ))
+                        ));
                     }
                 }
             }
@@ -123,7 +123,7 @@ impl Value {
                         return Err(format_err!(
                             "expected a valid unit index, got: {}",
                             unit_idx
-                        ))
+                        ));
                     }
                 }
             }
