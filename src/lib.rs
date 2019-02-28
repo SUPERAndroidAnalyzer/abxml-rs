@@ -26,7 +26,7 @@
     missing_docs,
     unused_results,
     clippy::unreadable_literal,
-    clippy::stutter,
+    clippy::module_name_repetitions,
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::similar_names,

@@ -89,17 +89,14 @@ impl Value {
                 let value = Self::complex(data);
                 let unit_idx = data & 0xF;
 
-                match units.get(unit_idx as usize) {
-                    Some(unit) => {
-                        let formatted = format!("{:.*}{}", 1, value, unit);
-                        Value::Dimension(formatted)
-                    }
-                    None => {
-                        return Err(format_err!(
-                            "expected a valid unit index, got: {}",
-                            unit_idx
-                        ));
-                    }
+                if let Some(unit) = units.get(unit_idx as usize) {
+                    let formatted = format!("{:.*}{}", 1, value, unit);
+                    Value::Dimension(formatted)
+                } else {
+                    return Err(format_err!(
+                        "expected a valid unit index, got: {}",
+                        unit_idx
+                    ));
                 }
             }
             TOKEN_TYPE_FRACTION => {
@@ -107,24 +104,21 @@ impl Value {
                 let unit_idx = (data & 0xF) as usize;
                 let final_value = Self::complex(data) * 100.0;
 
-                match units.get(unit_idx) {
-                    Some(unit) => {
-                        let integer = final_value.round();
-                        let diff = final_value - integer;
-                        let formatted_fraction = if diff > 0.0000001 {
-                            format!("{:.*}{}", 6, final_value, unit)
-                        } else {
-                            format!("{:.*}{}", 1, final_value, unit)
-                        };
+                if let Some(unit) = units.get(unit_idx) {
+                    let integer = final_value.round();
+                    let diff = final_value - integer;
+                    let formatted_fraction = if diff > 0.0000001 {
+                        format!("{:.*}{}", 6, final_value, unit)
+                    } else {
+                        format!("{:.*}{}", 1, final_value, unit)
+                    };
 
-                        Value::Fraction(formatted_fraction)
-                    }
-                    None => {
-                        return Err(format_err!(
-                            "expected a valid unit index, got: {}",
-                            unit_idx
-                        ));
-                    }
+                    Value::Fraction(formatted_fraction)
+                } else {
+                    return Err(format_err!(
+                        "expected a valid unit index, got: {}",
+                        unit_idx
+                    ));
                 }
             }
             TOKEN_TYPE_INTEGER => {
