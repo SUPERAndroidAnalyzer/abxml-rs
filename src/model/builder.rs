@@ -5,11 +5,11 @@ use crate::model::owned::OwnedBuf;
 
 #[derive(Default, Debug)]
 pub struct Arsc {
-    chunks: Vec<Box<OwnedBuf>>,
+    chunks: Vec<Box<dyn OwnedBuf>>,
 }
 
 impl Arsc {
-    pub fn push_owned(&mut self, chunk: Box<OwnedBuf>) {
+    pub fn push_owned(&mut self, chunk: Box<dyn OwnedBuf>) {
         self.chunks.push(chunk);
     }
 
@@ -46,11 +46,11 @@ impl Arsc {
 
 #[derive(Default, Debug)]
 pub struct Xml {
-    chunks: Vec<Box<OwnedBuf>>,
+    chunks: Vec<Box<dyn OwnedBuf>>,
 }
 
 impl Xml {
-    pub fn push_owned(&mut self, chunk: Box<OwnedBuf>) {
+    pub fn push_owned(&mut self, chunk: Box<dyn OwnedBuf>) {
         self.chunks.push(chunk);
     }
 

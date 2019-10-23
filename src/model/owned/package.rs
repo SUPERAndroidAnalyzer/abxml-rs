@@ -8,7 +8,7 @@ use crate::{chunks::TOKEN_PACKAGE, model::owned::OwnedBuf};
 pub struct PackageBuf {
     id: u32,
     package_name: String,
-    inner_chunks: Vec<Box<OwnedBuf>>,
+    inner_chunks: Vec<Box<dyn OwnedBuf>>,
 }
 
 #[allow(dead_code)]
@@ -26,7 +26,7 @@ impl PackageBuf {
         })
     }
 
-    pub fn add_chunk(&mut self, chunk: Box<OwnedBuf>) {
+    pub fn add_chunk(&mut self, chunk: Box<dyn OwnedBuf>) {
         self.inner_chunks.push(chunk);
     }
 }

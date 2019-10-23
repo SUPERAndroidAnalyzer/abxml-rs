@@ -35,6 +35,8 @@ impl Apk {
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
     pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<(), Error> {
+        use crate::visitor::XmlVisitor;
+
         let decoder = self
             .decoder
             .get_decoder()
@@ -72,7 +74,7 @@ impl Apk {
             {
                 decoder
                     .xml_visitor(&contents)
-                    .and_then(|visitor| visitor.into_string())
+                    .and_then(XmlVisitor::into_string)
                     .and_then(|string| Ok(string.into_bytes()))
                     .unwrap_or(contents)
             } else {
