@@ -146,10 +146,10 @@ impl<'a> XmlVisitor<'a> {
                         self.resources,
                     );
 
-                    if flag_resolution.is_none() {
-                        current_attribute.get_value()?.to_string()
+                    if let Some(flag_resolution) = flag_resolution {
+                        flag_resolution
                     } else {
-                        flag_resolution.unwrap()
+                        current_attribute.get_value()?.to_string()
                     }
                 }
                 _ => current_value.to_string(),
@@ -275,7 +275,7 @@ impl AttributeHelper {
             .and_then(|package| Self::search_flags(flags, *entry_ref, package))
     }
 
-    fn search_flags(flags: u32, entry_ref: u32, package: &Library) -> Option<String> {
+    fn search_flags(flags: u32, entry_ref: u32, package: &dyn Library) -> Option<String> {
         let str_indexes = Self::get_strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes
             .iter()
@@ -297,13 +297,15 @@ impl AttributeHelper {
         }
     }
 
-    fn get_strings(flags: u32, entry_ref: u32, package: &Library) -> Vec<u32> {
+    fn get_strings(flags: u32, entry_ref: u32, package: &dyn Library) -> Vec<u32> {
+        use crate::model::owned::Entry;
+
         let mut strs = Vec::new();
         let mut masks = Vec::new();
 
         let inner_entries = package
             .get_entry(entry_ref)
-            .and_then(|e| e.complex())
+            .and_then(Entry::complex)
             .and_then(|c| Ok(c.get_entries().to_vec()))
             .unwrap_or_else(|_| Vec::new());
 

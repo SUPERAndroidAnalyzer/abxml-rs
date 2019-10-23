@@ -177,7 +177,7 @@ pub enum Entry {
 
 impl Entry {
     pub fn simple(&self) -> Result<&SimpleEntry, Error> {
-        if let Entry::Simple(simple) = self {
+        if let Self::Simple(simple) = self {
             Ok(simple)
         } else {
             Err(format_err!("asked for a complex entry on a simple one"))
@@ -185,7 +185,7 @@ impl Entry {
     }
 
     pub fn complex(&self) -> Result<&ComplexEntry, Error> {
-        if let Entry::Complex(complex) = self {
+        if let Self::Complex(complex) = self {
             Ok(complex)
         } else {
             Err(format_err!("asked for a simple entry on a complex one"))
@@ -193,7 +193,7 @@ impl Entry {
     }
 
     pub fn is_empty(&self) -> bool {
-        if let Entry::Empty(_, _) = self {
+        if let Self::Empty(_, _) = self {
             true
         } else {
             false
@@ -202,25 +202,25 @@ impl Entry {
 
     pub fn get_id(&self) -> u32 {
         match self {
-            Entry::Complex(complex) => complex.get_id(),
-            Entry::Simple(simple) => simple.get_id(),
-            Entry::Empty(id, _) => *id,
+            Self::Complex(complex) => complex.get_id(),
+            Self::Simple(simple) => simple.get_id(),
+            Self::Empty(id, _) => *id,
         }
     }
 
     pub fn get_key(&self) -> u32 {
         match self {
-            Entry::Complex(complex) => complex.get_key(),
-            Entry::Simple(simple) => simple.get_key(),
-            Entry::Empty(_, key) => *key,
+            Self::Complex(complex) => complex.get_key(),
+            Self::Simple(simple) => simple.get_key(),
+            Self::Empty(_, key) => *key,
         }
     }
 
     pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
         match self {
-            Entry::Complex(complex) => complex.to_vec(),
-            Entry::Simple(simple) => simple.to_vec(),
-            Entry::Empty(_, _) => Ok(Vec::new()),
+            Self::Complex(complex) => complex.to_vec(),
+            Self::Simple(simple) => simple.to_vec(),
+            Self::Empty(_, _) => Ok(Vec::new()),
         }
     }
 }
