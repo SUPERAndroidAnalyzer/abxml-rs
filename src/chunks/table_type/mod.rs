@@ -118,13 +118,7 @@ impl<'a> TableTypeWrapper<'a> {
             return Ok(None);
         }
 
-        for j in 0..value_count {
-            debug!(
-                "Parsing value: {}/{} (@{})",
-                j,
-                value_count - 1,
-                cursor.position()
-            );
+        for _ in 0..value_count {
             let val_id = cursor.read_u32::<LittleEndian>()?;
             cursor.read_u16::<LittleEndian>()?;
             // Padding
