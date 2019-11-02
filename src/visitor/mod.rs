@@ -153,9 +153,9 @@ pub enum Origin {
 impl Origin {
     pub fn next(origin: Self) -> Self {
         match origin {
-            Origin::Global => Origin::Spec,
-            Origin::Spec => Origin::Entries,
-            Origin::Entries => Origin::Global,
+            Self::Global => Self::Spec,
+            Self::Spec => Self::Entries,
+            Self::Entries => Self::Global,
         }
     }
 }

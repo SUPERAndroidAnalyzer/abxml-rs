@@ -58,17 +58,17 @@ pub enum Value {
 impl ToString for Value {
     fn to_string(&self) -> String {
         match self {
-            Value::StringReference(i) => format!("@string/{}", i),
-            Value::Dimension(s)
-            | Value::Fraction(s)
-            | Value::ColorARGB8(s)
-            | Value::ColorRGB8(s)
-            | Value::ColorARGB4(s)
-            | Value::ColorRGB4(s) => s.clone(),
-            Value::Float(f) => format!("{:.*}", 1, f),
-            Value::Integer(i) | Value::Flags(i) => i.to_string(),
-            Value::Boolean(b) => b.to_string(),
-            Value::ReferenceId(s) | Value::AttributeReferenceId(s) => format!("@id/0x{:x}", s),
+            Self::StringReference(i) => format!("@string/{}", i),
+            Self::Dimension(s)
+            | Self::Fraction(s)
+            | Self::ColorARGB8(s)
+            | Self::ColorRGB8(s)
+            | Self::ColorARGB4(s)
+            | Self::ColorRGB4(s) => s.clone(),
+            Self::Float(f) => format!("{:.*}", 1, f),
+            Self::Integer(i) | Self::Flags(i) => i.to_string(),
+            Self::Boolean(b) => b.to_string(),
+            Self::ReferenceId(s) | Self::AttributeReferenceId(s) => format!("@id/0x{:x}", s),
             _ => "Unknown".to_string(),
         }
     }
@@ -79,11 +79,11 @@ impl Value {
     /// will return an error. If the type is not know, it will return `Value::Unknown`
     pub fn create(value_type: u8, data: u32) -> Result<Self, Error> {
         let value = match value_type {
-            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Value::ReferenceId(data),
+            TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Self::ReferenceId(data),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
-                Value::AttributeReferenceId(data)
+                Self::AttributeReferenceId(data)
             }
-            TOKEN_TYPE_STRING => Value::StringReference(data),
+            TOKEN_TYPE_STRING => Self::StringReference(data),
             TOKEN_TYPE_DIMENSION => {
                 let units: [&str; 6] = ["px", "dip", "sp", "pt", "in", "mm"];
                 let value = Self::complex(data);
@@ -91,7 +91,7 @@ impl Value {
 
                 if let Some(unit) = units.get(unit_idx as usize) {
                     let formatted = format!("{:.*}{}", 1, value, unit);
-                    Value::Dimension(formatted)
+                    Self::Dimension(formatted)
                 } else {
                     return Err(format_err!(
                         "expected a valid unit index, got: {}",
@@ -113,7 +113,7 @@ impl Value {
                         format!("{:.*}{}", 1, final_value, unit)
                     };
 
-                    Value::Fraction(formatted_fraction)
+                    Self::Fraction(formatted_fraction)
                 } else {
                     return Err(format_err!(
                         "expected a valid unit index, got: {}",
@@ -123,28 +123,28 @@ impl Value {
             }
             TOKEN_TYPE_INTEGER => {
                 // TODO: Should we transmute to signed integer?
-                Value::Integer(data)
+                Self::Integer(data)
             }
-            TOKEN_TYPE_FLAGS => Value::Flags(data),
-            TOKEN_TYPE_FLOAT => Value::Float(f32::from_bits(data)),
-            TOKEN_TYPE_BOOLEAN => Value::Boolean(data > 0),
+            TOKEN_TYPE_FLAGS => Self::Flags(data),
+            TOKEN_TYPE_FLOAT => Self::Float(f32::from_bits(data)),
+            TOKEN_TYPE_BOOLEAN => Self::Boolean(data > 0),
             TOKEN_TYPE_ARGB8 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::ColorARGB8(formatted_color)
+                Self::ColorARGB8(formatted_color)
             }
             TOKEN_TYPE_RGB8 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::ColorRGB8(formatted_color)
+                Self::ColorRGB8(formatted_color)
             }
             TOKEN_TYPE_ARGB4 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::ColorARGB4(formatted_color)
+                Self::ColorARGB4(formatted_color)
             }
             TOKEN_TYPE_RGB4 => {
                 let formatted_color = format!("#{:08x}", data);
-                Value::ColorRGB4(formatted_color)
+                Self::ColorRGB4(formatted_color)
             }
-            _ => Value::Unknown(value_type, data),
+            _ => Self::Unknown(value_type, data),
         };
 
         Ok(value)
