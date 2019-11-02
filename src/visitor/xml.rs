@@ -484,7 +484,9 @@ mod tests {
 
         fn add_entries(&mut self, _: Entries) {}
 
-        fn add_type_spec(&mut self, _: Self::TypeSpec) {}
+        fn add_type_spec(&mut self, _: Self::TypeSpec) -> Result<(), Error> {
+            Ok(())
+        }
     }
 
     struct FakeTypeSpec;

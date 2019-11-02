@@ -125,7 +125,9 @@ impl<'a> ChunkVisitor<'a> for ModelVisitor<'a> {
         self.current_spec = Some(type_spec.clone());
         let package_id = (self.package_mask >> 24) as u8;
         if let Some(package) = self.resources.get_mut_package(package_id) {
-            package.add_type_spec(type_spec);
+            let _ = package
+                .add_type_spec(type_spec)
+                .map_err(|e| error!("Could not add type spec: {}", e));
         } else {
             error!("Type spec refers to a non existing package");
         }
@@ -182,7 +184,7 @@ impl<'a> ResourcesTrait<'a> for Resources<'a> {
 #[derive(Debug)]
 pub struct Library<'a> {
     package: PackageWrapper<'a>,
-    specs: Vec<TypeSpecWrapper<'a>>,
+    specs: HashMap<u32, TypeSpecWrapper<'a>>,
     string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     spec_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
     entries_string_table: Option<StringTableCache<StringTableWrapper<'a>>>,
@@ -193,7 +195,7 @@ impl<'a> Library<'a> {
     pub fn new(package: PackageWrapper<'a>) -> Self {
         Self {
             package,
-            specs: Vec::new(),
+            specs: HashMap::new(),
             string_table: None,
             spec_string_table: None,
             entries_string_table: None,
@@ -202,7 +204,7 @@ impl<'a> Library<'a> {
     }
 
     fn get_spec_as_str(&self, spec_id: u32) -> Result<String, Error> {
-        if self.specs.get((spec_id - 1) as usize).is_some() {
+        if self.specs.get(&(spec_id)).is_some() {
             if let Some(spec_string_table) = &self.spec_string_table {
                 if let Ok(spec_str) = spec_string_table.get_string(spec_id - 1) {
                     return Ok((*spec_str).clone());
@@ -296,7 +298,10 @@ impl<'a> LibraryBuilder<'a> for Library<'a> {
         self.entries.extend(entries);
     }
 
-    fn add_type_spec(&mut self, type_spec: Self::TypeSpec) {
-        self.specs.push(type_spec);
+    fn add_type_spec(&mut self, type_spec: Self::TypeSpec) -> Result<(), Error> {
+        let id = u32::from(type_spec.get_id()?);
+        self.specs.insert(id, type_spec);
+
+        Ok(())
     }
 }
