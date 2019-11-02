@@ -183,9 +183,11 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(28);
 
-        Ok(cursor
-            .read_u32::<LittleEndian>()
-            .context("could not get data")?)
+        Ok(u32::from(
+            cursor
+                .read_u16::<LittleEndian>()
+                .context("could not get data")?,
+        ))
     }
 
     fn get_class(&self) -> Result<u32, Error> {
