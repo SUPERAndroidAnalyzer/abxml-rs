@@ -316,7 +316,7 @@
 
     <span class="kw">fn</span> <span class="ident">set_string_table</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string_table</span>: <span class="self">Self</span>::<span class="ident">StringTable</span>, <span class="ident">origin</span>: <span class="ident">Origin</span>);
     <span class="kw">fn</span> <span class="ident">add_entries</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">entries</span>: <span class="ident">Entries</span>);
-    <span class="kw">fn</span> <span class="ident">add_type_spec</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_spec</span>: <span class="self">Self</span>::<span class="ident">TypeSpec</span>);
+    <span class="kw">fn</span> <span class="ident">add_type_spec</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">type_spec</span>: <span class="self">Self</span>::<span class="ident">TypeSpec</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Resources</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
