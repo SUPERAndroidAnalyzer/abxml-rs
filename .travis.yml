@@ -65,10 +65,6 @@ jobs:
         repo: SUPERAndroidAnalyzer/abxml-rs
         tags: true
 
-matrix:
-  allow_failures:
-  - os: windows
-
 # Run the multiple tests
 script:
 - ./travis-helper.sh fmt_check
