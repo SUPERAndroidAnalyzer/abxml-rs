@@ -84,7 +84,7 @@ pub trait LibraryBuilder<'a> {
 
     fn set_string_table(&mut self, string_table: Self::StringTable, origin: Origin);
     fn add_entries(&mut self, entries: Entries);
-    fn add_type_spec(&mut self, type_spec: Self::TypeSpec);
+    fn add_type_spec(&mut self, type_spec: Self::TypeSpec) -> Result<(), Error>;
 }
 
 pub trait Resources<'a> {
