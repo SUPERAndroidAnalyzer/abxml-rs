@@ -1,16 +1,14 @@
-use std::rc::Rc;
-
+use crate::{
+    chunks::TOKEN_STRING_TABLE,
+    model::{owned::OwnedBuf, StringTable},
+};
+use anyhow::{bail, ensure, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
 use encoding::{
     codec::{utf_16, utf_8},
     Encoding as EncodingTrait,
 };
-use failure::{bail, ensure, Error};
-
-use crate::{
-    chunks::TOKEN_STRING_TABLE,
-    model::{owned::OwnedBuf, StringTable},
-};
+use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Encoding {
@@ -40,7 +38,7 @@ impl StringTableBuf {
         self.encoding = encoding;
     }
 
-    pub fn get_encoding(&self) -> Encoding {
+    pub fn encoding(&self) -> Encoding {
         self.encoding
     }
 
@@ -50,21 +48,21 @@ impl StringTableBuf {
 }
 
 impl OwnedBuf for StringTableBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_STRING_TABLE
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         let flags = if self.encoding == Encoding::Utf8 {
-            0x00000100
+            0x0000_0100
         } else {
             0
         };
 
         let header_size = 7 * 4;
-        let string_offset = header_size + self.get_strings_len() * 4 + self.get_styles_len() * 4;
+        let string_offset = header_size + self.strings_len() * 4 + self.styles_len() * 4;
 
         out.write_u32::<LittleEndian>(self.strings.len() as u32)?;
         out.write_u32::<LittleEndian>(self.styles.len() as u32)?;
@@ -78,7 +76,7 @@ impl OwnedBuf for StringTableBuf {
         Ok(out)
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         let mut string_offsets: Vec<u32> = Vec::new();
@@ -136,15 +134,15 @@ impl OwnedBuf for StringTableBuf {
 }
 
 impl StringTable for StringTableBuf {
-    fn get_strings_len(&self) -> u32 {
+    fn strings_len(&self) -> u32 {
         self.strings.len() as u32
     }
 
-    fn get_styles_len(&self) -> u32 {
+    fn styles_len(&self) -> u32 {
         self.styles.len() as u32
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
         if let Some(s) = self.strings.get(idx as usize) {
             Ok(s.clone())
         } else {

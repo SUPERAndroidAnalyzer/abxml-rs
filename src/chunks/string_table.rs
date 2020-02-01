@@ -1,3 +1,10 @@
+use crate::model::{
+    owned::{Encoding as EncodingType, StringTableBuf},
+    StringTable,
+};
+use anyhow::{bail, ensure, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use encoding::codec::{utf_16, utf_8};
 use std::{
     cell::RefCell,
     collections::{
@@ -6,15 +13,6 @@ use std::{
     },
     io::Cursor,
     rc::Rc,
-};
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use encoding::codec::{utf_16, utf_8};
-use failure::{ensure, format_err, Error};
-
-use crate::model::{
-    owned::{Encoding as EncodingType, StringTableBuf},
-    StringTable,
 };
 
 #[derive(Debug)]
@@ -27,21 +25,21 @@ impl<'a> StringTableWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_flags(&self) -> u32 {
+    pub fn flags(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(16);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    pub fn to_buffer(&self) -> Result<StringTableBuf, Error> {
+    pub fn to_buffer(&self) -> Result<StringTableBuf> {
         let mut owned = StringTableBuf::default();
 
         if !self.is_utf8() {
             owned.set_encoding(EncodingType::Utf16);
         }
 
-        for i in 0..self.get_strings_len() {
+        for i in 0..self.strings_len() {
             let string = &*self.get_string(i)?;
             owned.add_string(string.clone());
         }
@@ -49,7 +47,7 @@ impl<'a> StringTableWrapper<'a> {
         Ok(owned)
     }
 
-    fn get_string_position(&self, idx: u32) -> Result<u64, Error> {
+    fn string_position(&self, idx: u32) -> Result<u64> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(20);
         let str_offset = cursor.read_u32::<LittleEndian>()?;
@@ -71,7 +69,7 @@ impl<'a> StringTableWrapper<'a> {
         Ok(u64::from(position))
     }
 
-    fn parse_string(&self, offset: u32) -> Result<String, Error> {
+    fn parse_string(&self, offset: u32) -> Result<String> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(u64::from(offset));
 
@@ -123,7 +121,7 @@ impl<'a> StringTableWrapper<'a> {
             if decode_error.is_none() {
                 Ok(o)
             } else {
-                Err(format_err!("error decoding UTF8 string"))
+                bail!("error decoding UTF8 string")
             }
         } else {
             let size1 = u32::from(cursor.read_u8()?);
@@ -146,38 +144,38 @@ impl<'a> StringTableWrapper<'a> {
             decoder.raw_feed(subslice, &mut o);
             let decode_error = decoder.raw_finish(&mut o);
 
-            match decode_error {
-                None => Ok(o),
-                Some(_) => Err(format_err!("error decoding UTF16 string")),
+            if decode_error.is_some() {
+                bail!("error decoding UTF16 string");
             }
+            Ok(o)
         }
     }
 
     fn is_utf8(&self) -> bool {
-        (self.get_flags() & 0x00000100) == 0x00000100
+        (self.flags() & 0x0000_0100) == 0x0000_0100
     }
 }
 
 impl<'a> StringTable for StringTableWrapper<'a> {
-    fn get_strings_len(&self) -> u32 {
+    fn strings_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    fn get_styles_len(&self) -> u32 {
+    fn styles_len(&self) -> u32 {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
 
         cursor.read_u32::<LittleEndian>().unwrap_or(0)
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
-        ensure!(idx <= self.get_strings_len(), "index out of bounds");
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
+        ensure!(idx <= self.strings_len(), "index out of bounds");
 
         let string = self
-            .get_string_position(idx)
+            .string_position(idx)
             .and_then(|position| self.parse_string(position as u32))?;
 
         Ok(Rc::new(string))
@@ -200,15 +198,15 @@ impl<S: StringTable> StringTableCache<S> {
 }
 
 impl<S: StringTable> StringTable for StringTableCache<S> {
-    fn get_strings_len(&self) -> u32 {
-        self.inner.get_strings_len()
+    fn strings_len(&self) -> u32 {
+        self.inner.strings_len()
     }
 
-    fn get_styles_len(&self) -> u32 {
-        self.inner.get_styles_len()
+    fn styles_len(&self) -> u32 {
+        self.inner.styles_len()
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
+    fn get_string(&self, idx: u32) -> Result<Rc<String>> {
         let mut cache = self.cache.borrow_mut();
         let entry = cache.entry(idx);
 

@@ -1,8 +1,7 @@
-use std::io::Cursor;
-
+use anyhow::{bail, ensure, Result};
 use byteorder::{LittleEndian, ReadBytesExt};
 use encoding::codec::utf_16::{self, Little};
-use failure::{ensure, format_err, Error};
+use std::io::Cursor;
 
 #[derive(Debug)]
 pub struct PackageWrapper<'a> {
@@ -14,14 +13,14 @@ impl<'a> PackageWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_id(&self) -> Result<u32, Error> {
+    pub fn id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_name(&self) -> Result<String, Error> {
+    pub fn name(&self) -> Result<String> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
         let initial_position = cursor.position();
@@ -45,7 +44,7 @@ impl<'a> PackageWrapper<'a> {
 
         match decode_error {
             None => Ok(o),
-            Some(_) => Err(format_err!("error decoding UTF8 string")),
+            Some(_) => bail!("error decoding UTF8 string"),
         }
     }
 

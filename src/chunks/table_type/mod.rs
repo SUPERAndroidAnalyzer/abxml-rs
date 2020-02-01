@@ -1,15 +1,12 @@
-use std::io::Cursor;
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{ensure, format_err, Error};
-use log::debug;
-
+pub use self::configuration::{ConfigurationWrapper, Region};
 use crate::model::{
     owned::{ComplexEntry, Entry, EntryHeader, SimpleEntry, TableTypeBuf},
     TableType,
 };
-
-pub use self::configuration::{ConfigurationWrapper, Region};
+use anyhow::{anyhow, ensure, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use log::debug;
+use std::io::Cursor;
 
 mod configuration;
 
@@ -27,36 +24,37 @@ impl<'a> TableTypeWrapper<'a> {
         }
     }
 
-    pub fn to_buffer(&self) -> Result<TableTypeBuf, Error> {
-        let id = self.get_id()?;
-        let amount = self.get_amount()?;
-        let config = self.get_configuration()?.to_buffer()?;
+    pub fn to_buffer(&self) -> Result<TableTypeBuf> {
+        let id = self.id()?;
+        let amount = self.amount()?;
+        let config = self.configuration()?.to_buffer()?;
         let mut owned = TableTypeBuf::new(id & 0xF, config);
 
         for i in 0..amount {
-            let entry = self.get_entry(i)?;
+            let entry = self.entry(i)?;
             owned.add_entry(entry);
         }
 
         Ok(owned)
     }
 
-    pub fn get_entries(&self) -> Result<Vec<Entry>, Error> {
+    pub fn entries(&self) -> Result<Vec<Entry>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(self.data_offset);
 
         self.decode_entries(&mut cursor)
     }
 
-    fn decode_entries(&self, cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>, Error> {
+    fn decode_entries(&self, cursor: &mut Cursor<&[u8]>) -> Result<Vec<Entry>> {
         let mut offsets = Vec::new();
         let mut entries = Vec::new();
+        let amount = self.amount()?;
 
-        for _ in 0..self.get_amount()? {
+        for _ in 0..amount {
             offsets.push(cursor.read_u32::<LittleEndian>()?);
         }
 
-        for i in 0..self.get_amount()? {
+        for i in 0..amount {
             let id = i & 0xFFFF;
 
             if offsets[i as usize] == 0xFFFF_FFFF {
@@ -75,7 +73,7 @@ impl<'a> TableTypeWrapper<'a> {
         Ok(entries)
     }
 
-    fn decode_entry(cursor: &mut Cursor<&[u8]>, id: u32) -> Result<Option<Entry>, Error> {
+    fn decode_entry(cursor: &mut Cursor<&[u8]>, id: u32) -> Result<Option<Entry>> {
         let header_size = cursor.read_u16::<LittleEndian>()?;
         let flags = cursor.read_u16::<LittleEndian>()?;
         let key_index = cursor.read_u32::<LittleEndian>()?;
@@ -92,14 +90,14 @@ impl<'a> TableTypeWrapper<'a> {
         cursor: &mut Cursor<&[u8]>,
         header: EntryHeader,
         id: u32,
-    ) -> Result<Option<Entry>, Error> {
+    ) -> Result<Option<Entry>> {
         cursor.read_u16::<LittleEndian>()?;
         // Padding
         cursor.read_u8()?;
         let val_type = cursor.read_u8()?;
         let data = cursor.read_u32::<LittleEndian>()?;
 
-        let simple = SimpleEntry::new(id, header.get_key_index(), val_type, data);
+        let simple = SimpleEntry::new(id, header.key_index(), val_type, data);
         let entry = Entry::Simple(simple);
 
         Ok(Some(entry))
@@ -109,7 +107,7 @@ impl<'a> TableTypeWrapper<'a> {
         cursor: &mut Cursor<&[u8]>,
         header: EntryHeader,
         id: u32,
-    ) -> Result<Option<Entry>, Error> {
+    ) -> Result<Option<Entry>> {
         let parent_entry = cursor.read_u32::<LittleEndian>()?;
         let value_count = cursor.read_u32::<LittleEndian>()?;
         let mut entries = Vec::with_capacity(value_count as usize);
@@ -126,12 +124,12 @@ impl<'a> TableTypeWrapper<'a> {
             let val_type = cursor.read_u8()?;
             let data = cursor.read_u32::<LittleEndian>()?;
 
-            let simple_entry = SimpleEntry::new(val_id, header.get_key_index(), val_type, data);
+            let simple_entry = SimpleEntry::new(val_id, header.key_index(), val_type, data);
 
             entries.push(simple_entry);
         }
 
-        let complex = ComplexEntry::new(id, header.get_key_index(), parent_entry, entries);
+        let complex = ComplexEntry::new(id, header.key_index(), parent_entry, entries);
         let entry = Entry::Complex(complex);
 
         Ok(Some(entry))
@@ -141,7 +139,7 @@ impl<'a> TableTypeWrapper<'a> {
 impl<'a> TableType for TableTypeWrapper<'a> {
     type Configuration = ConfigurationWrapper<'a>;
 
-    fn get_id(&self) -> Result<u8, Error> {
+    fn id(&self) -> Result<u8> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
         let out_value = cursor.read_u32::<LittleEndian>()? & 0xF;
@@ -149,14 +147,14 @@ impl<'a> TableType for TableTypeWrapper<'a> {
         Ok(out_value as u8)
     }
 
-    fn get_amount(&self) -> Result<u32, Error> {
+    fn amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_configuration(&self) -> Result<Self::Configuration, Error> {
+    fn configuration(&self) -> Result<Self::Configuration> {
         let ini = 20;
         let end = self.data_offset as usize;
 
@@ -174,11 +172,11 @@ impl<'a> TableType for TableTypeWrapper<'a> {
         Ok(wrapper)
     }
 
-    fn get_entry(&self, index: u32) -> Result<Entry, Error> {
-        let entries = self.get_entries()?;
+    fn entry(&self, index: u32) -> Result<Entry> {
+        let entries = self.entries()?;
         entries
             .get(index as usize)
             .cloned()
-            .ok_or_else(|| format_err!("entry not found"))
+            .ok_or_else(|| anyhow!("entry not found"))
     }
 }

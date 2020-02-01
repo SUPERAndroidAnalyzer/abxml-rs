@@ -1,7 +1,6 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{format_err, Error};
-
 use crate::model::{owned::OwnedBuf, TypeSpec};
+use anyhow::{anyhow, Result};
+use byteorder::{LittleEndian, WriteBytesExt};
 
 #[derive(Debug)]
 pub struct TableTypeSpecBuf {
@@ -23,11 +22,11 @@ impl TableTypeSpecBuf {
 }
 
 impl OwnedBuf for TableTypeSpecBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         0x202
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         for flag in &self.flags {
@@ -37,7 +36,7 @@ impl OwnedBuf for TableTypeSpecBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(u32::from(self.id))?;
@@ -48,18 +47,18 @@ impl OwnedBuf for TableTypeSpecBuf {
 }
 
 impl TypeSpec for TableTypeSpecBuf {
-    fn get_id(&self) -> Result<u16, Error> {
+    fn id(&self) -> Result<u16> {
         Ok(self.id)
     }
-    fn get_amount(&self) -> Result<u32, Error> {
+    fn amount(&self) -> Result<u32> {
         Ok(self.flags.len() as u32)
     }
 
-    fn get_flag(&self, index: u32) -> Result<u32, Error> {
+    fn flag(&self, index: u32) -> Result<u32> {
         self.flags
             .get(index as usize)
             .cloned()
-            .ok_or_else(|| format_err!("flag out of bounds"))
+            .ok_or_else(|| anyhow!("flag out of bounds"))
     }
 }
 

@@ -1,8 +1,3 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{format_err, Error};
-
-use crate::model::{owned::OwnedBuf, TableType};
-
 mod configuration;
 mod entry;
 
@@ -10,6 +5,9 @@ pub use self::{
     configuration::ConfigurationBuf,
     entry::{ComplexEntry, Entry, EntryHeader, SimpleEntry},
 };
+use crate::model::{owned::OwnedBuf, TableType};
+use anyhow::{anyhow, Result};
+use byteorder::{LittleEndian, WriteBytesExt};
 
 #[derive(Debug)]
 pub struct TableTypeBuf {
@@ -33,11 +31,11 @@ impl TableTypeBuf {
 }
 
 impl OwnedBuf for TableTypeBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         0x201
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         let mut i = 0;
@@ -61,7 +59,7 @@ impl OwnedBuf for TableTypeBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         let vec_config = self.config.to_vec()?;
@@ -78,23 +76,23 @@ impl OwnedBuf for TableTypeBuf {
 impl TableType for TableTypeBuf {
     type Configuration = ConfigurationBuf;
 
-    fn get_id(&self) -> Result<u8, Error> {
+    fn id(&self) -> Result<u8> {
         Ok(self.id)
     }
 
-    fn get_amount(&self) -> Result<u32, Error> {
+    fn amount(&self) -> Result<u32> {
         Ok(self.entries.len() as u32)
     }
 
-    fn get_configuration(&self) -> Result<Self::Configuration, Error> {
+    fn configuration(&self) -> Result<Self::Configuration> {
         Ok(self.config.clone())
     }
 
-    fn get_entry(&self, index: u32) -> Result<Entry, Error> {
+    fn entry(&self, index: u32) -> Result<Entry> {
         self.entries
             .get(index as usize)
             .cloned()
-            .ok_or_else(|| format_err!("entry out of bound"))
+            .ok_or_else(|| anyhow!("entry out of bound"))
     }
 }
 

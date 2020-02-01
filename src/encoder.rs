@@ -1,31 +1,22 @@
 //! Exports the decoded binary XMLs to string XMLs
 
-use std::{io::Write, ops::Deref};
-
-use failure::{Error, ResultExt};
-use xml::{
-    common::XmlVersion,
-    writer::{EmitterConfig, EventWriter, XmlEvent},
-};
-
 use crate::model::{Element as AbxmlElement, Namespaces};
+use anyhow::{Context, Result};
+use quick_xml::{
+    events::{BytesDecl, BytesEnd, BytesStart, Event},
+    Writer,
+};
+use std::{io::Write, ops::Deref};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Xml;
 
 impl Xml {
-    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String, Error> {
+    pub fn encode(namespaces: &Namespaces, element: &AbxmlElement) -> Result<String> {
         let target: Vec<u8> = Vec::new();
-        let mut writer = EmitterConfig::new()
-            .perform_indent(true)
-            .create_writer(target);
+        let mut writer = Writer::new_with_indent(target, b' ', 2);
 
-        let version = XmlVersion::Version10;
-        writer.write(XmlEvent::StartDocument {
-            version,
-            encoding: None,
-            standalone: Some(false),
-        })?;
+        writer.write_event(Event::Decl(BytesDecl::new(b"1.0", None, None)))?;
         Self::encode_element(&mut writer, namespaces, element)
             .context("error decoding an element")?;
 
@@ -33,34 +24,40 @@ impl Xml {
         Ok(String::from_utf8(inner).context("could not export XML")?)
     }
 
-    fn encode_element<W: Write>(
-        writer: &mut EventWriter<W>,
+    fn encode_element<W>(
+        writer: &mut Writer<W>,
         namespaces: &Namespaces,
         element: &AbxmlElement,
-    ) -> Result<(), Error> {
-        let tag = element.get_tag();
-        let tag_name = tag.get_name();
-        let prefixes = tag.get_prefixes();
-        let mut xml_element = XmlEvent::start_element(tag_name.deref().as_str());
+    ) -> Result<()>
+    where
+        W: Write,
+    {
+        let tag = element.tag();
+        let tag_name = tag.name();
+        let prefixes = tag.prefixes();
+        let mut start_bytes = BytesStart::borrowed_name(tag_name.as_bytes());
 
-        for (k, v) in element.get_attributes() {
-            xml_element = xml_element.attr(k.as_str(), v);
-        }
+        start_bytes = start_bytes.with_attributes(
+            element
+                .attributes()
+                .into_iter()
+                .map(|(a, v)| (a.as_bytes(), v.as_bytes())),
+        );
 
         for uri in prefixes {
             let prefix = namespaces.get(&uri.deref().clone());
             if let Some(p) = prefix {
-                xml_element = xml_element.ns(p.as_str(), uri.as_str());
+                start_bytes = start_bytes.ns(p.as_str(), uri.as_str());
             }
         }
 
-        writer.write(xml_element)?;
+        writer.write_event(Event::Start(start_bytes))?;
 
-        for child in element.get_children() {
+        for child in element.children() {
             Self::encode_element(writer, namespaces, child)?;
         }
 
-        writer.write(XmlEvent::end_element())?;
+        writer.write_event(Event::End(BytesEnd::borrowed(tag_name.as_bytes())))?;
 
         Ok(())
     }

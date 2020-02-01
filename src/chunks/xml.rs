@@ -1,12 +1,10 @@
-use std::{io::Cursor, rc::Rc};
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{ensure, Error, ResultExt};
-
 use crate::model::{
     owned::{AttributeBuf, XmlNamespaceEndBuf, XmlNamespaceStartBuf, XmlTagEndBuf, XmlTagStartBuf},
     AttributeTrait, NamespaceEnd, NamespaceStart, StringTable, TagEnd, TagStart,
 };
+use anyhow::{ensure, Context, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use std::{io::Cursor, rc::Rc};
 
 #[derive(Debug)]
 pub struct XmlNamespaceStartWrapper<'a> {
@@ -18,47 +16,44 @@ impl<'a> XmlNamespaceStartWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_prefix_index(&self) -> Result<u32, Error> {
+    pub fn prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(16);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_namespace_index(&self) -> Result<u32, Error> {
+    pub fn namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(20);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn to_buffer(&self) -> Result<XmlNamespaceStartBuf, Error> {
-        let namespace_start = XmlNamespaceStartBuf::new(
-            self.get_line()?,
-            self.get_prefix_index()?,
-            self.get_namespace_index()?,
-        );
+    pub fn to_buffer(&self) -> Result<XmlNamespaceStartBuf> {
+        let namespace_start =
+            XmlNamespaceStartBuf::new(self.line()?, self.prefix_index()?, self.namespace_index()?);
 
         Ok(namespace_start)
     }
 }
 
 impl<'a> NamespaceStart for XmlNamespaceStartWrapper<'a> {
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
-        let index = self.get_prefix_index()?;
+    fn prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+        let index = self.prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
-        let index = self.get_namespace_index()?;
+    fn namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+        let index = self.namespace_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_line(&self) -> Result<u32, Error> {
+    fn line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
@@ -77,48 +72,45 @@ impl<'a> XmlNamespaceEndWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_prefix_index(&self) -> Result<u32, Error> {
+    pub fn prefix_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(16);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn get_namespace_index(&self) -> Result<u32, Error> {
+    pub fn namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(20);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    pub fn to_buffer(&self) -> Result<XmlNamespaceEndBuf, Error> {
-        let namespace_end = XmlNamespaceEndBuf::new(
-            self.get_line()?,
-            self.get_prefix_index()?,
-            self.get_namespace_index()?,
-        );
+    pub fn to_buffer(&self) -> Result<XmlNamespaceEndBuf> {
+        let namespace_end =
+            XmlNamespaceEndBuf::new(self.line()?, self.prefix_index()?, self.namespace_index()?);
 
         Ok(namespace_end)
     }
 }
 
 impl<'a> NamespaceEnd for XmlNamespaceEndWrapper<'a> {
-    fn get_line(&self) -> Result<u32, Error> {
+    fn line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
-        let index = self.get_prefix_index()?;
+    fn prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+        let index = self.prefix_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
-        let index = self.get_namespace_index()?;
+    fn namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
+        let index = self.namespace_index()?;
         let string = string_table.get_string(index)?;
 
         Ok(string)
@@ -134,7 +126,7 @@ pub struct XmlTagStartWrapper<'a> {
 impl<'a> TagStart for XmlTagStartWrapper<'a> {
     type Attribute = AttributeWrapper<'a>;
 
-    fn get_line(&self) -> Result<u32, Error> {
+    fn line(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
 
@@ -143,7 +135,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get line")?)
     }
 
-    fn get_field1(&self) -> Result<u32, Error> {
+    fn field1(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
 
@@ -152,7 +144,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get data")?)
     }
 
-    fn get_namespace_index(&self) -> Result<u32, Error> {
+    fn namespace_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(16);
 
@@ -161,7 +153,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get data")?)
     }
 
-    fn get_element_name_index(&self) -> Result<u32, Error> {
+    fn element_name_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(20);
 
@@ -170,7 +162,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get data")?)
     }
 
-    fn get_field2(&self) -> Result<u32, Error> {
+    fn field2(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(24);
 
@@ -179,7 +171,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get data")?)
     }
 
-    fn get_attributes_amount(&self) -> Result<u32, Error> {
+    fn attributes_amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(28);
 
@@ -190,7 +182,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
         ))
     }
 
-    fn get_class(&self) -> Result<u32, Error> {
+    fn class(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(32);
 
@@ -199,7 +191,7 @@ impl<'a> TagStart for XmlTagStartWrapper<'a> {
             .context("could not get data")?)
     }
 
-    fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error> {
+    fn attribute(&self, index: u32) -> Result<Self::Attribute> {
         let offset = 36 + u64::from(index) * 5 * 4;
         let initial_position = offset as usize;
         let final_position = (offset + 5 * 4) as usize;
@@ -224,18 +216,18 @@ impl<'a> XmlTagStartWrapper<'a> {
     }
 
     /// It converts the wrapper into a `XmlTagStartBuf` which can be later manipulated
-    pub fn to_buffer(&self) -> Result<XmlTagStartBuf, Error> {
+    pub fn to_buffer(&self) -> Result<XmlTagStartBuf> {
         let mut tag_start = XmlTagStartBuf::new(
-            self.get_line()?,
-            self.get_field1()?,
-            self.get_namespace_index()?,
-            self.get_element_name_index()?,
-            self.get_field2()?,
-            self.get_class()?,
+            self.line()?,
+            self.field1()?,
+            self.namespace_index()?,
+            self.element_name_index()?,
+            self.field2()?,
+            self.class()?,
         );
 
-        for i in 0..self.get_attributes_amount()? {
-            let attr = self.get_attribute(i).context("could not get attribute")?;
+        for i in 0..self.attributes_amount()? {
+            let attr = self.attribute(i).context("could not get attribute")?;
             tag_start.add_attribute(attr.to_buffer()?);
         }
 
@@ -250,7 +242,7 @@ pub struct AttributeWrapper<'a> {
 }
 
 impl<'a> AttributeTrait for AttributeWrapper<'a> {
-    fn get_namespace(&self) -> Result<u32, Error> {
+    fn namespace(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(0);
 
@@ -259,7 +251,7 @@ impl<'a> AttributeTrait for AttributeWrapper<'a> {
             .context("could not get namespace")?)
     }
 
-    fn get_name(&self) -> Result<u32, Error> {
+    fn name(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(4);
 
@@ -268,7 +260,7 @@ impl<'a> AttributeTrait for AttributeWrapper<'a> {
             .context("could not get name")?)
     }
 
-    fn get_class(&self) -> Result<u32, Error> {
+    fn class(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(8);
 
@@ -277,7 +269,7 @@ impl<'a> AttributeTrait for AttributeWrapper<'a> {
             .context("could not get class")?)
     }
 
-    fn get_resource_value(&self) -> Result<u32, Error> {
+    fn resource_value(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(12);
 
@@ -286,7 +278,7 @@ impl<'a> AttributeTrait for AttributeWrapper<'a> {
             .context("could not get resource value")?)
     }
 
-    fn get_data(&self) -> Result<u32, Error> {
+    fn data(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(16);
 
@@ -303,13 +295,13 @@ impl<'a> AttributeWrapper<'a> {
     }
 
     /// It converts the wrapper into a `AttributeBuf` which can be later manipulated
-    pub fn to_buffer(&self) -> Result<AttributeBuf, Error> {
+    pub fn to_buffer(&self) -> Result<AttributeBuf> {
         let attr = AttributeBuf::new(
-            self.get_namespace()?,
-            self.get_name()?,
-            self.get_class()?,
-            self.get_resource_value()?,
-            self.get_data()?,
+            self.namespace()?,
+            self.name()?,
+            self.class()?,
+            self.resource_value()?,
+            self.data()?,
         );
 
         Ok(attr)
@@ -327,13 +319,13 @@ impl<'a> XmlTagEndWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn to_buffer(&self) -> Result<XmlTagEndBuf, Error> {
-        Ok(XmlTagEndBuf::new(self.get_id()?))
+    pub fn to_buffer(&self) -> Result<XmlTagEndBuf> {
+        Ok(XmlTagEndBuf::new(self.id()?))
     }
 }
 
 impl<'a> TagEnd for XmlTagEndWrapper<'a> {
-    fn get_id(&self) -> Result<u32, Error> {
+    fn id(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(5 * 4);
 
@@ -351,7 +343,7 @@ impl<'a> XmlTextWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_text_index(&self) -> Result<u32, Error> {
+    pub fn text_index(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(16);
 

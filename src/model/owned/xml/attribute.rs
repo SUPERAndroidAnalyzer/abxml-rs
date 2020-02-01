@@ -1,6 +1,5 @@
-use failure::Error;
-
 use crate::model::AttributeTrait;
+use anyhow::Result;
 
 #[derive(Clone, Debug, Copy)]
 pub struct AttributeBuf {
@@ -24,23 +23,23 @@ impl AttributeBuf {
 }
 
 impl AttributeTrait for AttributeBuf {
-    fn get_namespace(&self) -> Result<u32, Error> {
+    fn namespace(&self) -> Result<u32> {
         Ok(self.namespace)
     }
 
-    fn get_name(&self) -> Result<u32, Error> {
+    fn name(&self) -> Result<u32> {
         Ok(self.name)
     }
 
-    fn get_class(&self) -> Result<u32, Error> {
+    fn class(&self) -> Result<u32> {
         Ok(self.class)
     }
 
-    fn get_resource_value(&self) -> Result<u32, Error> {
+    fn resource_value(&self) -> Result<u32> {
         Ok(self.value)
     }
 
-    fn get_data(&self) -> Result<u32, Error> {
+    fn data(&self) -> Result<u32> {
         Ok(self.data)
     }
 }

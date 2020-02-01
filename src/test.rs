@@ -1,7 +1,3 @@
-use std::rc::Rc;
-
-use failure::{bail, Error};
-
 use crate::{
     chunks::{
         PackageWrapper, ResourceWrapper, StringTableWrapper, TableTypeWrapper, TypeSpecWrapper,
@@ -11,6 +7,7 @@ use crate::{
     model,
     visitor::{ChunkVisitor, Origin},
 };
+use std::rc::Rc;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct CounterChunkVisitor {
@@ -18,7 +15,7 @@ pub struct CounterChunkVisitor {
 }
 
 impl CounterChunkVisitor {
-    pub fn get_count(self) -> u32 {
+    pub fn count(self) -> u32 {
         self.count
     }
 }
@@ -82,15 +79,15 @@ pub fn compare_chunks(expected: &[u8], data: &[u8]) {
 #[derive(Debug, Copy, Clone)]
 pub struct FakeStringTable;
 impl model::StringTable for FakeStringTable {
-    fn get_strings_len(&self) -> u32 {
+    fn strings_len(&self) -> u32 {
         8
     }
 
-    fn get_styles_len(&self) -> u32 {
+    fn styles_len(&self) -> u32 {
         0
     }
 
-    fn get_string(&self, idx: u32) -> Result<Rc<String>, Error> {
+    fn string(&self, idx: u32) -> Result<Rc<String>, Error> {
         match idx {
             0 => Ok(Rc::new("Zero".to_string())),
             11 => Ok(Rc::new("Ones".to_string())),

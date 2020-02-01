@@ -1,9 +1,7 @@
-use std::{io::Cursor, string::ToString};
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, ensure, Error};
-
 use crate::model::{owned::ConfigurationBuf, Configuration};
+use anyhow::{bail, ensure, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use std::{io::Cursor, string::ToString};
 
 #[derive(Debug)]
 pub struct ConfigurationWrapper<'a> {
@@ -15,34 +13,34 @@ impl<'a> ConfigurationWrapper<'a> {
         Self { slice }
     }
 
-    pub fn to_buffer(&self) -> Result<ConfigurationBuf, Error> {
+    pub fn to_buffer(&self) -> Result<ConfigurationBuf> {
         ConfigurationBuf::from_cursor(self.slice.into())
     }
 }
 
 impl<'a> Configuration for ConfigurationWrapper<'a> {
-    fn get_size(&self) -> Result<u32, Error> {
+    fn size(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(0);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_mcc(&self) -> Result<u16, Error> {
+    fn mcc(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(4);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_mnc(&self) -> Result<u16, Error> {
+    fn mnc(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(6);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_language(&self) -> Result<String, Error> {
+    fn language(&self) -> Result<String> {
         let lang_low = self.slice[8];
         let lang_high = self.slice[9];
 
@@ -51,7 +49,7 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(region.to_string())
     }
 
-    fn get_region(&self) -> Result<String, Error> {
+    fn region(&self) -> Result<String> {
         let lang_low = self.slice[10];
         let lang_high = self.slice[11];
 
@@ -60,77 +58,77 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(region.to_string())
     }
 
-    fn get_orientation(&self) -> Result<u8, Error> {
+    fn orientation(&self) -> Result<u8> {
         Ok(self.slice[12])
     }
 
-    fn get_touchscreen(&self) -> Result<u8, Error> {
+    fn touchscreen(&self) -> Result<u8> {
         Ok(self.slice[13])
     }
 
-    fn get_density(&self) -> Result<u16, Error> {
+    fn density(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(14);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_keyboard(&self) -> Result<u8, Error> {
+    fn keyboard(&self) -> Result<u8> {
         Ok(self.slice[16])
     }
 
-    fn get_navigation(&self) -> Result<u8, Error> {
+    fn navigation(&self) -> Result<u8> {
         Ok(self.slice[17])
     }
 
-    fn get_input_flags(&self) -> Result<u8, Error> {
+    fn input_flags(&self) -> Result<u8> {
         Ok(self.slice[18])
     }
 
-    fn get_width(&self) -> Result<u16, Error> {
+    fn width(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(20);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_height(&self) -> Result<u16, Error> {
+    fn height(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(22);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_sdk_version(&self) -> Result<u16, Error> {
+    fn sdk_version(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(24);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_min_sdk_version(&self) -> Result<u16, Error> {
+    fn min_sdk_version(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.slice);
         cursor.set_position(26);
 
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_layout(&self) -> Result<u8, Error> {
-        let size = self.get_size()?;
+    fn screen_layout(&self) -> Result<u8> {
+        let size = self.size()?;
         ensure!(size >= 28, "not enough bytes to retrieve the field");
 
         Ok(self.slice[28])
     }
 
-    fn get_ui_mode(&self) -> Result<u8, Error> {
-        let size = self.get_size()?;
+    fn ui_mode(&self) -> Result<u8> {
+        let size = self.size()?;
         ensure!(size >= 29, "not enough bytes to retrieve the field");
 
         Ok(self.slice[29])
     }
 
-    fn get_smallest_screen(&self) -> Result<u16, Error> {
-        let size = self.get_size()?;
+    fn smallest_screen(&self) -> Result<u16> {
+        let size = self.size()?;
         ensure!(size >= 30, "not enough bytes to retrieve the field");
 
         let mut cursor = Cursor::new(self.slice);
@@ -139,8 +137,8 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_width(&self) -> Result<u16, Error> {
-        let size = self.get_size()?;
+    fn screen_width(&self) -> Result<u16> {
+        let size = self.size()?;
         ensure!(size >= 32, "not enough bytes to retrieve the field");
 
         let mut cursor = Cursor::new(self.slice);
@@ -149,8 +147,8 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_screen_height(&self) -> Result<u16, Error> {
-        let size = self.get_size()?;
+    fn screen_height(&self) -> Result<u16> {
+        let size = self.size()?;
         ensure!(size >= 34, "not enough bytes to retrieve the field");
 
         let mut cursor = Cursor::new(self.slice);
@@ -159,15 +157,15 @@ impl<'a> Configuration for ConfigurationWrapper<'a> {
         Ok(cursor.read_u16::<LittleEndian>()?)
     }
 
-    fn get_locale_script(&self) -> Result<Option<String>, Error> {
+    fn locale_script(&self) -> Result<Option<String>> {
         bail!("not enough bytes to retrieve the field")
     }
 
-    fn get_locale_variant(&self) -> Result<Option<String>, Error> {
+    fn locale_variant(&self) -> Result<Option<String>> {
         bail!("not enough bytes to retrieve the field")
     }
 
-    fn get_secondary_layout(&self) -> Result<Option<u8>, Error> {
+    fn secondary_layout(&self) -> Result<Option<u8>> {
         bail!("not enough bytes to retrieve the field")
     }
 }

@@ -1,8 +1,7 @@
+use crate::{chunks::TOKEN_PACKAGE, model::owned::OwnedBuf};
+use anyhow::{ensure, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
 use encoding::{codec::utf_16, Encoding};
-use failure::{ensure, Error};
-
-use crate::{chunks::TOKEN_PACKAGE, model::owned::OwnedBuf};
 
 #[derive(Default, Debug)]
 pub struct PackageBuf {
@@ -13,7 +12,7 @@ pub struct PackageBuf {
 
 #[allow(dead_code)]
 impl PackageBuf {
-    pub fn create(id: u32, package_name: String) -> Result<Self, Error> {
+    pub fn create(id: u32, package_name: String) -> Result<Self> {
         ensure!(
             package_name.as_bytes().len() <= 256,
             "can not create a package with a length greater than 256"
@@ -32,11 +31,11 @@ impl PackageBuf {
 }
 
 impl OwnedBuf for PackageBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_PACKAGE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         for c in &self.inner_chunks {
@@ -47,7 +46,7 @@ impl OwnedBuf for PackageBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut buffer = Vec::new();
         let mut encoder = utf_16::UTF_16LE_ENCODING.raw_encoder();
         let mut encoded_string = Vec::new();

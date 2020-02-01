@@ -1,5 +1,5 @@
+use anyhow::{bail, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{format_err, Error};
 
 const MASK_COMPLEX: u16 = 0x0001;
 
@@ -24,7 +24,7 @@ impl EntryHeader {
         (self.flags & MASK_COMPLEX) == MASK_COMPLEX
     }
 
-    pub fn get_key_index(self) -> u32 {
+    pub fn key_index(self) -> u32 {
         self.key_index
     }
 }
@@ -47,11 +47,11 @@ impl SimpleEntry {
         }
     }
 
-    pub fn get_id(&self) -> u32 {
+    pub fn id(&self) -> u32 {
         self.id
     }
 
-    pub fn get_key(&self) -> u32 {
+    pub fn key(&self) -> u32 {
         self.key_index
     }
 
@@ -59,11 +59,11 @@ impl SimpleEntry {
         self.value_type
     }
 
-    pub fn get_value(&self) -> u32 {
+    pub fn value(&self) -> u32 {
         self.value_data
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // Header size
@@ -73,7 +73,7 @@ impl SimpleEntry {
         out.write_u16::<LittleEndian>(0)?;
 
         // Key index
-        out.write_u32::<LittleEndian>(self.get_key())?;
+        out.write_u32::<LittleEndian>(self.key())?;
 
         // Value type
         out.write_u16::<LittleEndian>(8)?;
@@ -81,7 +81,7 @@ impl SimpleEntry {
         out.write_u8(self.get_type())?;
 
         // Value
-        out.write_u32::<LittleEndian>(self.get_value())?;
+        out.write_u32::<LittleEndian>(self.value())?;
 
         Ok(out)
     }
@@ -105,29 +105,29 @@ impl ComplexEntry {
         }
     }
 
-    pub fn get_id(&self) -> u32 {
+    pub fn id(&self) -> u32 {
         self.id
     }
 
-    pub fn get_key(&self) -> u32 {
+    pub fn key(&self) -> u32 {
         self.key_index
     }
 
-    pub fn get_referent_id(&self, value: u32) -> Option<u32> {
+    pub fn referent_id(&self, value: u32) -> Option<u32> {
         for e in &self.entries {
-            if e.get_value() == value {
-                return Some(e.get_id());
+            if e.value() == value {
+                return Some(e.id());
             }
         }
 
         None
     }
 
-    pub fn get_entries(&self) -> &Vec<SimpleEntry> {
+    pub fn entries(&self) -> &[SimpleEntry] {
         &self.entries
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // Header size
@@ -153,7 +153,7 @@ impl ComplexEntry {
         for e in &self.entries {
             // TODO: Unify this with simple entry without header
             // Key index
-            out.write_u32::<LittleEndian>(e.get_id())?;
+            out.write_u32::<LittleEndian>(e.id())?;
 
             // Value type
             out.write_u16::<LittleEndian>(8)?;
@@ -161,7 +161,7 @@ impl ComplexEntry {
             out.write_u8(e.get_type())?;
 
             // Value
-            out.write_u32::<LittleEndian>(e.get_value())?;
+            out.write_u32::<LittleEndian>(e.value())?;
         }
 
         Ok(out)
@@ -176,19 +176,19 @@ pub enum Entry {
 }
 
 impl Entry {
-    pub fn simple(&self) -> Result<&SimpleEntry, Error> {
+    pub fn simple(&self) -> Result<&SimpleEntry> {
         if let Self::Simple(simple) = self {
             Ok(simple)
         } else {
-            Err(format_err!("asked for a complex entry on a simple one"))
+            bail!("asked for a complex entry on a simple one")
         }
     }
 
-    pub fn complex(&self) -> Result<&ComplexEntry, Error> {
+    pub fn complex(&self) -> Result<&ComplexEntry> {
         if let Self::Complex(complex) = self {
             Ok(complex)
         } else {
-            Err(format_err!("asked for a simple entry on a complex one"))
+            bail!("asked for a simple entry on a complex one")
         }
     }
 
@@ -200,23 +200,23 @@ impl Entry {
         }
     }
 
-    pub fn get_id(&self) -> u32 {
+    pub fn id(&self) -> u32 {
         match self {
-            Self::Complex(complex) => complex.get_id(),
-            Self::Simple(simple) => simple.get_id(),
+            Self::Complex(complex) => complex.id(),
+            Self::Simple(simple) => simple.id(),
             Self::Empty(id, _) => *id,
         }
     }
 
-    pub fn get_key(&self) -> u32 {
+    pub fn key(&self) -> u32 {
         match self {
-            Self::Complex(complex) => complex.get_key(),
-            Self::Simple(simple) => simple.get_key(),
+            Self::Complex(complex) => complex.key(),
+            Self::Simple(simple) => simple.key(),
             Self::Empty(_, key) => *key,
         }
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         match self {
             Self::Complex(complex) => complex.to_vec(),
             Self::Simple(simple) => simple.to_vec(),

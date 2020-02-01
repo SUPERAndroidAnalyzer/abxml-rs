@@ -1,12 +1,10 @@
-use std::rc::Rc;
-
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
-
 use crate::{
     chunks::TOKEN_XML_START_NAMESPACE,
     model::{owned::OwnedBuf, NamespaceStart, StringTable},
 };
+use anyhow::Result;
+use byteorder::{LittleEndian, WriteBytesExt};
+use std::rc::Rc;
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlNamespaceStartBuf {
@@ -26,17 +24,17 @@ impl XmlNamespaceStartBuf {
 }
 
 impl NamespaceStart for XmlNamespaceStartBuf {
-    fn get_line(&self) -> Result<u32, Error> {
+    fn line(&self) -> Result<u32> {
         Ok(self.line)
     }
 
-    fn get_prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
+    fn prefix<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let string = string_table.get_string(self.prefix_index)?;
 
         Ok(string)
     }
 
-    fn get_namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>, Error> {
+    fn namespace<S: StringTable>(&self, string_table: &S) -> Result<Rc<String>> {
         let string = string_table.get_string(self.namespace_index)?;
 
         Ok(string)
@@ -44,11 +42,11 @@ impl NamespaceStart for XmlNamespaceStartBuf {
 }
 
 impl OwnedBuf for XmlNamespaceStartBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_XML_START_NAMESPACE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.prefix_index)?;
@@ -57,7 +55,7 @@ impl OwnedBuf for XmlNamespaceStartBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.line)?;

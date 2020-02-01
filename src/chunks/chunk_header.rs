@@ -18,33 +18,34 @@ impl ChunkHeader {
         }
     }
 
-    pub fn get_offset(&self) -> u64 {
+    pub fn offset(&self) -> u64 {
         self.offset
     }
 
-    pub fn get_header_size(&self) -> u16 {
+    pub fn header_size(&self) -> u16 {
         self.header_size
     }
 
-    pub fn get_data_offset(&self) -> u64 {
+    pub fn data_offset(&self) -> u64 {
         self.offset + u64::from(self.header_size)
     }
 
-    pub fn get_chunk_end(&self) -> u64 {
+    pub fn chunk_end(&self) -> u64 {
         self.offset + u64::from(self.chunk_size)
     }
 
     pub fn absolute(&self, relative: u64) -> u64 {
         let absolute = self.offset + relative;
 
-        if absolute > self.get_chunk_end() {
-            panic!("Requested a relative value out of bounds");
-        }
+        assert!(
+            absolute > self.chunk_end(),
+            "Requested a relative value out of bounds"
+        );
 
         absolute
     }
 
-    pub fn get_token(&self) -> u16 {
+    pub fn token(&self) -> u16 {
         self.chunk_type
     }
 }
@@ -56,8 +57,8 @@ impl fmt::Display for ChunkHeader {
             "(Token:{:X}; Start: {}; Data: {}; End {})",
             self.chunk_type,
             self.offset,
-            self.get_data_offset(),
-            self.get_chunk_end()
+            self.data_offset(),
+            self.chunk_end()
         )
     }
 }

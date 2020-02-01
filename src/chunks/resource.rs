@@ -1,9 +1,7 @@
-use std::io::Cursor;
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{ensure, Error};
-
 use crate::model::owned::ResourcesBuf;
+use anyhow::{ensure, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use std::io::Cursor;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -16,7 +14,7 @@ impl<'a> ResourceWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn get_resources(&self) -> Result<Vec<u32>, Error> {
+    pub fn resources(&self) -> Result<Vec<u32>> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(4);
 
@@ -39,10 +37,10 @@ impl<'a> ResourceWrapper<'a> {
         Ok(resources)
     }
 
-    pub fn to_buffer(&self) -> Result<ResourcesBuf, Error> {
+    pub fn to_buffer(&self) -> Result<ResourcesBuf> {
         let mut owned = ResourcesBuf::default();
 
-        for r in &self.get_resources()? {
+        for r in &self.resources()? {
             owned.push_resource(*r);
         }
 

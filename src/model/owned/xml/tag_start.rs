@@ -1,6 +1,3 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{bail, Error};
-
 use crate::{
     chunks::TOKEN_XML_TAG_START,
     model::{
@@ -8,6 +5,8 @@ use crate::{
         AttributeTrait, TagStart,
     },
 };
+use anyhow::{bail, Result};
+use byteorder::{LittleEndian, WriteBytesExt};
 
 /// Representation of a XML Tag start chunk
 #[derive(Debug)]
@@ -51,35 +50,35 @@ impl XmlTagStartBuf {
 impl TagStart for XmlTagStartBuf {
     type Attribute = AttributeBuf;
 
-    fn get_line(&self) -> Result<u32, Error> {
+    fn line(&self) -> Result<u32> {
         Ok(self.line)
     }
 
-    fn get_field1(&self) -> Result<u32, Error> {
+    fn field1(&self) -> Result<u32> {
         Ok(self.field1)
     }
 
-    fn get_namespace_index(&self) -> Result<u32, Error> {
+    fn namespace_index(&self) -> Result<u32> {
         Ok(self.namespace)
     }
 
-    fn get_element_name_index(&self) -> Result<u32, Error> {
+    fn element_name_index(&self) -> Result<u32> {
         Ok(self.name)
     }
 
-    fn get_field2(&self) -> Result<u32, Error> {
+    fn field2(&self) -> Result<u32> {
         Ok(self.field2)
     }
 
-    fn get_attributes_amount(&self) -> Result<u32, Error> {
+    fn attributes_amount(&self) -> Result<u32> {
         Ok(self.attributes.len() as u32)
     }
 
-    fn get_class(&self) -> Result<u32, Error> {
+    fn class(&self) -> Result<u32> {
         Ok(self.class)
     }
 
-    fn get_attribute(&self, index: u32) -> Result<Self::Attribute, Error> {
+    fn attribute(&self, index: u32) -> Result<Self::Attribute> {
         if let Some(attr) = self.attributes.get(index as usize) {
             Ok(*attr)
         } else {
@@ -89,11 +88,11 @@ impl TagStart for XmlTagStartBuf {
 }
 
 impl OwnedBuf for XmlTagStartBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_XML_TAG_START
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.namespace)?;
@@ -103,17 +102,17 @@ impl OwnedBuf for XmlTagStartBuf {
         out.write_u32::<LittleEndian>(self.class)?;
 
         for a in &self.attributes {
-            out.write_u32::<LittleEndian>(a.get_namespace()?)?;
-            out.write_u32::<LittleEndian>(a.get_name()?)?;
-            out.write_u32::<LittleEndian>(a.get_class()?)?;
-            out.write_u32::<LittleEndian>(a.get_resource_value()?)?;
-            out.write_u32::<LittleEndian>(a.get_data()?)?;
+            out.write_u32::<LittleEndian>(a.namespace()?)?;
+            out.write_u32::<LittleEndian>(a.name()?)?;
+            out.write_u32::<LittleEndian>(a.class()?)?;
+            out.write_u32::<LittleEndian>(a.resource_value()?)?;
+            out.write_u32::<LittleEndian>(a.data()?)?;
         }
 
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         out.write_u32::<LittleEndian>(self.line)?;

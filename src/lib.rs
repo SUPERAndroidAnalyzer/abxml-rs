@@ -5,33 +5,38 @@
 //! possible to check which chunks of data a document contains, and perform specific queries
 //! depending on the type of chunk.
 
-#![forbid(anonymous_parameters)]
-#![deny(
-    clippy::all,
-    variant_size_differences,
-    unused_results,
-    unused_qualifications,
-    unused_import_braces,
-    unsafe_code,
-    trivial_numeric_casts,
-    trivial_casts,
-    missing_docs,
-    unused_extern_crates,
-    missing_debug_implementations,
-    missing_copy_implementations
-)]
-#![warn(clippy::pedantic)]
-// Allowing these for now:
-#![allow(
-    missing_docs,
-    unused_results,
-    clippy::unreadable_literal,
-    clippy::module_name_repetitions,
-    clippy::cast_possible_truncation,
-    clippy::cast_precision_loss,
-    clippy::similar_names,
-    clippy::shadow_unrelated
-)]
+// #![forbid(anonymous_parameters, unsafe_code)]
+// #![deny(
+//     clippy::all,
+//     clippy::restriction,
+//     variant_size_differences,
+//     unused_results,
+//     unused,
+//     unused_qualifications,
+//     unused_import_braces,
+//     unused_lifetimes,
+//     unreachable_pub,
+//     trivial_numeric_casts,
+//     trivial_casts,
+//     missing_docs,
+//     rustdoc,
+//     missing_debug_implementations,
+//     missing_copy_implementations,
+//     deprecated_in_future,
+//     meta_variable_misuse,
+//     non_ascii_idents,
+//     rust_2018_compatibility,
+//     rust_2018_idioms,
+//     future_incompatible,
+//     nonstandard_style,
+//     //warnings
+// )]
+// #![warn(
+//     clippy::pedantic,
+//     clippy::cargo,
+//     clippy::dbg_macro,
+//     missing_doc_code_examples
+// )]
 
 #[cfg(feature = "zip_decode")]
 pub mod apk;

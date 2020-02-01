@@ -1,11 +1,10 @@
+use log::error;
 use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
     iter,
     rc::Rc,
 };
-
-use log::error;
 
 #[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct Tag {
@@ -18,11 +17,11 @@ impl Tag {
         Self { name, prefixes }
     }
 
-    pub fn get_name(&self) -> Rc<String> {
+    pub fn name(&self) -> Rc<String> {
         self.name.clone()
     }
 
-    pub fn get_prefixes(&self) -> &Vec<Rc<String>> {
+    pub fn prefixes(&self) -> &[Rc<String>] {
         &self.prefixes
     }
 }
@@ -53,15 +52,15 @@ impl Element {
         self.level = level;
     }
 
-    pub fn get_attributes(&self) -> &HashMap<String, String> {
+    pub fn attributes(&self) -> &HashMap<String, String> {
         &self.attrs
     }
 
-    pub fn get_tag(&self) -> &Tag {
+    pub fn tag(&self) -> &Tag {
         &self.tag
     }
 
-    pub fn get_children(&self) -> &Vec<Self> {
+    pub fn children(&self) -> &[Self] {
         &self.children
     }
 }
@@ -71,7 +70,7 @@ impl Display for Element {
         let tabs = iter::repeat("\t")
             .take(self.level as usize)
             .collect::<String>();
-        writeln!(formatter, "{}Element: {}", tabs, self.tag.get_name())?;
+        writeln!(formatter, "{}Element: {}", tabs, self.tag.name())?;
 
         for c in &self.children {
             write!(formatter, "{}", c)?;
@@ -112,7 +111,7 @@ impl ElementContainer {
             });
     }
 
-    pub fn get_root(&self) -> &Option<Element> {
+    pub fn root(&self) -> &Option<Element> {
         &self.root
     }
 }

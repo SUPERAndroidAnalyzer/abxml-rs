@@ -1,15 +1,14 @@
-//! Collection of visitors that are fed from chunk iterator
-use std::io::Cursor;
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, Error, ResultExt};
-use log::warn;
+//! Collection of visitors that are fed from chunk iterator.
 
 use crate::chunks::{
     Chunk, ChunkLoaderStream, PackageWrapper, ResourceWrapper, StringTableWrapper,
     TableTypeWrapper, TypeSpecWrapper, XmlNamespaceEndWrapper, XmlNamespaceStartWrapper,
     XmlTagEndWrapper, XmlTagStartWrapper, XmlTextWrapper,
 };
+use anyhow::{bail, Context, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use log::warn;
+use std::io::Cursor;
 
 pub mod model;
 mod print;
@@ -40,7 +39,7 @@ pub struct Executor;
 impl Executor {
     /// Given a valid `resources.arsc` file contents, it will call to the proper methods on the
     /// given visitor.
-    pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], visitor: &mut V) -> Result<(), Error> {
+    pub fn arsc<'a, V: ChunkVisitor<'a>>(buffer: &'a [u8], visitor: &mut V) -> Result<()> {
         let mut cursor = Cursor::new(buffer);
         let token = cursor
             .read_u16::<LittleEndian>()
@@ -94,7 +93,7 @@ impl Executor {
     pub fn xml<'a, V: ChunkVisitor<'a>>(
         mut cursor: Cursor<&'a [u8]>,
         visitor: &mut V,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let token = cursor
             .read_u16::<LittleEndian>()
             .context("error reading first token")?;

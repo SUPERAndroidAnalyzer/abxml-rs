@@ -1,15 +1,13 @@
 //! High level abstraction to easy the extraction to file system of APKs
 
+use crate::decoder::BufferedDecoder;
+use anyhow::{Context, Result};
 use std::{
     fs,
     io::{Read, Write},
     path::Path,
 };
-
-use failure::{format_err, Error, ResultExt};
 use zip::read::ZipArchive;
-
-use crate::decoder::BufferedDecoder;
 
 #[derive(Debug)]
 pub struct Apk {
@@ -18,7 +16,7 @@ pub struct Apk {
 }
 
 impl Apk {
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mut buffer = Vec::new();
         let file = fs::File::open(&path)?;
         let mut zip_handler = ZipArchive::new(file)?;
@@ -34,23 +32,27 @@ impl Apk {
 
     /// It exports to target output_path the contents of the APK, transcoding the binary XML files
     /// found on it.
-    pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<(), Error> {
+    pub fn export<P: AsRef<Path>>(&mut self, output_path: P, force: bool) -> Result<()> {
         use crate::visitor::XmlVisitor;
 
         let decoder = self
             .decoder
-            .get_decoder()
+            .decoder()
             .context("could not get the decoder")?;
 
         if fs::create_dir_all(&output_path).is_err() && force {
-            fs::remove_dir_all(&output_path).context(format_err!(
-                "could not clean target directory: {}",
-                output_path.as_ref().display()
-            ))?;
-            fs::create_dir_all(&output_path).context(format_err!(
-                "error creating the output folder: {}",
-                output_path.as_ref().display()
-            ))?;
+            fs::remove_dir_all(&output_path).with_context(|| {
+                format!(
+                    "could not clean target directory: {}",
+                    output_path.as_ref().display()
+                )
+            })?;
+            fs::create_dir_all(&output_path).with_context(|| {
+                format!(
+                    "error creating the output folder: {}",
+                    output_path.as_ref().display()
+                )
+            })?;
         }
 
         // Iterate over all the files on the ZIP and extract them
@@ -91,7 +93,7 @@ impl Apk {
         base_path: B,
         relative: R,
         content: &[u8],
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let full_path = base_path.as_ref().join(&relative);
         // println!("Full path: {}", full_path.display());
         fs::create_dir_all(full_path.parent().unwrap())

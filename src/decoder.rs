@@ -1,13 +1,11 @@
 //! Structs which contains the read data from binary documents
 
-use std::io::{Cursor, Read};
-
-use failure::{Error, ResultExt};
-
 use crate::{
     visitor::{Executor, ModelVisitor, Resources, XmlVisitor},
     STR_ARSC,
 };
+use anyhow::{Context, Result};
+use std::io::{Cursor, Read};
 
 #[derive(Debug)]
 pub struct BufferedDecoder {
@@ -26,7 +24,7 @@ where
 }
 
 impl BufferedDecoder {
-    pub fn from_read<R: Read>(mut read: R) -> Result<Self, Error> {
+    pub fn from_read<R: Read>(mut read: R) -> Result<Self> {
         let mut buffer = Vec::new();
         read.read_to_end(&mut buffer)
             .context("could not read buffer")?;
@@ -35,7 +33,7 @@ impl BufferedDecoder {
         })
     }
 
-    pub fn get_decoder(&self) -> Result<Decoder, Error> {
+    pub fn decoder(&self) -> Result<Decoder> {
         Decoder::from_buffer(&self.buffer)
     }
 }
@@ -48,7 +46,7 @@ pub struct Decoder<'a> {
 }
 
 impl<'a> Decoder<'a> {
-    pub fn from_buffer(buffer_apk: &'a [u8]) -> Result<Self, Error> {
+    pub fn from_buffer(buffer_apk: &'a [u8]) -> Result<Self> {
         let visitor = ModelVisitor::default();
 
         let mut decoder = Self {
@@ -65,13 +63,13 @@ impl<'a> Decoder<'a> {
         Ok(decoder)
     }
 
-    pub fn get_resources(&self) -> &'a Resources {
-        self.visitor.get_resources()
+    pub fn resources(&self) -> &'a Resources {
+        self.visitor.resources()
     }
 
-    pub fn xml_visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor, Error> {
+    pub fn xml_visitor<T: AsRef<[u8]>>(&self, content: &'a T) -> Result<XmlVisitor> {
         let cursor = Cursor::new(content.as_ref());
-        let mut visitor = XmlVisitor::new(self.get_resources());
+        let mut visitor = XmlVisitor::new(self.resources());
 
         Executor::xml(cursor, &mut visitor)?;
 

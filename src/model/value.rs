@@ -1,6 +1,5 @@
+use anyhow::{bail, Result};
 use std::{mem, string::ToString};
-
-use failure::{format_err, Error};
 
 const TOKEN_TYPE_REFERENCE_ID: u8 = 0x01;
 const TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID: u8 = 0x02;
@@ -77,7 +76,7 @@ impl ToString for Value {
 impl Value {
     /// Creates a new `Value`. If the payload can not be interpreted by the given `value_type`, it
     /// will return an error. If the type is not know, it will return `Value::Unknown`
-    pub fn create(value_type: u8, data: u32) -> Result<Self, Error> {
+    pub fn create(value_type: u8, data: u32) -> Result<Self> {
         let value = match value_type {
             TOKEN_TYPE_REFERENCE_ID | TOKEN_TYPE_DYN_REFERENCE => Self::ReferenceId(data),
             TOKEN_TYPE_ATTRIBUTE_REFERENCE_ID | TOKEN_TYPE_DYN_ATTRIBUTE => {
@@ -93,10 +92,7 @@ impl Value {
                     let formatted = format!("{:.*}{}", 1, value, unit);
                     Self::Dimension(formatted)
                 } else {
-                    return Err(format_err!(
-                        "expected a valid unit index, got: {}",
-                        unit_idx
-                    ));
+                    bail!("expected a valid unit index, got: {}", unit_idx);
                 }
             }
             TOKEN_TYPE_FRACTION => {
@@ -107,7 +103,7 @@ impl Value {
                 if let Some(unit) = units.get(unit_idx) {
                     let integer = final_value.round();
                     let diff = final_value - integer;
-                    let formatted_fraction = if diff > 0.0000001 {
+                    let formatted_fraction = if diff > 0.000_000_1 {
                         format!("{:.*}{}", 6, final_value, unit)
                     } else {
                         format!("{:.*}{}", 1, final_value, unit)
@@ -115,10 +111,7 @@ impl Value {
 
                     Self::Fraction(formatted_fraction)
                 } else {
-                    return Err(format_err!(
-                        "expected a valid unit index, got: {}",
-                        unit_idx
-                    ));
+                    bail!("expected a valid unit index, got: {}", unit_idx);
                 }
             }
             TOKEN_TYPE_INTEGER => {
@@ -154,7 +147,7 @@ impl Value {
     #[allow(unsafe_code)]
     fn complex(data: u32) -> f32 {
         // TODO: Clean this mess
-        let mantissa = 0xffffff << 8;
+        let mantissa = 0x00ff_ffff << 8;
         let u_value = data & mantissa;
         let i_value: i32 = unsafe { mem::transmute(u_value) };
         let m = i_value as f32;

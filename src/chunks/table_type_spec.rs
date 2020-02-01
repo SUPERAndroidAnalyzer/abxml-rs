@@ -1,9 +1,7 @@
-use std::io::Cursor;
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{ensure, Error};
-
 use crate::model::{owned::TableTypeSpecBuf, TypeSpec};
+use anyhow::{ensure, Result};
+use byteorder::{LittleEndian, ReadBytesExt};
+use std::io::Cursor;
 
 #[derive(Clone, Debug)]
 pub struct TypeSpecWrapper<'a> {
@@ -15,12 +13,12 @@ impl<'a> TypeSpecWrapper<'a> {
         Self { raw_data }
     }
 
-    pub fn to_buffer(&self) -> Result<TableTypeSpecBuf, Error> {
-        let mut owned = TableTypeSpecBuf::new(self.get_id()?);
-        let amount = self.get_amount()?;
+    pub fn to_buffer(&self) -> Result<TableTypeSpecBuf> {
+        let mut owned = TableTypeSpecBuf::new(self.id()?);
+        let amount = self.amount()?;
 
         for i in 0..amount {
-            owned.push_flag(self.get_flag(i)?);
+            owned.push_flag(self.flag(i)?);
         }
 
         Ok(owned)
@@ -28,7 +26,7 @@ impl<'a> TypeSpecWrapper<'a> {
 }
 
 impl<'a> TypeSpec for TypeSpecWrapper<'a> {
-    fn get_id(&self) -> Result<u16, Error> {
+    fn id(&self) -> Result<u16> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(8);
         let out_value = cursor.read_u32::<LittleEndian>()? & 0xFF;
@@ -36,15 +34,15 @@ impl<'a> TypeSpec for TypeSpecWrapper<'a> {
         Ok(out_value as u16)
     }
 
-    fn get_amount(&self) -> Result<u32, Error> {
+    fn amount(&self) -> Result<u32> {
         let mut cursor = Cursor::new(self.raw_data);
         cursor.set_position(12);
 
         Ok(cursor.read_u32::<LittleEndian>()?)
     }
 
-    fn get_flag(&self, index: u32) -> Result<u32, Error> {
-        let amount = self.get_amount()?;
+    fn flag(&self, index: u32) -> Result<u32> {
+        let amount = self.amount()?;
         ensure!(
             index < amount,
             "invalid flag on index {} out of {}",

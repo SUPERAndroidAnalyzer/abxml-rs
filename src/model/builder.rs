@@ -1,7 +1,6 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::{Error, ResultExt};
-
 use crate::model::owned::OwnedBuf;
+use anyhow::{Context, Result};
+use byteorder::{LittleEndian, WriteBytesExt};
 
 #[derive(Default, Debug)]
 pub struct Arsc {
@@ -13,7 +12,7 @@ impl Arsc {
         self.chunks.push(chunk);
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;
@@ -54,7 +53,7 @@ impl Xml {
         self.chunks.push(chunk);
     }
 
-    pub fn into_vec(self) -> Result<Vec<u8>, Error> {
+    pub fn into_vec(self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
         let mut inner = Vec::new();
         let mut file_size = 0;

@@ -1,9 +1,4 @@
 //! Structs to represent chunks and iterate them
-use std::io::Cursor;
-
-use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
-use log::error;
 
 mod chunk_header;
 mod package;
@@ -25,6 +20,10 @@ pub use self::{
         XmlTextWrapper,
     },
 };
+use anyhow::Result;
+use byteorder::{LittleEndian, ReadBytesExt};
+use log::error;
+use std::io::Cursor;
 
 pub const TOKEN_STRING_TABLE: u16 = 0x0001;
 pub const TOKEN_RESOURCE: u16 = 0x0180;
@@ -66,7 +65,7 @@ impl<'a> ChunkLoaderStream<'a> {
         }
     }
 
-    fn read_one(&mut self) -> Result<Chunk<'a>, Error> {
+    fn read_one(&mut self) -> Result<Chunk<'a>> {
         let initial_position = self.cursor.position();
         let token = self.cursor.read_u16::<LittleEndian>()?;
         let header_size = self.cursor.read_u16::<LittleEndian>()?;
@@ -76,9 +75,9 @@ impl<'a> ChunkLoaderStream<'a> {
         let chunk = self.get_chunk(&chunk_header);
 
         if let Chunk::Package(_) = chunk {
-            self.cursor.set_position(chunk_header.get_data_offset());
+            self.cursor.set_position(chunk_header.data_offset());
         } else {
-            self.cursor.set_position(chunk_header.get_chunk_end());
+            self.cursor.set_position(chunk_header.chunk_end());
         }
 
         Ok(chunk)
@@ -86,14 +85,14 @@ impl<'a> ChunkLoaderStream<'a> {
 
     fn get_chunk(&self, header: &ChunkHeader) -> Chunk<'a> {
         let raw_data = self.cursor.get_ref();
-        let slice = &raw_data[header.get_offset() as usize..header.get_chunk_end() as usize];
+        let slice = &raw_data[header.offset() as usize..header.chunk_end() as usize];
 
-        match header.get_token() {
+        match header.token() {
             TOKEN_STRING_TABLE => Chunk::StringTable(StringTableWrapper::new(slice)),
             TOKEN_PACKAGE => Chunk::Package(PackageWrapper::new(slice)),
             TOKEN_TABLE_SPEC => Chunk::TableTypeSpec(TypeSpecWrapper::new(slice)),
             TOKEN_TABLE_TYPE => {
-                let current_chunk_data_offset = header.get_data_offset() - header.get_offset();
+                let current_chunk_data_offset = header.data_offset() - header.offset();
                 Chunk::TableType(TableTypeWrapper::new(slice, current_chunk_data_offset))
             }
             TOKEN_XML_START_NAMESPACE => {
@@ -114,9 +113,9 @@ impl<'a> ChunkLoaderStream<'a> {
 }
 
 impl<'a> Iterator for ChunkLoaderStream<'a> {
-    type Item = Result<Chunk<'a>, Error>;
+    type Item = Result<Chunk<'a>>;
 
-    fn next(&mut self) -> Option<Result<Chunk<'a>, Error>> {
+    fn next(&mut self) -> Option<Result<Chunk<'a>>> {
         if let Some(prev) = self.previous {
             if prev == self.cursor.position() {
                 return None;

@@ -1,10 +1,9 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
-
 use crate::{
     chunks::TOKEN_XML_TAG_END,
     model::{owned::OwnedBuf, TagEnd},
 };
+use anyhow::Result;
+use byteorder::{LittleEndian, WriteBytesExt};
 
 #[derive(Debug, Copy, Clone)]
 pub struct XmlTagEndBuf {
@@ -18,11 +17,11 @@ impl XmlTagEndBuf {
 }
 
 impl OwnedBuf for XmlTagEndBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_XML_TAG_END
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // ??
@@ -33,7 +32,7 @@ impl OwnedBuf for XmlTagEndBuf {
         Ok(out)
     }
 
-    fn get_header(&self) -> Result<Vec<u8>, Error> {
+    fn header(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         // Amount of writes
@@ -46,7 +45,7 @@ impl OwnedBuf for XmlTagEndBuf {
 }
 
 impl TagEnd for XmlTagEndBuf {
-    fn get_id(&self) -> Result<u32, Error> {
+    fn id(&self) -> Result<u32> {
         Ok(self.id)
     }
 }

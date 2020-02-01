@@ -1,7 +1,6 @@
-use byteorder::{LittleEndian, WriteBytesExt};
-use failure::Error;
-
 use crate::{chunks::TOKEN_RESOURCE, model::owned::OwnedBuf};
+use anyhow::Result;
+use byteorder::{LittleEndian, WriteBytesExt};
 
 #[derive(Default, Debug)]
 pub struct ResourcesBuf {
@@ -19,11 +18,11 @@ impl ResourcesBuf {
 }
 
 impl OwnedBuf for ResourcesBuf {
-    fn get_token(&self) -> u16 {
+    fn token(&self) -> u16 {
         TOKEN_RESOURCE
     }
 
-    fn get_body_data(&self) -> Result<Vec<u8>, Error> {
+    fn body_data(&self) -> Result<Vec<u8>> {
         let mut out = Vec::new();
 
         for r in &self.resources {

@@ -1,8 +1,3 @@
-use std::{cmp::Ordering, collections::HashMap, rc::Rc};
-
-use failure::{format_err, Error, ResultExt};
-use log::{error, info, warn};
-
 use super::{ChunkVisitor, Origin};
 use crate::{
     chunks::{
@@ -16,6 +11,9 @@ use crate::{
     },
     visitor::model::Resources,
 };
+use anyhow::{anyhow, bail, Context, Result};
+use log::{error, info, warn};
+use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 #[derive(Debug)]
 pub struct XmlVisitor<'a> {
@@ -39,19 +37,19 @@ impl<'a> XmlVisitor<'a> {
         }
     }
 
-    pub fn get_namespaces(&self) -> &Namespaces {
+    pub fn namespaces(&self) -> &Namespaces {
         &self.namespaces
     }
 
-    pub fn get_root(&self) -> &Option<Element> {
-        self.container.get_root()
+    pub fn root(&self) -> Option<&Element> {
+        self.container.root().as_ref()
     }
 
-    pub fn get_string_table(&self) -> &Option<StringTableCache<StringTableWrapper<'a>>> {
-        &self.main_string_table
+    pub fn string_table(&self) -> Option<&StringTableCache<StringTableWrapper<'a>>> {
+        self.main_string_table.as_ref()
     }
 
-    pub fn get_resources(&self) -> &Vec<u32> {
+    pub fn resources(&self) -> &[u32] {
         &self.res
     }
 
@@ -60,11 +58,10 @@ impl<'a> XmlVisitor<'a> {
     }
 
     // TODO: Convert to TryInto once it will be stable
-    pub fn into_string(self) -> Result<String, Error> {
-        if let Some(root) = self.get_root() {
-            if self.get_string_table().is_some() {
-                let res =
-                    Xml::encode(self.get_namespaces(), root).context("could note encode XML")?;
+    pub fn into_string(self) -> Result<String> {
+        if let Some(root) = self.root() {
+            if self.string_table().is_some() {
+                let res = Xml::encode(&self.namespaces, root).context("could note encode XML")?;
                 return Ok(res);
             } else {
                 warn!("No string table found");
@@ -73,28 +70,28 @@ impl<'a> XmlVisitor<'a> {
             warn!("No root on target XML");
         }
 
-        Err(format_err!("could not decode XML"))
+        bail!("could not decode XML")
     }
 
-    fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element, Error> {
+    fn build_element(&self, tag_start: &XmlTagStartWrapper) -> Result<Element> {
         match &self.main_string_table {
             Some(string_table) => {
                 let (tag, attributes) = self
-                    .get_element_data(&string_table, tag_start)
+                    .element_data(&string_table, tag_start)
                     .context("could not get element data")?;
                 Ok(Element::new(tag, attributes))
             }
-            None => Err(format_err!("no main string table found")),
+            None => bail!("no main string table found"),
         }
     }
 
-    fn get_element_data(
+    fn element_data(
         &self,
         string_table: &StringTableCache<StringTableWrapper<'a>>,
         tag_start: &XmlTagStartWrapper,
-    ) -> Result<(Tag, HashMap<String, String>), Error> {
+    ) -> Result<(Tag, HashMap<String, String>)> {
         let name_index = tag_start
-            .get_element_name_index()
+            .element_name_index()
             .context("name index not found")?;
         let rc_string = string_table
             .get_string(name_index)
@@ -103,31 +100,31 @@ impl<'a> XmlVisitor<'a> {
 
         let mut attributes = HashMap::new();
         let num_attributes = tag_start
-            .get_attributes_amount()
+            .attributes_amount()
             .context("could not get the amount of attributes")?;
 
         for i in 0..num_attributes {
             let mut final_name = String::new();
             let current_attribute = tag_start
-                .get_attribute(i)
-                .context(format_err!("could not read attribute {} ", i))?;
+                .attribute(i)
+                .with_context(|| format!("could not read attribute {} ", i))?;
 
-            let namespace_index = current_attribute.get_namespace()?;
+            let namespace_index = current_attribute.namespace()?;
             if namespace_index != 0xFFFF_FFFF {
                 let namespace = (*string_table.get_string(namespace_index)?).clone();
                 let prefix = self
                     .namespaces
                     .get(&namespace)
-                    .ok_or_else(|| format_err!("namespace not found"))?;
+                    .ok_or_else(|| anyhow!("namespace not found"))?;
                 final_name.push_str(prefix);
                 final_name.push(':');
             }
 
-            let name_index = current_attribute.get_name()?;
+            let name_index = current_attribute.name()?;
             let name = string_table.get_string(name_index)?;
             final_name.push_str((*name).as_str());
 
-            let current_value = current_attribute.get_value()?;
+            let current_value = current_attribute.value()?;
             let value = match current_value {
                 Value::StringReference(index) => (*string_table.get_string(index)?).clone(),
                 Value::ReferenceId(id) => {
@@ -149,7 +146,7 @@ impl<'a> XmlVisitor<'a> {
                     if let Some(flag_resolution) = flag_resolution {
                         flag_resolution
                     } else {
-                        current_attribute.get_value()?.to_string()
+                        current_attribute.value()?.to_string()
                     }
                 }
                 _ => current_value.to_string(),
@@ -174,8 +171,8 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     fn visit_xml_namespace_start(&mut self, namespace_start: XmlNamespaceStartWrapper<'a>) {
         if let Some(ref mut string_table) = self.main_string_table {
             if let (Ok(namespace), Ok(prefix)) = (
-                namespace_start.get_namespace(string_table),
-                namespace_start.get_prefix(string_table),
+                namespace_start.namespace(string_table),
+                namespace_start.prefix(string_table),
             ) {
                 self.namespaces
                     .insert((*namespace).clone(), (*prefix).clone());
@@ -204,7 +201,7 @@ impl<'a> ChunkVisitor<'a> for XmlVisitor<'a> {
     }
 
     fn visit_resource(&mut self, resource: ResourceWrapper<'a>) {
-        if let Ok(res) = resource.get_resources() {
+        if let Ok(res) = resource.resources() {
             self.res = res;
         }
     }
@@ -217,9 +214,9 @@ impl AttributeHelper {
         resources: &R,
         id: u32,
         prefix: &str,
-    ) -> Result<String, Error> {
+    ) -> Result<String> {
         let res_id = id;
-        let package_id = id.get_package();
+        let package_id = id.package();
 
         if id == 0 {
             return Ok("@null".to_string());
@@ -227,17 +224,17 @@ impl AttributeHelper {
 
         let is_main = resources.is_main_package(package_id);
         let package = resources
-            .get_package(package_id)
-            .ok_or_else(|| format_err!("package not found"))?;
+            .package(package_id)
+            .ok_or_else(|| anyhow!("package not found"))?;
 
-        let entry_key = package.get_entry(res_id).and_then(|e| Ok(e.get_key())).ok();
+        let entry_key = package.entry(res_id).and_then(|e| Ok(e.key())).ok();
 
         if let Some(key) = entry_key {
-            let namespace = if is_main { None } else { package.get_name() };
+            let namespace = if is_main { None } else { package.name() };
             return package.format_reference(id, key, namespace, prefix);
         }
 
-        Err(format_err!("error resolving reference"))
+        bail!("error resolving reference")
     }
 
     pub fn resolve_flags<'a, R: ResourceTrait<'a>, A: AttributeTrait>(
@@ -248,7 +245,7 @@ impl AttributeHelper {
     ) -> Option<String> {
         // Check if it's the special value in which the integer is an Enum
         // In that case, we return a crafted string instead of the integer itself
-        let name_index = attribute.get_name().unwrap();
+        let name_index = attribute.name().unwrap();
         if name_index < xml_resources.len() as u32 {
             Self::search_values(flags, name_index, xml_resources, resources)
         } else {
@@ -269,18 +266,18 @@ impl AttributeHelper {
             None => return None,
         };
 
-        let package_id = entry_ref.get_package();
+        let package_id = entry_ref.package();
         resources
-            .get_package(package_id)
+            .package(package_id)
             .and_then(|package| Self::search_flags(flags, *entry_ref, package))
     }
 
     fn search_flags(flags: u32, entry_ref: u32, package: &dyn Library) -> Option<String> {
-        let str_indexes = Self::get_strings(flags, entry_ref, package);
+        let str_indexes = Self::strings(flags, entry_ref, package);
         let str_strs: Vec<String> = str_indexes
             .iter()
             .map(|si| {
-                if let Ok(str) = package.get_entries_string(*si) {
+                if let Ok(str) = package.entries_string(*si) {
                     (*str).clone()
                 } else {
                     error!("Key not found on the string table");
@@ -297,16 +294,16 @@ impl AttributeHelper {
         }
     }
 
-    fn get_strings(flags: u32, entry_ref: u32, package: &dyn Library) -> Vec<u32> {
+    fn strings(flags: u32, entry_ref: u32, package: &dyn Library) -> Vec<u32> {
         use crate::model::owned::Entry;
 
         let mut strs = Vec::new();
         let mut masks = Vec::new();
 
         let inner_entries = package
-            .get_entry(entry_ref)
+            .entry(entry_ref)
             .and_then(Entry::complex)
-            .and_then(|c| Ok(c.get_entries().to_vec()))
+            .and_then(|c| Ok(c.entries().to_vec()))
             .unwrap_or_else(|_| Vec::new());
 
         let mut sorted = inner_entries.to_vec();
@@ -314,9 +311,9 @@ impl AttributeHelper {
         sorted.sort_by(Self::compare_entries);
 
         for ie in sorted {
-            let mask = ie.get_value();
+            let mask = ie.value();
             if (mask & flags) == mask {
-                let maybe_entry = package.get_entry(ie.get_id());
+                let maybe_entry = package.entry(ie.id());
 
                 if let Ok(entry) = maybe_entry {
                     let mut has_to_add = true;
@@ -331,7 +328,7 @@ impl AttributeHelper {
                     if has_to_add {
                         entry
                             .simple()
-                            .and_then(|s| Ok(s.get_key()))
+                            .and_then(|s| Ok(s.key()))
                             .and_then(|key| {
                                 strs.push(key);
                                 masks.push(mask);
@@ -354,23 +351,23 @@ impl AttributeHelper {
     }
 
     fn compare_entries(a: &SimpleEntry, b: &SimpleEntry) -> Ordering {
-        let id_a = a.get_value();
-        let id_b = b.get_value();
+        let id_a = a.value();
+        let id_b = b.value();
 
         // TODO: This code is to create an exact match with Apktool.
         // A simple descending ordering seems to be also ok.
         let mut i = id_a;
-        i -= (i >> 1) & 0x55555555;
-        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-        i = (i + (i >> 4)) & 0x0f0f0f0f;
+        i -= (i >> 1) & 0x5555_5555;
+        i = (i & 0x3333_3333) + ((i >> 2) & 0x3333_3333);
+        i = (i + (i >> 4)) & 0x0f0f_0f0f;
         i += i >> 8;
         i += i >> 16;
         i &= 0x3f;
 
         let mut j = id_b;
-        j -= (j >> 1) & 0x55555555;
-        j = (j & 0x33333333) + ((j >> 2) & 0x33333333);
-        j = (j + (j >> 4)) & 0x0f0f0f0f;
+        j -= (j >> 1) & 0x5555_5555;
+        j = (j & 0x3333_3333) + ((j >> 2) & 0x3333_3333);
+        j = (j + (j >> 4)) & 0x0f0f_0f0f;
         j += j >> 8;
         j += j >> 16;
         j &= 0x3f;
@@ -439,7 +436,7 @@ mod tests {
     }
 
     impl Library for FakeLibrary {
-        fn get_name(&self) -> Option<String> {
+        fn name(&self) -> Option<String> {
             Some("Package name".to_string())
         }
 
@@ -449,7 +446,7 @@ mod tests {
             _: u32,
             namespace: Option<String>,
             _: &str,
-        ) -> Result<String, Error> {
+        ) -> Result<String> {
             if id == (1 << 24) | 1 && namespace.is_none() {
                 Ok("reference#1".to_string())
             } else if id == (2 << 24) | 1 && namespace.is_some() {
@@ -459,19 +456,19 @@ mod tests {
             }
         }
 
-        fn get_entry(&self, id: u32) -> Result<&Entry, Error> {
+        fn entry(&self, id: u32) -> Result<&Entry> {
             self.entries
                 .get(&id)
                 .ok_or_else(|| format_err!("could not find entry"))
         }
 
-        fn get_entries_string(&self, str_id: u32) -> Result<Rc<String>, Error> {
+        fn entries_string(&self, str_id: u32) -> Result<Rc<String>> {
             let st = FakeStringTable;
 
-            Ok(st.get_string(str_id)?)
+            Ok(st.string(str_id)?)
         }
 
-        fn get_spec_string(&self, _: u32) -> Result<Rc<String>, Error> {
+        fn spec_string(&self, _: u32) -> Result<Rc<String>> {
             bail!("spec string")
         }
     }
@@ -484,7 +481,7 @@ mod tests {
 
         fn add_entries(&mut self, _: Entries) {}
 
-        fn add_type_spec(&mut self, _: Self::TypeSpec) -> Result<(), Error> {
+        fn add_type_spec(&mut self, _: Self::TypeSpec) -> Result<()> {
             Ok(())
         }
     }
@@ -492,14 +489,14 @@ mod tests {
     struct FakeTypeSpec;
 
     impl TypeSpec for FakeTypeSpec {
-        fn get_id(&self) -> Result<u16, Error> {
+        fn id(&self) -> Result<u16> {
             Ok(82)
         }
-        fn get_amount(&self) -> Result<u32, Error> {
+        fn amount(&self) -> Result<u32> {
             Ok(3)
         }
 
-        fn get_flag(&self, index: u32) -> Result<u32, Error> {
+        fn flag(&self, index: u32) -> Result<u32> {
             let flags = vec![0, 4, 16];
 
             flags
@@ -524,7 +521,7 @@ mod tests {
     impl<'a> Resources<'a> for FakeResources {
         type Library = FakeLibrary;
 
-        fn get_package(&self, package_id: u8) -> Option<&Self::Library> {
+        fn package(&self, package_id: u8) -> Option<&Self::Library> {
             if package_id == 1 || package_id == 2 {
                 Some(&self.library)
             } else {
@@ -532,11 +529,11 @@ mod tests {
             }
         }
 
-        fn get_mut_package(&mut self, _: u8) -> Option<&mut Self::Library> {
+        fn mut_package(&mut self, _: u8) -> Option<&mut Self::Library> {
             None
         }
 
-        fn get_main_package(&self) -> Option<&Self::Library> {
+        fn main_package(&self) -> Option<&Self::Library> {
             None
         }
 
