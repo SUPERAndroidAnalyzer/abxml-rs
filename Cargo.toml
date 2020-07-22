@@ -45,3 +45,6 @@ required-features = ["zip_decode"]
 [[example]]
 name = "converter"
 required-features = ["zip_decode"]
+
+[package]
+exclude = ["resources/resources.arsc"]
